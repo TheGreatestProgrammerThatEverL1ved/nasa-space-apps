@@ -42,7 +42,7 @@ for (const locale of ['en', 'ua'] as const) {
     await page.screenshot({ path: testInfo.outputPath(`urban-pass-${locale}.png`) })
     await page.setViewportSize({ width: 320, height: 844 })
     await page.evaluate(() => { document.documentElement.style.fontSize = '200%' })
-    for (const summary of await page.locator('details > summary').all()) {
+    for (const summary of await page.locator('main details > summary').all()) {
       if (!(await summary.evaluate(el => el.parentElement?.hasAttribute('open')))) await summary.click()
     }
     const overflow = await page.evaluate(() => [...document.querySelectorAll('body *')]

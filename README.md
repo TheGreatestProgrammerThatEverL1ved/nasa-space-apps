@@ -12,6 +12,8 @@ A bilingual browser mission-design game for NASA Space Apps 2026, Dnipro, Ukrain
 
 ## Run locally
 
+Night-02 adds a skippable, replayable **Flight Academy**. Use **Help / Academy** at any time: the guided WF-B run uses the real evaluator (7.1 h → choose the ground network → 3.1 h), never pays campaign credits, and leaves your design/report intact. Mission phase navigation, inspectable spacecraft slots and the recorded 24-hour contact strip explain the current design and its bottleneck. All art is original schematic SVG, not a flight layout.
+
 Node 22.22.2+ (or a compatible supported Node release) and npm:
 
 ```sh

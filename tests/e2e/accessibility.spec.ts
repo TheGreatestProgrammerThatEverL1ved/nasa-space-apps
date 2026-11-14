@@ -22,7 +22,7 @@ for (const locale of ['en', 'ua'] as const) {
     await expect(page.getByTestId('latency-value')).toContainText(/3[.,]1/)
     await page.setViewportSize({ width: 320, height: 844 })
     // Audit the disclosed content too, not just the compact control deck.
-    for (const summary of await page.locator('details > summary').all()) {
+    for (const summary of await page.locator('main details > summary').all()) {
       if (!(await summary.evaluate(el => el.parentElement?.hasAttribute('open')))) await summary.click()
     }
     const narrowOverflow = await page.evaluate(() => [...document.querySelectorAll('body *')]

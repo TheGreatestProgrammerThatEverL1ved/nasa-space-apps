@@ -31,6 +31,9 @@ import {
   formatValue,
 } from './format'
 import '../App.css'
+import Academy from './academy/Academy'
+import { ContactStrip, Spacecraft, type PartField } from './mission-control/Spacecraft'
+import { repairDestination } from './mission-control/repairs'
 
 export interface MissionAppProps {
   readonly context: EvaluationContext
@@ -46,7 +49,6 @@ export interface MissionAppProps {
   readonly onReport?: (report: EvaluationReport) => void
 }
 
-type PartField = Exclude<keyof MissionConfiguration, 'scenarioId'>
 type SelectOption = { readonly id: string; readonly label: Labels }
 type SelectField = {
   readonly key: PartField
@@ -412,10 +414,7 @@ function summaryText(report: EvaluationReport, locale: Locale): string {
     case 'FAILURE': {
       const first = report.diagnostics[0]
       if (!first) return translate(locale, 'results.failureSummaryNoFinding')
-      return translate(locale, 'results.failureSummary', {
-        requirement: detailText(locale, first),
-        repair: repairText(locale, first),
-      })
+      return `${locale === 'en' ? 'Current bottleneck' : 'Поточне обмеження'}: ${detailText(locale, first)}`
     }
     case 'UNVERIFIED':
       return translate(locale, 'results.unverifiedSummary')
@@ -481,9 +480,9 @@ export default function MissionApp({
   const [evaluationError, setEvaluationError] = useState(false)
   const [runSignal, setRunSignal] = useState(0)
   const resultHeadingRef = useRef<HTMLHeadingElement>(null)
-  const groundRef = useRef<HTMLSelectElement>(null)
-  const radioRef = useRef<HTMLSelectElement>(null)
+  const controlRefs = useRef<Partial<Record<PartField, HTMLSelectElement | null>>>({})
   const pickerRef = useRef<HTMLSelectElement>(null)
+  const [phase, setPhase] = useState<'board' | 'build' | 'debrief'>('build')
 
   const t = (key: MessageKey) => translate(locale, key)
   const tc = (key: MessageKey, _fallback?: string) => translate(locale, key)
@@ -520,6 +519,7 @@ export default function MissionApp({
   }
 
   const handleRun = () => {
+    setPhase('debrief')
     setEvaluationError(false)
     try {
       const next = evaluate(draft)
@@ -544,11 +544,15 @@ export default function MissionApp({
     }
   }
 
-  const backToConfiguration = (event: MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault()
-    const target = report?.diagnostics[0]?.reasonCode === 'DATA_BOTTLENECK' ? radioRef.current : groundRef.current
+  const inspectPart = (field: PartField | null) => {
+    setPhase('build')
+    const target = field ? controlRefs.current[field] : document.getElementById('mission-controls')
     target?.focus()
     target?.scrollIntoView?.({ block: 'center' })
+  }
+  const backToConfiguration = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault()
+    inspectPart(repairDestination(report?.diagnostics[0]))
   }
 
   const scienceChecks = report?.checks.filter((check) => check.scope === 'science') ?? []
@@ -627,15 +631,6 @@ export default function MissionApp({
             <p className="brand">{tc('control.eyebrow', 'Mission control')}</p>
             <h1>{missionName}</h1>
             <p className="mission-type">{mission?.subtitle[locale] ?? t('app.missionType')}</p>
-            <ol
-              className="mission-steps"
-              aria-label={tc('control.sequence', 'Brief, build, run, repair')}
-            >
-              <li>{tc('control.stepBrief', 'Brief')}</li>
-              <li>{tc('control.stepBuild', 'Build')}</li>
-              <li>{tc('control.stepRun', 'Run')}</li>
-              <li>{tc('control.stepRepair', 'Repair')}</li>
-            </ol>
           </div>
 
           <div className="header-side">
@@ -726,6 +721,18 @@ export default function MissionApp({
           </div>
         </div>
       </header>
+      <nav className="phase-nav" aria-label={locale === 'en' ? 'Mission phases' : 'Етапи місії'}>
+        {(['board', 'build', 'debrief'] as const).map(step => <button key={step} type="button"
+          aria-current={phase === step ? 'step' : undefined}
+          onClick={() => {
+            setPhase(step)
+            const target = document.getElementById(step === 'board' ? 'picker-heading' : step === 'build' ? 'config-heading' : 'result-heading')
+            target?.focus(); target?.scrollIntoView?.({ block: 'start' })
+          }}>{step === 'board' ? (locale === 'en' ? '01 Mission Control' : '01 Центр керування')
+            : step === 'build' ? (locale === 'en' ? '02 Spacecraft hangar' : '02 Ангар апарата')
+              : (locale === 'en' ? '03 Mission debrief' : '03 Підсумок місії')}</button>)}
+      </nav>
+      <Academy locale={locale} onLocaleChange={setLocale} />
 
       <main className="command-grid">
         {campaignPanel}
@@ -733,7 +740,7 @@ export default function MissionApp({
           <section className="panel mission-picker" aria-labelledby="picker-heading">
             <div>
               <p className="section-kicker">{t('mission.intro')}</p>
-              <h2 id="picker-heading">{t('mission.picker')}</h2>
+              <h2 id="picker-heading" tabIndex={-1}>{t('mission.picker')}</h2>
             </div>
             <div className="field">
               <label htmlFor="mission-picker">{t('mission.select')}</label>
@@ -796,8 +803,9 @@ export default function MissionApp({
           tabIndex={-1}
         >
           <p className="section-kicker">{tc('control.stepBuild', 'Build')}</p>
-          <h2 id="config-heading">{t('config.title')}</h2>
+          <h2 id="config-heading" tabIndex={-1}>{t('config.title')}</h2>
           <p>{t('config.intro')}</p>
+          <Spacecraft config={draft} context={context} locale={locale} onInspect={inspectPart} />
           <div
             className="select-grid"
             role="group"
@@ -808,7 +816,7 @@ export default function MissionApp({
                 <label htmlFor={field.key}>{t(CATEGORY_MESSAGE[field.category])}</label>
                 <select
                   id={field.key}
-                  ref={field.key === 'groundId' ? groundRef : field.key === 'radioId' ? radioRef : undefined}
+                  ref={element => { controlRefs.current[field.key] = element }}
                   value={draft[field.key]}
                   aria-describedby={
                     field.key === 'groundId' ? 'ground-hint contact-lesson' : undefined
@@ -958,6 +966,7 @@ export default function MissionApp({
               ))}
             </div>
           )}
+          {report && <ContactStrip report={report} locale={locale} stale={isStale} />}
 
           {report && (
             <>
@@ -987,11 +996,20 @@ export default function MissionApp({
               {report.diagnostics.length > 0 && <div className="repair-card" aria-labelledby="diagnostics-heading">
                 <p className="section-kicker">{tc('control.repairTitle', 'Repair priorities')}</p>
                 <h3 id="diagnostics-heading">{t('diagnostics.title')}</h3>
-                <p className="repair-intro">{t('diagnostics.intro')}</p>
+                <div className="repair-priority">
+                  <p>{repairText(locale, report.diagnostics[0]!)}</p>
+                  <a className="repair-cta" href="#mission-controls" onClick={backToConfiguration}>
+                    {repairDestination(report.diagnostics[0]) === 'groundId' ? t('control.groundAction') : t('results.backToConfig')}
+                  </a>
+                </div>
+                <details><summary>{locale === 'en' ? 'All findings and repair destinations' : 'Усі зауваження й переходи до ремонту'}</summary>
                 {report.diagnostics.length > 0 ? (
                   <ul className="diagnostic-list">
                     {report.diagnostics.map((diagnostic, index) => (
                       <li key={`${diagnostic.reasonCode}-${diagnostic.detailId}-${index}`}>
+                        <button type="button" onClick={() => inspectPart(repairDestination(diagnostic))}>
+                          {t('results.backToConfig')}: {detailText(locale, diagnostic)}
+                        </button>
                         <dl>
                           <div>
                             <dt>{t('diagnostics.reasonLabel')}</dt>
@@ -1035,17 +1053,7 @@ export default function MissionApp({
                 ) : (
                   <p>{t('diagnostics.empty')}</p>
                 )}
-                <a
-                  className="repair-cta"
-                  href="#mission-controls"
-                  onClick={backToConfiguration}
-                  aria-describedby="contact-lesson"
-                >
-                  {report.diagnostics[0]?.reasonCode === 'DATA_BOTTLENECK' ? t('results.backToConfig') : tc('control.groundAction', 'Open ground-service selection')}
-                </a>
-                <a className="back-link" href="#mission-controls" onClick={backToConfiguration}>
-                  {t('results.backToConfig')}
-                </a>
+                </details>
               </div>}
 
               <details className="drawer">

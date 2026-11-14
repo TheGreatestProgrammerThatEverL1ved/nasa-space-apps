@@ -1,5 +1,21 @@
 # MISSION FORGE — overnight handoff
 
+## Night-02 active execution — 15 November 2026
+
+- Authority: root `mission-forge-night-02.md`, user explicitly authorizes A → B → C implementation and normal pushes; supersedes the old stop below.
+- Reference/actual entry/verified remote: `eab1ec8ab418be2b6dfb2c23e6f064a58ae9bacb`; `mission-forge`, upstream `origin/mission-forge`, fetch 0/0.
+- Stage A active: game shell, typed repairs, dedicated interactive academy (no payouts), persistent Help.
+- Owners: connected Sol owns all implementation/integration/tests/docs/Git after free DeepSeek smoke `ses_e23cea6f4ffeI5W9yhT2PNPYOn` returned **Free usage limit reached**. No paid fallback, retry, account/config change. Prior workers recorded below are idle; no overlapping work. Local Qwen `ses_e23ce6802ffe24IuZXoK2t3i4n` has read-only bounded key check.
+- Entry checks actually run: production build and **12 production-preview Chrome tests passed**; screenshots in `test-results/` include baseline ready/failure/pass in both languages.
+- Preserve untracked user inputs: `docs/01-analysis-and-plan.md`, `docs/research/`, `mission-forge-night-02.md`, `opencode.jsonc`, `public/`, `src/assets/`; no blanket staging.
+- Next exact action: implement A under `src/ui/mission-control/`, `src/ui/academy/`, integrate into MissionApp/App without changing evaluator; add bilingual keyboard/guide acceptance, verify and push A independently before new mission registration.
+- Pending: visible mapping (primary optics evidence + independent arithmetic), Earth packet relay (explicit two-hop synthetic FIFO model), data-driven save-compatible campaign, final clean committed-copy proof.
+- A verification: connected session API confirms `openai/gpt-6.1-sol#high`; active sessions contained root + bounded Qwen only. Qwen completed grep-based bilingual parity review, no writes. Typecheck/lint **105 engine /26 UI /15 production Chrome tests** passed; production build passed. New Chrome coverage: both guide languages, start/skip/replay, true 7.1→3.1 arithmetic, zero campaign save/payout, help/Escape/language restoration with stale report preserved, 320px/200% Help, axe, typed mass/power repairs and subsystem focus. Two test-locator issues (changed language and hidden dialog details) were fixed without weakening outcome assertions.
+- Visually inspected baseline first screen and A workbench/debrief/Ukrainian guide screenshots in `test-results/`; moved sticky Help to the right to avoid covering the spacecraft heading; removed duplicated immediate repair prose. Final A regression and scoped push next.
+- `/tmp/opencode` is not writable; use ignored `.cache/` for isolated verification where needed.
+
+Historical night-01 record follows; its delivery stop is superseded by the active authorization above.
+
 ## Authority and baseline
 
 - User authorized redesign and scenario expansion beyond the historical wildfire-only phase; audited wildfire mechanics remain frozen.

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent, type MouseEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type ReactNode } from 'react'
 import type {
   Category,
   CheckResult,
@@ -42,6 +42,8 @@ export interface MissionAppProps {
   readonly locale?: Locale
   readonly onLocaleChange?: (locale: Locale) => void
   readonly focusMissionPicker?: boolean
+  readonly campaignPanel?: ReactNode
+  readonly onReport?: (report: EvaluationReport) => void
 }
 
 type PartField = Exclude<keyof MissionConfiguration, 'scenarioId'>
@@ -466,6 +468,8 @@ export default function MissionApp({
   locale: controlledLocale,
   onLocaleChange,
   focusMissionPicker = false,
+  campaignPanel,
+  onReport,
 }: MissionAppProps) {
   const [localLocale, setLocalLocale] = useState<Locale>('en')
   const locale = controlledLocale ?? localLocale
@@ -530,6 +534,7 @@ export default function MissionApp({
       })
       setReport(next)
       setStale(false)
+      onReport?.(next)
     } catch {
       setEvaluationError(true)
       // The old report survives, but it can no longer be presented as current.
@@ -723,6 +728,7 @@ export default function MissionApp({
       </header>
 
       <main className="command-grid">
+        {campaignPanel}
         {mission && missions && onMissionChange && (
           <section className="panel mission-picker" aria-labelledby="picker-heading">
             <div>

@@ -914,6 +914,21 @@ details ul {
 .mission-goals h3 { font-size: .8rem; margin-bottom: 8px; }
 .mission-goals details { margin-top: 14px; }
 .mission-source-list { display: grid; gap: 14px; }
+.campaign-panel { grid-column: 1 / -1; border-left: 4px solid #537064; }
+.campaign-heading { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.campaign-heading h2 { margin-bottom: 0; }
+.campaign-panel > p { font-size: .8rem; }
+.campaign-toggle, .shop-card button { border: 1px solid #566354; border-radius: 6px; background: #e8ecdf; color: #1b362a; padding: 10px 15px; font-weight: 650; }
+.campaign-toggle:hover, .shop-card button:not(:disabled):hover { background: #d4dfc9; }
+.campaign-status { display: flex; flex-wrap: wrap; gap: 12px 28px; padding: 14px 0; font-family: var(--mono); font-size: .85rem; color: #254c36; }
+.campaign-steps { display: grid; gap: 8px; padding: 0; list-style: none; font-size: .83rem; margin-bottom: 14px; }
+.campaign-shop { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+.shop-card { min-width: 0; border: 1px solid #cbd3c0; background: #f3f5ec; padding: 18px; border-radius: 8px; }
+.shop-card h3 { font-size: 1rem; }
+.shop-card p { font-size: .8rem; margin: 10px 0 14px; }
+.shop-card button { max-width: 100%; font-size: .85rem; }
+.shop-card button:disabled { cursor: default; color: #52614c; background: #e9eadd; border-style: dashed; }
+.campaign-complete { background: #e3eedb; color: #21472d; border-left: 4px solid #3f715e; padding: 12px; margin-top: 16px; font-weight: 700; }
 .brief-panel h2 { font-size: 1.1rem; }
 .brief-copy { max-width: 100ch; font-size: .94rem; }
 .section-kicker { font: 700 .65rem var(--mono); text-transform: uppercase; letter-spacing: .12em; color: var(--orange); margin-bottom: 8px; }
@@ -988,6 +1003,7 @@ details ul {
   .results-panel h2 { font-size: 1.25rem; }
   .select-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .mission-picker { grid-template-columns: minmax(0, 1fr); }
+  .campaign-shop { grid-template-columns: minmax(0, 1fr); }
   .margin-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .brief-panel > .note { display: block; margin-left: 0; }
   .run-row { flex-wrap: wrap; }

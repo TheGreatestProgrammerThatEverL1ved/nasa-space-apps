@@ -1,5 +1,7 @@
 import { defineConfig } from '@playwright/test'
 
+const preview = process.env.MISSION_FORGE_PREVIEW === '1'
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -8,8 +10,8 @@ export default defineConfig({
     { name: 'chromium', use: { browserName: 'chromium', channel: 'chrome' } },
   ],
   webServer: {
-    command: 'npm run dev -- --host 127.0.0.1 --port 4173 --strictPort',
+    command: `npm run ${preview ? 'preview' : 'dev'} -- --host 127.0.0.1 --port 4173 --strictPort`,
     url: 'http://127.0.0.1:4173/nasa-space-apps/',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
   },
 })

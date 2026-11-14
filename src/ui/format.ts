@@ -124,3 +124,18 @@ export function formatLimit(
 ): string {
   return formatValue(limit, unit, locale, key)
 }
+
+/**
+ * Full-precision raw value for boundary diagnostics. `String(value)` is the
+ * shortest decimal that round-trips to the same double, so no display rounding
+ * is applied. The unit label is still localized and never dropped.
+ */
+export function formatExactValue(
+  value: number,
+  unit: string,
+  locale: Locale,
+): string {
+  if (!Number.isFinite(value)) return translate(locale, 'metric.unavailable')
+  const label = formatUnit(unit, locale)
+  return label ? `${String(value)} ${label}` : String(value)
+}

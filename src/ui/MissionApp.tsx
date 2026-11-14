@@ -9,6 +9,8 @@ import type {
   Locale,
   MissionConfiguration,
   Outcome,
+  Part,
+  Provenance,
   ReportProvider,
   Status,
 } from '../engine/types'
@@ -19,7 +21,14 @@ import {
   translateOptional,
   type MessageKey,
 } from '../i18n'
-import { formatLimit, formatMetric, formatNumber, formatUnit, formatValue } from './format'
+import {
+  formatExactValue,
+  formatLimit,
+  formatMetric,
+  formatNumber,
+  formatUnit,
+  formatValue,
+} from './format'
 import '../App.css'
 
 export interface MissionAppProps {
@@ -155,6 +164,193 @@ function selectFields(context: EvaluationContext): readonly SelectField[] {
   ]
 }
 
+type SelectedPart = {
+  readonly key: PartField
+  readonly part: Part
+}
+
+/**
+ * Evidence snapshot captured at Run. Field provenance must describe the
+ * evaluated context and configuration, never the edited draft or a later
+ * catalog revision.
+ */
+type ReportSnapshot = {
+  readonly revision: string
+  readonly context: EvaluationContext
+  readonly parts: readonly SelectedPart[]
+}
+
+const SOURCE_REGISTER: Readonly<
+  Record<string, { readonly url: string; readonly label: string }>
+> = {
+  S1: {
+    url: 'https://www.nasa.gov/wp-content/uploads/2018/01/cubesatdesignspecificationrev14_12022-02-09.pdf',
+    label: 'CubeSat Design Specification Rev 14.1',
+  },
+  S2: {
+    url: 'https://circgs.tksc.jaxa.jp/documents/2012/83533J.pdf',
+    label: 'JAXA CIRC development',
+  },
+  S3: {
+    url: 'https://www.nasa.gov/smallsat-institute/sst-soa/power-subsystems/',
+    label: 'NASA 2026 SoA: Power',
+  },
+  S4: {
+    url: 'https://www.nasa.gov/smallsat-institute/sst-soa/communications/',
+    label: 'NASA 2026 SoA: Communications',
+  },
+  S5: {
+    url: 'https://www.iceye.com/newsroom/press-releases/iceye-successfully-launches-worlds-first-sar-microsatellite-and-establishes-finlands-first-commercial-satellite',
+    label: 'ICEYE launch release',
+  },
+  S6: {
+    url: 'https://www.nasa.gov/wp-content/uploads/2025/02/5-soa-gnc-2024.pdf',
+    label: 'NASA GNC chapter',
+  },
+  S7: {
+    url: 'https://www.earthdata.nasa.gov/data/tools/firms/faq',
+    label: 'NASA FIRMS FAQ',
+  },
+  S8: {
+    url: 'https://www.kplabs.space/projects-and-missions/intuition-1',
+    label: 'KP Labs Intuition-1',
+  },
+  S9: {
+    url: 'https://carbonmapper.org/articles/product-guide',
+    label: 'Carbon Mapper product guide',
+  },
+  S10: {
+    url: 'https://new.spacex.com/rideshare',
+    label: 'SpaceX Smallsat Rideshare',
+  },
+  S11: {
+    url: 'https://rocketlabcorp.com/updates/rocket-lab-increases-electron-payload-capacity-enabling-interplanetary-missions-and-reusability/',
+    label: 'Rocket Lab Electron payload increase',
+  },
+}
+
+/** Mirrors the rulebook anchors used by the frozen catalog and fixtures. */
+const RULE_SECTIONS: Readonly<Record<string, string>> = {
+  '31-bus': '3.1',
+  '32-arrays': '3.2',
+  '33-batteries': '3.3',
+  '34-science-downlink-packages': '3.4',
+  '35-retained-payload-pl-thermal': '3.5',
+  '41-orbit-and-target-access': '4.1',
+  '42-ground-contacts-and-arrivals': '4.2',
+  '43-launch-booking': '4.3',
+  '52-orbit-and-scheduled-modes': '5.2',
+}
+
+const PROVENANCE_MESSAGE: Readonly<Record<Provenance['kind'], MessageKey>> = {
+  'verified-reference': 'provenance.verified-reference',
+  derived: 'provenance.derived',
+  provisional: 'provenance.provisional',
+}
+
+function contextRevisionKey(context: EvaluationContext): string {
+  return JSON.stringify([
+    context.modelRevision,
+    context.contractRevision,
+    context.catalogRevision,
+    context.scenarioRevision,
+    context.fixtureRevision,
+  ])
+}
+
+function selectedParts(
+  config: MissionConfiguration,
+  context: EvaluationContext,
+): readonly SelectedPart[] {
+  const catalog = context.catalog
+  const groups: readonly { readonly key: PartField; readonly parts: readonly Part[] }[] = [
+    { key: 'payloadId', parts: catalog.payloads },
+    { key: 'busId', parts: catalog.buses },
+    { key: 'arrayId', parts: catalog.arrays },
+    { key: 'batteryId', parts: catalog.batteries },
+    { key: 'radioId', parts: catalog.radios },
+    { key: 'groundId', parts: catalog.grounds },
+    { key: 'orbitId', parts: catalog.orbits },
+    { key: 'launcherId', parts: catalog.launchers },
+  ]
+  const selected: SelectedPart[] = []
+  for (const group of groups) {
+    const part = group.parts.find((candidate) => candidate.id === config[group.key])
+    if (part) selected.push({ key: group.key, part })
+  }
+  return selected
+}
+
+function isSafeHttpsUrl(value: string): boolean {
+  try {
+    return new URL(value).protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+function isRuleRef(sourceRef: string): boolean {
+  return sourceRef.startsWith('docs/game-rules-technical.md#')
+}
+
+function ruleSection(sourceRef: string): string | null {
+  if (!isRuleRef(sourceRef)) return null
+  const anchor = sourceRef.slice('docs/game-rules-technical.md#'.length)
+  return RULE_SECTIONS[anchor] ?? null
+}
+
+function SourceReference({
+  sourceRef,
+  locale,
+}: {
+  readonly sourceRef: string
+  readonly locale: Locale
+}) {
+  const source = SOURCE_REGISTER[sourceRef]
+  if (source && isSafeHttpsUrl(source.url)) {
+    return (
+      <a
+        className="source-link"
+        href={source.url}
+        target="_blank"
+        rel="noreferrer noopener"
+        aria-label={translate(locale, 'sources.openPrimary', {
+          id: sourceRef,
+          title: source.label,
+        })}
+      >
+        <span className="source-id">{sourceRef}</span>
+        {' — '}
+        {source.label}
+      </a>
+    )
+  }
+  const section = ruleSection(sourceRef)
+  if (section) {
+    return (
+      <span className="rule-reference">
+        {translate(locale, 'sources.ruleReference', { section })}
+      </span>
+    )
+  }
+  if (isRuleRef(sourceRef)) {
+    return (
+      <span className="rule-reference">
+        {translate(locale, 'sources.ruleReferenceUnknown')}
+      </span>
+    )
+  }
+  return <code>{sourceRef}</code>
+}
+
+/** The same rounded text for actual and limit hides the real comparison. */
+function hasRoundedBoundary(check: CheckResult, locale: Locale): boolean {
+  if (check.operator === 'true' || check.actual.kind !== 'finite') return false
+  const actual = formatValue(check.actual.value, check.actual.unit, locale, check.checkId)
+  const limit = formatValue(check.limit, check.actual.unit, locale, check.checkId)
+  return actual === limit
+}
+
 function repairText(locale: Locale, diagnostic: Diagnostic): string {
   // Only the known latency failure gets the cadence repair. An UNVERIFIED
   // latency uses MISSING_EVIDENCE and must ask for evidence, not contacts.
@@ -225,9 +421,10 @@ function checkActualText(check: CheckResult, locale: Locale): string {
 
 function checkLimitText(check: CheckResult, locale: Locale): string {
   if (check.operator === 'true') return translate(locale, 'metric.mustBeTrue')
-  const unit = check.actual.kind === 'finite' ? check.actual.unit : ''
+  // Every Metric variant carries its unit, including unknown and unbounded
+  // actuals. Dropping it would make the printed limit ambiguous.
   const relation = check.operator === '<=' ? '≤' : '≥'
-  return `${relation} ${formatLimit(check.limit, unit, locale, check.checkId)}`
+  return `${relation} ${formatLimit(check.limit, check.actual.unit, locale, check.checkId)}`
 }
 
 function latencyQuantity(
@@ -256,6 +453,7 @@ export default function MissionApp({
   const [locale, setLocale] = useState<Locale>('en')
   const [draft, setDraft] = useState<MissionConfiguration>(() => ({ ...initialConfiguration }))
   const [report, setReport] = useState<EvaluationReport | null>(null)
+  const [snapshot, setSnapshot] = useState<ReportSnapshot | null>(null)
   const [stale, setStale] = useState(false)
   const [evaluationError, setEvaluationError] = useState(false)
   const [runSignal, setRunSignal] = useState(0)
@@ -275,6 +473,13 @@ export default function MissionApp({
     resultHeadingRef.current?.focus()
   }, [runSignal])
 
+  // A report only describes the five revision strings it was computed under.
+  // Staleness is derived during render; no effect writes state on a context
+  // change. The report, language and Run-time evidence snapshot are preserved.
+  const revisionChanged =
+    snapshot !== null && snapshot.revision !== contextRevisionKey(context)
+  const isStale = stale || revisionChanged
+
   const handleSelect = (field: PartField, event: ChangeEvent<HTMLSelectElement>) => {
     const value = event.currentTarget.value
     if (draft[field] === value) return
@@ -286,10 +491,21 @@ export default function MissionApp({
     setEvaluationError(false)
     try {
       const next = evaluate(draft)
+      // Snapshot the evaluated context and configuration together, so later
+      // edits or catalog revisions cannot rewrite this report's provenance.
+      const evaluatedContext = structuredClone(context)
+      const evaluatedConfig = next.config ?? { ...draft }
+      setSnapshot({
+        revision: contextRevisionKey(evaluatedContext),
+        context: evaluatedContext,
+        parts: selectedParts(evaluatedConfig, evaluatedContext),
+      })
       setReport(next)
       setStale(false)
     } catch {
       setEvaluationError(true)
+      // The old report survives, but it can no longer be presented as current.
+      if (report) setStale(true)
     } finally {
       setRunSignal((value) => value + 1)
     }
@@ -306,6 +522,8 @@ export default function MissionApp({
     report?.checks.filter((check) => check.scope === 'engineering') ?? []
   const extraAssumptions =
     report?.assumptions.filter((assumption) => !KNOWN_ASSUMPTION_CODES.has(assumption)) ?? []
+  // Field provenance comes only from the report's Run-time snapshot.
+  const provenanceParts = snapshot?.parts ?? []
 
   const renderCheck = (check: CheckResult) => (
     <li
@@ -331,6 +549,24 @@ export default function MissionApp({
           <dd>{checkLimitText(check, locale)}</dd>
         </div>
       </dl>
+      {check.actual.kind === 'finite' && hasRoundedBoundary(check, locale) && (
+        <div className="boundary-note">
+          <p>{t('boundary.ambiguous')}</p>
+          <details>
+            <summary>{t('boundary.detailTitle')}</summary>
+            <dl className="check-values boundary-values">
+              <div>
+                <dt>{t('boundary.exactActual')}</dt>
+                <dd>{formatExactValue(check.actual.value, check.actual.unit, locale)}</dd>
+              </div>
+              <div>
+                <dt>{t('boundary.exactLimit')}</dt>
+                <dd>{formatExactValue(check.limit, check.actual.unit, locale)}</dd>
+              </div>
+            </dl>
+          </details>
+        </div>
+      )}
       {check.checkId === 'WF-LATENCY' && check.actual.kind === 'finite' && (
         <p className="latency-short">{t('latency.short')}</p>
       )}
@@ -458,7 +694,7 @@ export default function MissionApp({
         <section className="panel resources-panel" aria-labelledby="resources-heading">
           <h2 id="resources-heading">{t('resources.title')}</h2>
           <p>{t('resources.intro')}</p>
-          {stale && report && (
+          {isStale && report && (
             <p className="stale-hint">{t('resources.stale')}</p>
           )}
           <div className="resource-grid">
@@ -508,7 +744,7 @@ export default function MissionApp({
 
         <section
           id="mission-result"
-          className={`panel results-panel${stale ? ' is-stale' : ''}`}
+          className={`panel results-panel${isStale ? ' is-stale' : ''}`}
           aria-labelledby="result-heading"
         >
           <h2
@@ -521,7 +757,7 @@ export default function MissionApp({
             {report ? t(OUTCOME_MESSAGE[report.outcome]) : t('results.placeholderTitle')}
           </h2>
 
-          {stale && report && (
+          {isStale && report && (
             <p className="stale-notice" data-testid="stale-notice" role="status">
               {t('results.staleNotice')}
             </p>
@@ -689,7 +925,10 @@ export default function MissionApp({
               <section className="result-section" aria-labelledby="assumptions-heading">
                 <h3 id="assumptions-heading">{t('assumptions.title')}</h3>
                 <p>{t('assumptions.intro')}</p>
-                <ul className="assumption-list">
+                <p id="assumption-baseline" className="assumption-scope">
+                  {t('assumptions.baseline')}
+                </p>
+                <ul className="assumption-list" aria-describedby="assumption-baseline">
                   {CORE_ASSUMPTIONS.map((key) => (
                     <li key={key}>{t(key)}</li>
                   ))}
@@ -766,10 +1005,10 @@ export default function MissionApp({
                     <dt>{t('evidence.sources')}</dt>
                     <dd>
                       {report.sources.length > 0 ? (
-                        <ul>
+                        <ul className="source-list">
                           {report.sources.map((source, index) => (
                             <li key={`${source}-${index}`}>
-                              <code>{source}</code>
+                              <SourceReference sourceRef={source} locale={locale} />
                             </li>
                           ))}
                         </ul>
@@ -780,6 +1019,66 @@ export default function MissionApp({
                   </div>
                 </dl>
                 <p className="note">{t('evidence.roundingNote')}</p>
+              </section>
+
+              <section className="result-section" aria-labelledby="field-evidence-heading">
+                <h3 id="field-evidence-heading">{t('fieldEvidence.title')}</h3>
+                <p>{t('fieldEvidence.intro')}</p>
+                {isStale && <p className="note">{t('fieldEvidence.stale')}</p>}
+                {provenanceParts.length > 0 ? (
+                  <div className="field-evidence-grid">
+                    {provenanceParts.map(({ key, part }) => (
+                      <article className="field-evidence-card" key={key}>
+                        <h4>{part.label[locale]}</h4>
+                        <p className="field-evidence-category">
+                          {t(CATEGORY_MESSAGE[part.category])}
+                        </p>
+                        {Object.keys(part.evidence).length > 0 ? (
+                          <dl className="field-evidence-list">
+                            {Object.entries(part.evidence).map(([field, provenance]) => (
+                              <div key={field}>
+                                <dt>
+                                  <code>{field}</code>
+                                </dt>
+                                <dd>
+                                  <span
+                                    className={`provenance-kind provenance-${provenance.kind}`}
+                                  >
+                                    {t(PROVENANCE_MESSAGE[provenance.kind])}
+                                  </span>
+                                  {provenance.sourceRefs.length > 0 && (
+                                    <ul className="source-list">
+                                      {provenance.sourceRefs.map((sourceRef) => (
+                                        <li key={sourceRef}>
+                                          <SourceReference
+                                            sourceRef={sourceRef}
+                                            locale={locale}
+                                          />
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                  {provenance.assumptionIds.length > 0 && (
+                                    <p className="assumption-ids">
+                                      <span>{t('fieldEvidence.assumptions')}: </span>
+                                      {provenance.assumptionIds.map((assumptionId) => (
+                                        <code key={assumptionId}>{assumptionId}</code>
+                                      ))}
+                                    </p>
+                                  )}
+                                </dd>
+                              </div>
+                            ))}
+                          </dl>
+                        ) : (
+                          <p>{t('fieldEvidence.noFields')}</p>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p>{t('fieldEvidence.noFields')}</p>
+                )}
               </section>
             </>
           )}

@@ -228,7 +228,7 @@ export const en = {
   'repair.POINTING_UNSTABLE':
     'Use an accepted pointing and tracking profile; do not invent stability or residual-motion performance.',
   'repair.LINK_UNCLOSED':
-    'Restore a compatible receiver, antenna pointing and link-closure conditions; science downlink is then zero.',
+    'While the science link fails, useful science downlink is zero. Restore a compatible receiver, antenna pointing and link-closure conditions, then re-evaluate.',
   'repair.DATA_BOTTLENECK':
     'Increase accepted rate or unique contact time; extra memory only delays a growing backlog.',
   'repair.STORAGE_SATURATED':
@@ -263,6 +263,8 @@ export const en = {
   'assumptions.title': 'Provisional assumptions',
   'assumptions.intro':
     'These assumptions keep the training model reproducible. A provisional pass is not flight qualification.',
+  'assumptions.baseline':
+    'Nominal passing-fixture assumptions — not established conditions for this report; see the evaluated checks above.',
   'assumptions.tracking':
     'Accepted provisional 1.0°/s ground-target tracking with image-motion compensation.',
   'assumptions.link': 'A closing science downlink and a compatible receiver are assumed.',
@@ -304,6 +306,21 @@ export const en = {
   'provenance.verified-reference': 'Verified reference',
   'provenance.derived': 'Derived',
   'provenance.provisional': 'Provisional',
+  'sources.openPrimary': 'Open primary source {id}: {title} (opens in a new tab)',
+  'sources.ruleReference': 'Technical rule §{section}',
+  'sources.ruleReferenceUnknown': 'Technical rulebook reference',
+  'boundary.ambiguous':
+    'Near boundary: the rounded actual equals the rounded limit, so the displayed comparison is not decisive.',
+  'boundary.detailTitle': 'Show full-precision actual and limit',
+  'boundary.exactActual': 'Unrounded actual',
+  'boundary.exactLimit': 'Unrounded limit',
+  'fieldEvidence.title': 'Field-level provenance',
+  'fieldEvidence.intro':
+    'Each technical field below carries its own provenance from the configuration evaluated at Run. A provisional field is not a flight-qualification claim.',
+  'fieldEvidence.stale':
+    'This provenance belongs to the report snapshot described above. Run the mission again to evaluate the current configuration.',
+  'fieldEvidence.assumptions': 'Assumptions',
+  'fieldEvidence.noFields': 'No field-level provenance reported.',
   'service.available': 'Available',
   'service.unavailable': 'Unavailable',
   'service.unknown': 'Unknown',

@@ -9,9 +9,13 @@ async function tabTo(page: Page, target: Locator) {
 }
 
 for (const locale of ['en', 'ua'] as const) {
-  test(`M1 real keyboard failure → network repair (${locale})`, async ({ page }) => {
+  test(`M1 real keyboard failure → network repair (${locale})`, async ({ page }, testInfo) => {
     const errors: string[] = []
+    const failedAssets: string[] = []
     page.on('pageerror', error => errors.push(error.message))
+    page.on('response', response => {
+      if (response.status() >= 400) failedAssets.push(`${response.status()} ${response.url()}`)
+    })
     await page.goto('./')
     if (locale === 'ua') {
       const toggle = page.getByRole('button', { name: 'Українська', exact: true })
@@ -39,5 +43,12 @@ for (const locale of ['en', 'ua'] as const) {
     await expect(page.getByTestId('verdict')).toContainText(locale === 'en' ? /provisional/i : /попередн|умовн/i)
     await expect(page.getByTestId('stale-notice')).toHaveCount(0)
     expect(errors).toEqual([])
+    expect(failedAssets).toEqual([])
+    await page.screenshot({ path: testInfo.outputPath(`repaired-${locale}.png`) })
+    await page.reload()
+    // Reload intentionally starts a new unsaved design in the primary language.
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+    await expect(page.getByLabel('Ground service', { exact: true })).toHaveValue('gs-single')
+    expect(failedAssets).toEqual([])
   })
 }

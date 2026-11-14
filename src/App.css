@@ -2,8 +2,10 @@
 .mission-shell {
   width: 100%;
   max-width: 1180px;
+  min-width: 0;
   margin: 0 auto;
   padding: 0 24px 72px;
+  overflow-wrap: anywhere;
 }
 
 /* Keyboard users reach the controls before the long brief and resources. */
@@ -63,7 +65,10 @@
 .locale-switch {
   display: flex;
   flex: 0 0 auto;
+  flex-wrap: wrap;
   gap: 4px;
+  min-width: 0;
+  max-width: 100%;
   padding: 4px;
   border: 1px solid var(--line-strong);
   border-radius: 999px;
@@ -93,16 +98,21 @@
 
 main {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 26px;
+  min-width: 0;
   padding-top: 26px;
 }
 
 .panel {
+  min-width: 0;
+  max-width: 100%;
   padding: 24px 26px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background-color: var(--surface);
   color: var(--ink-soft);
+  overflow-wrap: anywhere;
 }
 
 .panel h2 {
@@ -161,7 +171,7 @@ main {
 /* Configuration */
 .select-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(215px, 100%), 1fr));
   gap: 16px;
   margin: 18px 0 6px;
 }
@@ -183,6 +193,8 @@ main {
 
 .field select {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   padding: 10px 12px;
   border: 1px solid var(--line-strong);
   border-radius: 6px;
@@ -231,12 +243,13 @@ main {
 /* Six resources */
 .resource-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(235px, 100%), 1fr));
   gap: 16px;
   margin-top: 18px;
 }
 
 .resource-card {
+  min-width: 0;
   padding: 16px 16px 14px;
   border: 1px solid var(--line);
   border-top: 4px solid var(--navy);
@@ -523,6 +536,29 @@ details ul {
   font-size: 0.82rem;
 }
 
+/* Near-boundary checks: the rounded comparison is not decisive. */
+.boundary-note {
+  margin-top: 9px;
+  padding: 8px 11px;
+  border-left: 4px solid var(--amber);
+  border-radius: 4px;
+  background-color: var(--amber-soft);
+  color: #5c4008;
+  font-size: 0.85rem;
+}
+
+.boundary-note > p {
+  margin-bottom: 8px;
+}
+
+.boundary-note details {
+  background-color: var(--surface);
+}
+
+.boundary-values {
+  margin-top: 8px;
+}
+
 /* Diagnostics */
 .diagnostic-list {
   display: grid;
@@ -599,6 +635,18 @@ details ul {
   color: var(--ink-soft);
 }
 
+/* Baseline assumptions are hypothetical, not conditions established for a report. */
+.assumption-scope {
+  margin-top: 12px;
+  padding: 10px 13px;
+  border: 1px dashed var(--amber);
+  border-radius: 4px;
+  background-color: var(--amber-soft);
+  color: #5c4008;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
 /* Evidence */
 .evidence-list {
   display: grid;
@@ -633,6 +681,146 @@ details ul {
   gap: 4px;
   padding: 0;
   list-style: none;
+}
+
+.evidence-list code,
+.check-technical code {
+  overflow-wrap: anywhere;
+}
+
+/* Safe external primary-source links */
+.source-list {
+  display: grid;
+  gap: 5px;
+  padding: 0;
+  list-style: none;
+}
+
+.source-list li {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.source-link {
+  display: inline;
+  color: var(--navy);
+  font-weight: 650;
+}
+
+.source-id {
+  font-family: var(--mono);
+  font-weight: 750;
+}
+
+.rule-reference {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+/* Field-level provenance for the evaluated configuration */
+.field-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.field-evidence-card {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--navy);
+  border-radius: 8px;
+  background-color: var(--surface-alt);
+  overflow-wrap: anywhere;
+}
+
+.field-evidence-card h4 {
+  color: var(--ink);
+  font-size: 0.98rem;
+}
+
+.field-evidence-category {
+  margin-top: 3px;
+  color: var(--orange);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.field-evidence-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.field-evidence-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+}
+
+.field-evidence-list > div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.field-evidence-list dt {
+  min-width: 0;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.field-evidence-list dd {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
+}
+
+.provenance-kind {
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.provenance-verified-reference {
+  background-color: var(--green-soft);
+  color: var(--green);
+}
+
+.provenance-derived {
+  border: 1px solid var(--line-strong);
+  background-color: var(--surface);
+  color: var(--navy);
+}
+
+.provenance-provisional {
+  background-color: var(--amber-soft);
+  color: var(--amber);
+}
+
+.assumption-ids {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+}
+
+.assumption-ids code {
+  overflow-wrap: anywhere;
 }
 
 /* Responsive layout */

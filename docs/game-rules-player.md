@@ -35,11 +35,13 @@ Every minimum is inclusive; meeting one does not excuse missing another.
 
 Visible-only or VNIR-only cameras cannot replace the required thermal band. The fixture rejects **40%** of scenes for cloud, after they have consumed imaging energy and downlink. A scheduled opportunity is not a promise of a cloud-free image.
 
-**A concrete tradeoff:** in this fixture, four six-minute ground contacts a day leave a delivery bound of **7.1 hours**, even with a fast radio. More frequent contacts can reduce that delay and help a slower radio sustain the workload, but increase ground costs. More Mbps cannot create a contact that is missing.
+**A concrete tradeoff:** in this fixture, four six-minute ground contacts a day leave a delivery bound of **7.1 hours**, even with a fast radio. More frequent contacts can reduce that delay and help a slower radio sustain the workload. Compare setup and annual costs separately: a high-contact service can cost less to set up but more per year than a network. More Mbps cannot create a contact that is missing.
 
 ## What a provisional pass means
 
-A pass means every hard rule works **within this training model**, not that a spacecraft is flight-proven. Target access and ground contacts are synthetic fixtures, not geographic predictions. Passing also assumes tracking/image-motion compensation during exposure; without it, image quality fails the mission's limit. Integration, prices, pointing stability, lifetime, and other system assumptions remain provisional.
+A pass means every hard rule works **within this training model**, not that a spacecraft is flight-proven. Target opportunities come from a supplied synthetic campaign fixture; ground contacts are evenly spaced over each 24-hour cycle. They are separate inputs, not propagated geographic predictions.
+
+Current passing designs assume tracking/image-motion compensation during exposure. Turning tracking off makes those designs exceed the image-scale limit. If tracking performance is unknown, a pass cannot be established; unknown evidence is not the same as a demonstrated failure. Integration, prices, pointing stability, lifetime, and other system assumptions remain provisional.
 
 Tight-margin warnings do not automatically mean failure. Read the limiting resource and repair hint, revise the design, and rerun all checks: a bigger battery or array can help power but break mass or budget.
 

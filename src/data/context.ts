@@ -11,17 +11,19 @@ import type {
   Tracking,
 } from '../engine/types'
 import { CATALOG } from './catalog'
+import { ruleRef } from './ruleRefs'
+import type { RuleSection } from './ruleRefs'
 
 const CATALOG_REVISION = 'catalog-step2-2026-11-14'
 const SCENARIO_REVISION = 'scenario-wildfire-step2-2026-11-14'
 const FIXTURE_REVISION = 'fixture-step2-2026-11-14'
 
 const fixtureProvenance = (
-  section: string,
+  section: RuleSection,
   ...assumptionIds: string[]
 ): Provenance => ({
   kind: 'provisional',
-  sourceRefs: [`docs/game-rules-technical.md#${section}`],
+  sourceRefs: [ruleRef(section)],
   assumptionIds,
 })
 

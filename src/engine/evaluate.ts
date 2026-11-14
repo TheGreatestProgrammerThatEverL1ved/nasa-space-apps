@@ -5,7 +5,7 @@ import { geometry } from './geometry'
 import { power } from './power'
 import { link } from './link'
 import { queue } from './queue'
-import { CONFIG_KEYS, parseRequest, validateContext, validatePart, validBands } from './validate'
+import { CONFIG_KEYS, normalizeContext, parseRequest, validateContext, validatePart, validBands } from './validate'
 
 export function configurationKey(config: MissionConfiguration, context: EvaluationContext): string {
   return JSON.stringify([context.modelRevision, context.contractRevision, context.catalogRevision, context.scenarioRevision, context.fixtureRevision, ...CONFIG_KEYS.map(k => config[k])])
@@ -27,6 +27,8 @@ function freeze<T>(value: T): T {
   return value
 }
 export function evaluateMission(request: unknown, context: EvaluationContext): EvaluationReport {
+  const contextIssues = validateContext(context)
+  context = normalizeContext(context)
   const parsed = parseRequest(request)
   const c = parsed.config
   const cat = context.catalog
@@ -39,7 +41,7 @@ export function evaluateMission(request: unknown, context: EvaluationContext): E
   const o = cat.orbits.find(p => p.id === c?.orbitId)
   const launch = cat.launchers.find(p => p.id === c?.launcherId)
   const parts = [b, p, a, battery, r, g, o, launch]
-  const issues = [...parsed.issues, ...validateContext(context)]
+  const issues = [...parsed.issues, ...contextIssues]
   if (c) {
     if (!['wildfire', 'flood', 'methane'].includes(c.scenarioId)) issues.push('scenarioId')
     for (const [index, part] of parts.entries()) if (!part) issues.push(['busId', 'payloadId', 'arrayId', 'batteryId', 'radioId', 'groundId', 'orbitId', 'launcherId'][index])
@@ -48,7 +50,8 @@ export function evaluateMission(request: unknown, context: EvaluationContext): E
   const metrics: Record<string, Metric> = {}
   const checks: CheckResult[] = []
   const add = (id: string, actual: Metric, operator: CheckResult['operator'], limit: number, reasonCode: string, prerequisites: readonly string[] = []) => {
-    checks.push({ checkId: id, scope: id.startsWith('WF-') ? 'science' : 'engineering', actual, operator, limit, status: compare(actual, operator, limit), reasonCode, ruleRef: 'docs/game-rules-technical.md#6', prerequisiteIds: prerequisites })
+    if (!Number.isFinite(limit)) { actual = unknown(actual.unit, 'invalid-limit'); limit = 0 }
+    checks.push({ checkId: id, scope: id.startsWith('WF-') ? 'science' : 'engineering', actual, operator, limit, status: compare(actual, operator, limit), reasonCode, ruleRef: 'docs/game-rules-technical.md#6-hard-gates-reason-codes-and-outcome-precedence', prerequisiteIds: prerequisites })
   }
   const store = (key: string, value: number, unit: string) => { metrics[key] = finite(value, unit); return metrics[key] }
   const missing = (unit = '') => unknown(unit, 'invalid-or-missing-prerequisite')
@@ -64,7 +67,9 @@ export function evaluateMission(request: unknown, context: EvaluationContext): E
   const geom = b && p && o && b.jitterArcsec && [b.errorDeg, p.referenceGSDm, p.referenceAltitudeKm, p.crossFovDeg, p.exposureSeconds, o.altitudeKm].every(Number.isFinite) ? geometry(b, p, o, context.fixture.tracking) : null
   const validGround = g && Number.isInteger(g.contactsPerDay) && g.contactsPerDay >= 0 && (g.contactsPerDay === 0 || g.lengthMin > 0) && g.contactsPerDay * g.lengthMin <= 1440 && [g.lengthMin, g.efficiency, g.processingHours].every(Number.isFinite)
   const energy = b && p && a && battery && r && validGround && o ? power(b, p, a, battery, r, g!, o, context.scenario.plannedYears) : null
-  const service = b && r && r.antenna && Number.isFinite(b.errorDeg) && Number.isFinite(r.lineMbps) && validGround ? link(b, r, g!, context) : null
+  const pointingKnown = b && r && Number.isFinite(b.errorDeg) && b.errorDeg >= 0 && r.antenna
+    && (r.antenna.kind === 'omni' || r.antenna.kind === 'directed' && Number.isFinite(r.antenna.errorDeg) && r.antenna.errorDeg > 0)
+  const service = pointingKnown && Number.isFinite(r!.lineMbps) && validGround ? link(b!, r!, g!, context) : null
   const generation = p && validBands(p.bandsMicrometers) && [p.widthPixels, p.heightPixels, p.bitsPerPixel, p.duty, p.framesPerSecond].every(Number.isFinite) ? p.widthPixels * p.heightPixels * p.bandsMicrometers.length * p.bitsPerPixel / 8 * 86400 * p.duty * p.framesPerSecond / 1e9 : undefined
   const storage = b ? b.storageGB * .8 : undefined
   const q = service && generation !== undefined && storage !== undefined && g ? queue(service, generation, storage, g, context.scenario.acceptedFraction) : null
@@ -106,7 +111,7 @@ export function evaluateMission(request: unknown, context: EvaluationContext): E
   add('ENG-MOTION-PROFILE', geom ? geom.motionStatus === 'UNVERIFIED' ? missing() : finite(geom.motionStatus === 'MET' ? 1 : 0) : missing(), 'true', 1, 'POINTING_UNSTABLE')
   const knownLinkFail = b && r && r.antenna?.kind === 'directed' && compare(finite(b.errorDeg), '<=', r.antenna.errorDeg) === 'NOT_MET'
   const linkMetric = knownLinkFail ? finite(0) : context.fixture.linkClosure.state === 'known' && !context.fixture.linkClosure.value || context.fixture.receiverCompatible.state === 'known' && !context.fixture.receiverCompatible.value ? finite(0)
-    : context.fixture.linkClosure.state === 'unknown' || context.fixture.receiverCompatible.state === 'unknown' || !b || !r ? missing() : finite(1)
+    : context.fixture.linkClosure.state === 'unknown' || context.fixture.receiverCompatible.state === 'unknown' || !pointingKnown ? missing() : finite(1)
   add('ENG-LINK', linkMetric, 'true', 1, 'LINK_UNCLOSED')
   const rate = q ? q.perContactStable === 'UNVERIFIED' ? missing() : finite(q.perContactStable === 'MET' ? 1 : 0) : missing()
   add('ENG-DATA-RATE', rate, 'true', 1, 'DATA_BOTTLENECK', ['ENG-LINK'])
@@ -164,7 +169,7 @@ export function evaluateMission(request: unknown, context: EvaluationContext): E
       ...ordered.filter(c => c.status === 'UNVERIFIED').map(c => ({ reasonCode: 'MISSING_EVIDENCE', detailId: c.checkId, checkIds: [c.checkId], causeIds: c.prerequisiteIds, repairKey: 'MISSING_EVIDENCE' })),
     ],
     warnings, assumptions: ['synthetic-access', 'synthetic-contacts', 'tracking', 'link', 'integration', 'costs', 'life', 'cloud-rejection'],
-    sources: [...new Set((parts.filter(Boolean) as Part[]).flatMap(part => Object.values(part.evidence ?? {}).flatMap(e => e.sourceRefs ?? [])))],
+    sources: [...new Set((parts.filter(Boolean) as Part[]).flatMap(part => Object.values(part.evidence ?? {}).flatMap(e => e?.sourceRefs ?? [])))],
     service: deferred ? null : service, queue: deferred ? null : q, merit,
     timelineEligible: outcome === 'MODEL_PASS_PROVISIONAL',
   } satisfies EvaluationReport))

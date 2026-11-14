@@ -10,9 +10,9 @@ export function queue(service: LinkService, generatedGBDay: number, usableStorag
   } as const
   if (d === undefined || !Number.isFinite(generatedGBDay)) return blank
   // One authoritative decision in GB/day. Do not independently tolerate G/N.
-  const stable = atLeast(d, generatedGBDay)
-  const backlog = Math.max(0, generatedGBDay - d)
   const noService = d === 0 && generatedGBDay > 0
+  const stable = !noService && atLeast(d, generatedGBDay)
+  const backlog = stable ? 0 : Math.max(0, generatedGBDay - d)
   const peak = stable && ground.contactsPerDay > 0
     ? finite(generatedGBDay * Math.max(0, 1440 / ground.contactsPerDay - ground.lengthMin) / 1440, 'GB')
     : unavailable('not-applicable', 'GB', 'no-stable-periodic-peak')

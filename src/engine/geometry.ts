@@ -86,6 +86,6 @@ export function geometry(
     jitterGroundM,
     smearM: smear,
     effectiveScaleM: scaleMetric(nativeGSDm, jitterGroundM, smear),
-    motionStatus,
+    motionStatus: motionStatus === 'NOT_MET' ? 'NOT_MET' : jitterGroundM.kind !== 'finite' ? 'UNVERIFIED' : motionStatus,
   }
 }

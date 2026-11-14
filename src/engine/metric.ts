@@ -1,7 +1,7 @@
 import type { Evidence, Metric, Provenance, Status } from './types'
 
 export const MODEL_BASIS: Provenance = {
-  kind: 'derived', sourceRefs: ['docs/game-rules-technical.md#5'],
+  kind: 'derived', sourceRefs: ['docs/game-rules-technical.md#5-equations-in-dependency-order'],
   assumptionIds: ['synthetic-access', 'synthetic-contacts', 'tracking', 'integration', 'costs', 'life', 'link'],
 }
 export const finite = (value: number, unit = ''): Metric => Number.isFinite(value)

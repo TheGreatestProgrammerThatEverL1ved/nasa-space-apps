@@ -18,13 +18,13 @@ import type {
   Provenance,
   Radio,
 } from '../engine/types'
-
-const rules = (section: string): string => `docs/game-rules-technical.md#${section}`
+import { ruleRef } from './ruleRefs'
+import type { RuleSection } from './ruleRefs'
 
 /** Provisional synthetic/adopted field; cites the governing rulebook section. */
-const provisional = (section: string, ...assumptionIds: string[]): Provenance => ({
+const provisional = (section: RuleSection, ...assumptionIds: string[]): Provenance => ({
   kind: 'provisional',
-  sourceRefs: [rules(section)],
+  sourceRefs: [ruleRef(section)],
   assumptionIds,
 })
 
@@ -36,10 +36,21 @@ const verified = (sourceId: string, ...assumptionIds: string[]): Provenance => (
 })
 
 /** Reproducible arithmetic conditional on the named primary inputs. */
-const derived = (sourceId: string, section: string, ...assumptionIds: string[]): Provenance => ({
+const derived = (sourceId: string, section: RuleSection, ...assumptionIds: string[]): Provenance => ({
   kind: 'derived',
-  sourceRefs: [sourceId, rules(section)],
+  sourceRefs: [sourceId, ruleRef(section)],
   assumptionIds,
+})
+
+/**
+ * Applied 6/12/24 kg booked limit is a provisional game policy. S1 remains the
+ * primary reference for the underlying CDS typical maxima; it does not verify
+ * our composite spacecraft or make the booked limit a [V] hardware field.
+ */
+const bookedLimit = (): Provenance => ({
+  kind: 'provisional',
+  sourceRefs: ['S1', ruleRef('3.1')],
+  assumptionIds: ['booked-policy'],
 })
 
 const evidence = <T>(value: T, provenance: Provenance): Evidence<T> => ({
@@ -74,7 +85,7 @@ const BUSES: readonly Bus[] = [
       errorDeg: provisional('3.1', 'bus-control-error'),
       jitterArcsec: provisional('3.1', 'exposure-jitter'),
       powerPackageLimitKg: provisional('3.1', 'power-package-fit'),
-      spacecraftLimitKg: verified('S1', 'cds-typical-maximum-policy'),
+      spacecraftLimitKg: bookedLimit(),
       lifeYears: provisional('3.1', 'service-life'),
     },
   },
@@ -101,7 +112,7 @@ const BUSES: readonly Bus[] = [
       errorDeg: provisional('3.1', 'bus-control-error'),
       jitterArcsec: provisional('3.1', 'exposure-jitter'),
       powerPackageLimitKg: provisional('3.1', 'power-package-fit'),
-      spacecraftLimitKg: verified('S1', 'cds-typical-maximum-policy'),
+      spacecraftLimitKg: bookedLimit(),
       lifeYears: provisional('3.1', 'service-life'),
     },
   },
@@ -128,7 +139,7 @@ const BUSES: readonly Bus[] = [
       errorDeg: provisional('3.1', 'bus-control-error'),
       jitterArcsec: provisional('3.1', 'exposure-jitter'),
       powerPackageLimitKg: provisional('3.1', 'power-package-fit'),
-      spacecraftLimitKg: verified('S1', 'cds-typical-maximum-policy'),
+      spacecraftLimitKg: bookedLimit(),
       lifeYears: provisional('3.1', 'service-life'),
     },
   },
@@ -366,7 +377,7 @@ const PAYLOADS: readonly Payload[] = [
     errorLimitDeg: 0.2,
     busIds: ['bus-12u'],
     evidence: {
-      massKg: provisional('3.5', 'integrated-package-allocation'),
+      massKg: { kind: 'provisional', sourceRefs: ['S2', ruleRef('3.5')], assumptionIds: ['integrated-package-allocation'] },
       costUsd: provisional('3.5', 'adaptation-and-processing-allowance'),
       leadMonths: provisional('3.5', 'lead-times'),
       activeW: provisional('3.5', 'switched-duty'),

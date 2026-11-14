@@ -1,31 +1,48 @@
 # MISSION FORGE — overnight handoff
 
-## Night-02 active execution — 15 November 2026
+## Night-02 delivery complete — 15 November 2026
 
-- Authority: root `mission-forge-night-02.md`, user explicitly authorizes A → B → C implementation and normal pushes; supersedes the old stop below.
-- Reference/actual entry/verified remote: `eab1ec8ab418be2b6dfb2c23e6f064a58ae9bacb`; `mission-forge`, upstream `origin/mission-forge`, fetch 0/0.
-- Stage A active: game shell, typed repairs, dedicated interactive academy (no payouts), persistent Help.
-- **A shipped and remotely verified:** `c83997d9d9df7c4e87917f19befdd1d305386105` equals `ls-remote`. Final A typecheck/lint/build, **105 engine /26 UI /15 production Chrome** all pass. Four actual captures committed under `docs/screenshots/night02-*`.
-- **Stage B1 active:** root owns `src/data/missions/visible.ts`, additive evaluator policy guards and tests; no worker active. Historical NanoCam page/datasheet and NASA band guide fetched; independently calculated 35 mm effective scale **47.729238478 m**, usable width **93.650412076 km**, single Bayer mosaic **0.86973087744 GB/day**, useful **0.521838526464**. Research source PDFs stay ignored, not republished. Campaign remains limited to old two contracts until C.
-- B1 ready: typecheck/lint/build, **109 engine /26 UI /17 production Chrome** passed, including wide/detail vs long/width failure, 35 mm pass, thermal↔visible capability rejection, equality boundary, missing-link evidence and fixture/policy swaps, bilingual actual repair and axe. Visually inspected `visible-pass-en.png`. Next exact action: scoped B1 commit/push/remote equality, then implement synthetic Earth two-hop packet relay separately.
-- **B1 shipped/remotely verified:** `64737774612de85cdb8e39928b2d25c5dd6afc84`.
-- **Stage B2 active:** all edits owned by root; typed receive/store payload is separate from camera catalog, explicit periodic ingress/egress and FIFO under the same evaluator. NASA SCaN DTN primary concept fetched. Independent connected Sol `ses_e23bbaee7fferY1yJIrfTw6Y65` reproduced **1.05 GB ingress capacity/batch,6.3 GB/day egress,1 GB/day delivered,.5 GB peak,1.849206349 h**; found malformed-catalog and ingress-provenance guard issues, root fixed both with regressions. Legacy `codex-review` refused source review due docs-only role; no Codex coverage claimed and no permissions changed. Before review fixes, root checks passed **121 engine /26 UI /19 production Chrome**; final rerun pending. Next exact action: final B2 checks/screenshots/scoped independent push, then C.
-- B2 final verification: typecheck/lint/build and **129 engine /26 UI /19 production Chrome** passed after all review fixes, including seven malformed evidence/catalog regressions and explicit independence from camera jitter/tracking/access/cloud fields. Independent Sol targeted re-review confirms both findings fixed, no remaining pass-critical issue. Visually inspected actual relay debrief/two-hop strip. Next: commit/push B2 with remote equality, then data-driven four-contract campaign and v1 balance-preserving progression.
-- **B2 shipped/remotely verified:** `2274521bbc66baebf0ab748ade6ca5ef0cfe4d24`.
-- **Stage C active:** root sole owner of progression, CampaignPanel, App/MissionApp integration and tests. Explicit four-contract prerequisites/rewards and four equipment purchases, full refunds (reversible optional choices), visible/relay unlocks. v1 reads normalize to v2 under the same storage key; old missions/parts/derived balances retained. Current-inventory key + actual reevaluation gate first-clear payouts. Purchases fit compatible slots without resetting the rest of the draft; session mission/mode drafts retained, reports never relabelled. New graph solvency/migration and full bilingual browser campaign tests are being completed. Last green checkpoint remains B2; next exact action: run updated campaign checks, fix integration issues, obtain connected Sol save review, verify and push C independently.
-- **C ready for scoped commit/push:** typecheck/lint/build, **133 engine /27 UI /21 production Chrome** passed. Verbose campaign run: **19 tests**, **48 reachable states /48 completion routes**. Both complete language loops, first-clear/repeat/free retries, X-band/array/refund paths, v1 exact-balance migration, unrelated storage, compatible Fit/focus, draft preservation, staleness, reload, guide-in-campaign zero rewards, axe and 320px/200% reflow passed. Connected Sol High `ses_e23ae66b7ffeXCcKNHaPoqXyxD` reviewed save/progression/integration read-only, no must-fix findings. Qwen grep-based four-ID/key/completion-copy check completed; its suggestion that the optional array is legacy-only was rejected (the actual shop and passing alternative remain tested). Root removed the remaining hardcoded completion count. No workers active.
-- Screenshot inspection caught the sticky Help covering a contract title. Removed the overlay (Help entry remains persistent in the header) and added a documented `?` shortcut outside form fields, with focus restoration regression. Final C browser rerun follows this visual correction.
-- Next exact action: inspect scoped C diff, commit/push, verify remote SHA, then `git archive` the committed application into ignored `.cache/night02/clean-*` (no branch/worktree/user inputs), run fresh `npm ci` and every required command, final docs-only handoff/checkpoint push. Stop at delivery review.
-- Owners: connected Sol owns all implementation/integration/tests/docs/Git after free DeepSeek smoke `ses_e23cea6f4ffeI5W9yhT2PNPYOn` returned **Free usage limit reached**. No paid fallback, retry, account/config change. Prior workers recorded below are idle; no overlapping work. Local Qwen `ses_e23ce6802ffe24IuZXoK2t3i4n` has read-only bounded key check.
-- Entry checks actually run: production build and **12 production-preview Chrome tests passed**; screenshots in `test-results/` include baseline ready/failure/pass in both languages.
-- Preserve untracked user inputs: `docs/01-analysis-and-plan.md`, `docs/research/`, `mission-forge-night-02.md`, `opencode.jsonc`, `public/`, `src/assets/`; no blanket staging.
-- Next exact action: implement A under `src/ui/mission-control/`, `src/ui/academy/`, integrate into MissionApp/App without changing evaluator; add bilingual keyboard/guide acceptance, verify and push A independently before new mission registration.
-- Pending: visible mapping (primary optics evidence + independent arithmetic), Earth packet relay (explicit two-hop synthetic FIFO model), data-driven save-compatible campaign, final clean committed-copy proof.
-- A verification: connected session API confirms `openai/gpt-6.1-sol#high`; active sessions contained root + bounded Qwen only. Qwen completed grep-based bilingual parity review, no writes. Typecheck/lint **105 engine /26 UI /15 production Chrome tests** passed; production build passed. New Chrome coverage: both guide languages, start/skip/replay, true 7.1→3.1 arithmetic, zero campaign save/payout, help/Escape/language restoration with stale report preserved, 320px/200% Help, axe, typed mass/power repairs and subsystem focus. Two test-locator issues (changed language and hidden dialog details) were fixed without weakening outcome assertions.
-- Visually inspected baseline first screen and A workbench/debrief/Ukrainian guide screenshots in `test-results/`; moved sticky Help to the right to avoid covering the spacecraft heading; removed duplicated immediate repair prose. Final A regression and scoped push next.
-- `/tmp/opencode` is not writable; use ignored `.cache/` for isolated verification where needed.
+**Outcome:** A/B1/B2/C shipped in order. Application **`309250d855ff00f9029fe587fc3c4d0451529f73`** is pushed, remotely verified and clean-install tested. Final wrap changes **README + this handoff + execution log only**; runtime/tests/build inputs remain byte-identical to that verified application. No worker is active. **Stop at human delivery review; do not restart feature work.**
 
-Historical night-01 record follows; its delivery stop is superseded by the active authorization above.
+### Checkpoints (each normal push + remote SHA equality actually verified)
+
+| Checkpoint | SHA | Engine / UI / production Chrome |
+|---|---|---:|
+| Entry baseline | `eab1ec8ab418be2b6dfb2c23e6f064a58ae9bacb` | baseline build +12 Chrome |
+| A — game hangar / bilingual interactive academy | `c83997d9d9df7c4e87917f19befdd1d305386105` | 105 /26 /15 |
+| B1 — visible mapping / real lens tradeoff | `64737774612de85cdb8e39928b2d25c5dd6afc84` | 109 /26 /17 |
+| B2 — Earth two-hop FIFO packet relay | `2274521bbc66baebf0ab748ade6ca5ef0cfe4d24` | 129 /26 /19 |
+| C — four-contract campaign / migration / refunds | `309250d855ff00f9029fe587fc3c4d0451529f73` | 133 /27 /21 |
+
+All feature checkpoints also passed typecheck, lint and production build.
+
+### Final clean committed-copy proof — actually completed
+
+Archived exact application `309250d` (no branch/worktree, private config, local dependencies or untracked inputs) to `~/.cache/mission-forge-night02-clean-OPfQjL`, then ran:
+
+`npm ci` → `npm run typecheck` → `npm run lint` → `npm test` (**133**) → `npm run test:ui` (**27**) → `npm run build` → `MISSION_FORGE_PREVIEW=1 npm run test:e2e` (**21**) → `npm audit --audit-level=low` (**zero vulnerabilities**).
+
+Actual toolchain: **Node22.23.5, npm10.9.9, Chrome157.0.8103.78**. Initial archive inside ignored `.cache/night02/clean-309250d` installed and typechecked but lint found no files because of the ancestor ignore boundary; that attempt is **not** the clean proof. The outside-checkout archive reran every command successfully, including real source lint. No ignores, permissions or credentials were changed.
+
+Root verification additionally passed all commands, verbose campaign **19 tests**, and exhaustive **48 reachable states /48 completion routes**. Both full language campaigns, old-save migration/balance, unrelated storage, guide/direct/stale/spoofed zero payouts, refund/fit/focus/draft preservation, WF-A/B/C/all 15 audited cases, urban boundaries, visible capability/lens boundaries, relay both-hop/queue/buffer/delay/malformed-evidence checks remain covered. Axe, reduced motion, 320px/200% Help/disclosures pass.
+
+### Scope, sources and limits
+
+- Playable: **Return the Heat Map**, **Urban Heat Map**, **Trace the Shoreline**, **Carry the Signal**. Direct play remains immediate; campaign is wildfire → urban → buy visible35 → visible → buy relay package (and own X-band) → relay. Every first clear pays100 once; purchases100, retries free, full refunds prevent optional-array soft locks. [Campaign policy](mission-campaign.md).
+- Tutorial is skippable/replayable from Help (or `?` outside inputs), evaluates 7.1 h → ground-network choice →3.1 h, and cannot pay credits or replace player drafts/reports. Inspectable original subsystem SVG, typed repair focus and report-derived contact strips; Help overlay found in screenshot review was removed.
+- New evidence/assumptions: [non-thermal mission policy](nonthermal-missions.md). Discontinued historical NanoCam reference, provisional integrated power/mass/fit/1 ms exposure and Bayer product plan; no water-quality/reflectance/cloud penetration claim. Relay is a synthetic **Earth** ingress/egress/FIFO teaching model, not lunar geometry or a real network booking. All passes provisional, not flight qualification or validated imaging observation age.
+- Exact arithmetic independently reproduced: visible35 **47.729238478 m**, **93.650412076 km**, **0.521838526464 useful GB/day**; relay **1 GB/day**, **0.5 GB peak**, **1.849206349 h**. Source record/catalog/context/builds/constants/geometry/link/queue remain byte-identical to entry. Shared power default behavior remains covered; only an optional explicit relay-service envelope was added.
+- Ten actual, visually inspected Chrome captures: `docs/screenshots/night02-{first-load,workbench,academy-uk,debrief-en,visible-en,visible-uk,relay-en,relay-uk,campaign-en,campaign-uk}.png`. [README demo](../README.md#60-second-local-demo): guide launch → real ground repair → visible35 → relay/network in about60 seconds.
+- Pending human review only: English/Ukrainian scientific/linguistic quality, screen reader/assistive technology, broader device/browser coverage and event/submission requirements. Lunar far-side, full-region active-fire, flood and methane remain unshipped.
+
+### Ownership / preservation / exact resume
+
+- Connected `openai/gpt-6.1-sol#high` root owned implementation/integration/tests/docs and all Git. Single free DeepSeek smoke hit **Free usage limit reached**; honored it and used the authorized Sol fallback. No paid route or account/config/permission change. Qwen completed two bounded read-only grep/key checks.
+- Independent connected Sol relay review found two malformed-catalog/provenance defects; fixed, regression-tested and re-reviewed. Independent Sol save/progression/integration review found no must-fix findings. Legacy docs-only `codex-review` refused source review; **no Codex coverage claimed**. All workers reconciled and idle.
+- All **10** preserved user-file hashes match. Untracked `docs/01-analysis-and-plan.md`, `docs/research/`, `mission-forge-night-02.md`, `opencode.jsonc`, `public/`, `src/assets/` remain untouched/unstaged. No dependency/lockfile changes, deployment, submission, PR, merge, extra branch/worktree, force push or destructive cleanup.
+- If interrupted during the documentation wrap: inspect `git status --short --branch`, `git rev-parse HEAD`, and `git ls-remote origin refs/heads/mission-forge`. Only if the inspected documentation-only wrap is locally ahead, push normally and confirm exact SHA equality. Otherwise **exit: delivery is complete**. Final wrap SHA is reported in the delivery response rather than guessed inside its own content.
+
+Historical night-01 record follows; its old progress entries are provenance, not current next actions.
 
 ## Authority and baseline
 

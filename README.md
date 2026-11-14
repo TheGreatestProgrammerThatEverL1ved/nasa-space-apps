@@ -94,6 +94,8 @@ The historical M4 archive passed a fresh install and all checks; the redesigned 
 
 **Historical clean-copy proof:** night-01 application `699b6a23e8e135ccc2703deeca82147629c2ec55` passed fresh `npm ci`, all verification commands, **105 /25 /12** tests and zero audit vulnerabilities. Current night-02 committed-copy proof is recorded in the [handoff](docs/overnight-handoff.md).
 
+**Night-02 clean-copy proof:** application `309250d855ff00f9029fe587fc3c4d0451529f73` passed fresh `npm ci`, typecheck, lint, **133 engine /27 UI /21 production Chrome** tests, production build and zero-vulnerability audit from an isolated committed archive outside the checkout. Toolchain: Node22.23.5/npm10.9.9/Chrome157.0.8103.78. Final wrap is documentation only; no deployment.
+
 All passing examples are **provisional model passes**, conditional on synthetic access/contact fixtures and assumed tracking/integration. Fixture latency is not validated physical observation age. An insufficient optimistic useful-return ceiling can prove urban failure; it is labelled as a ceiling, not achieved delivery. This is not flight qualification, an operational alert service, or NASA endorsement.
 
 The lunar relay remains a short [scenario backlog](docs/scenario-expansion.md#further-scenario-backlog): no Earth-imaging equations have been misused as lunar geometry. Full-region active-fire, flood and methane remain deferred. Local campaign saves are convenience state, not tamper-proof accounts or cross-device synchronization.

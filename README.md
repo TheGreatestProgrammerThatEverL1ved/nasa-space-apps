@@ -4,6 +4,8 @@ A bilingual browser mission-design game for NASA Space Apps 2026, Dnipro, Ukrain
 
 Also playable: **Trace the Shoreline**, a genuinely visible-light lens-selection mission. Run the 8 mm starter, repair to the 35 mm analogue, then compare the narrower 70 mm option. Primary evidence, exact assumptions and reproducible figures are in [non-thermal missions](docs/nonthermal-missions.md).
 
+**Carry the Signal** adds a different mechanism: receive two packet batches, buffer them and close a two-hop Earth relay route. Keep the starter hardware and select the ground network; viable ingress alone cannot deliver anything without egress. The exact synthetic FIFO reference returns 1 GB/day with a 0.5 GB peak and 1.84921 h completion delay. No optical equations or lunar geometry are used.
+
 - [Player guide](docs/game-rules-player.md)
 - [Technical game rules](docs/game-rules-technical.md)
 - [New scenario policy and primary references](docs/scenario-expansion.md)

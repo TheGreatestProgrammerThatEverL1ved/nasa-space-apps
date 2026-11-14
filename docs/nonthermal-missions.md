@@ -27,3 +27,24 @@ Synthetic gates: required visible Bayer mode covering 0.45–0.69 µm; effective
 - Countertrade: **70 mm** has finer sampling but ~46.39 km usable width, missing the corridor. Thermal payload fails the visible mode/spectrum gate; visible payload fails wildfire's LWIR gate.
 
 No source asset is reused. All spacecraft artwork is original schematic SVG.
+
+## Carry the Signal — Earth-orbit packet relay
+
+Who needs what: a remote sensor team needs **two 0.5 GB batches/day** delivered through a receive/store spacecraft to a ground user. No camera, optical geometry, thermal capability or cloud rejection is applicable. This is an Earth training fixture, **not lunar far-side coverage**, a physical network booking or an implementation of the complete DTN protocol.
+
+Primary conceptual reference, fetched 15 November 2026: [NASA SCaN, Delay/Disruption Tolerant Networking](https://www.nasa.gov/communicating-with-missions/delay-disruption-tolerant-networking/) explains storing data at a node until the next node becomes available. No NASA throughput, reliability, operational route, protocol conformance or hardware capability is transferred.
+
+All hardware/route allocations below are **[P] synthetic**:
+
+- Receive/store package: 0.6 kg, $150k, 10-month lead, 20 Mbps ingress, 70% ingress efficiency, 2 GB buffer; 4 W active/6 W peak; conservative 12% worst-orbit active envelope. Compatible assumed interface to 6U/12U buses. The 12U/X-band reference satisfies independent mass, cost, power and radio pointing checks.
+- Daily ingress contacts: **02:00–02:10** and **14:00–14:10**, each carrying 0.5 GB. Each accepted receive contact has `20×10×0.0075×.7 = 1.05 GB` capacity. Source and receive interfaces/link closure are explicit assumptions. Unknown closure cannot pass; known closure/capacity failure is retained.
+- The single-station contract has **explicitly zero egress windows**, despite viable ingress. Network egress: **03:00–03:06** and **15:00–15:06**. Frequent-service alternative adds **09:00–09:06** and **21:00–21:06**. These replace the imaging mission's evenly spaced ground schedule; costs remain the selected audited ground package's allocation.
+- Selected X-band supplies `.525 GB/min`; unique unioned network egress capacity is `6.3 GB/day`. S-band supplies only `.315 GB/day` with this network schedule, so it cannot sustain the required batches. No parallel/overlapping station multiplies capacity.
+- Exact FIFO event service: a complete batch enters the buffer at **ingress end**, a conservative serialization assumption. Egress starts after ingress; receive/transmit overlaps fail the mode check. The usable buffer is `min(0.8×busStorage, receivePackageBuffer)`, never two free buffers added together.
+- Four repeated days are evaluated from empty startup: day 0 warms the queue; all day-1 batches are measured through the next periodic service. Stable daily capacity must sustain the complete ingress demand. No loss/drop model rescues a deficit. A repeating deficit is unbounded backlog, not extra achieved delivery; overflow suppresses achieved delivery and latency claims.
+- Worst-orbit power uses the **maximum unioned egress minutes in any orbit-length interval, including day wrap**, not an even-spacing inference. Ingress occupancy must fit the package active envelope; receive and transmit windows must not overlap. Sunlit mode placement, orbit/link geometry and receiver compatibility remain explicitly assumed, not propagated.
+- Reference result: **1 GB/day delivered**, **0.5 GB peak buffer**; X-band sends a 0.5 GB batch in **0.952380952 min**. Delay from ingress completion to product is `(50 + .952380952)/60 + 1 h processing = 1.849206349 h`. This is timestamped fixture completion, **not the imaging fluid-queue bound or physical observation age**.
+
+Synthetic mission gates: actual relay payload; viable ingress; contracted egress route; ≥1 GB/day delivered; ≤4 h ingress-completion-to-product delay; one year. Shared applicable engineering gates remain; optical pointing/tracking/scale/spectrum/footprint are excluded, not falsely marked MET. Relay merit is a fixed 70 after all gates pass (no invented optical stretch score).
+
+Starter and pass use identical 12U/55 W/medium battery/X-band/500 km/50 kg booking hardware. Change **Ground service → network** to complete the route; returning to the single-station contract fails despite viable ingress. Tests also cover day wrap, unioned windows, unknown versus false hop evidence, capability, ingress and service deficits, finite buffer and delay equality.

@@ -21,19 +21,21 @@ const orbitalPeriodMin = (altitudeKm: number): number =>
 
 export function power(
   bus: Bus,
-  payload: Payload,
+  payload: Pick<Payload, 'activeW' | 'peakW' | 'duty'>,
   array: ArrayPart,
   battery: Battery,
   radio: Radio,
   ground: Ground,
   orbit: Orbit,
   years: number,
+  explicitService?: { readonly contactsPerOrbit: number; readonly txMinutesPerOrbit: number },
 ): PowerResult {
   const periodMin = orbitalPeriodMin(orbit.altitudeKm)
   const sunHours = (periodMin * (1 - orbit.eclipseFraction)) / 60
   const eclipseHours = (periodMin * orbit.eclipseFraction) / 60
-  const contactsPerOrbit = Math.ceil((ground.contactsPerDay * periodMin) / 1440)
-  const txDutyWorstOrbit = (contactsPerOrbit * ground.lengthMin) / periodMin
+  const contactsPerOrbit = explicitService?.contactsPerOrbit ?? Math.ceil((ground.contactsPerDay * periodMin) / 1440)
+  const txMinutes = explicitService?.txMinutesPerOrbit ?? contactsPerOrbit * ground.lengthMin
+  const txDutyWorstOrbit = txMinutes / periodMin
   const avgLoadW =
     bus.housekeepingW + payload.activeW * payload.duty + radio.dcW * txDutyWorstOrbit
   const arrayWh = (y: number): number =>
@@ -53,7 +55,7 @@ export function power(
   return {
     contactsPerOrbit,
     sunlightMin: sunHours * 60,
-    activityMin: payload.duty * periodMin + contactsPerOrbit * ground.lengthMin,
+    activityMin: payload.duty * periodMin + txMinutes,
     avgLoadW,
     requiredWh,
     bolWh: arrayWh(0),

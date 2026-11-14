@@ -402,6 +402,20 @@ export const en = {
   'repair.VM-DELIVERY': 'Sustain the full Bayer frame stream and check useful return after rejection.',
   'repair.VM-LATENCY': 'Check contact cadence and a stable queue, not bandwidth alone.',
   'repair.VM-DURATION': 'Fund and support one year within the engineering budget.',
+  'check.RL-CAPABILITY': 'Packet receive/store capability is fitted',
+  'check.RL-INGRESS': 'Ingress link receives every scheduled batch',
+  'check.RL-ROUTE': 'Contracted egress windows complete the route',
+  'check.RL-DELIVERY': 'Every daily batch is delivered',
+  'check.RL-DELAY': 'Ingress-completion-to-product delay is 4 h or less',
+  'check.RL-DURATION': 'Relay operations last at least one year',
+  'reason.RELAY_EGRESS_DEFICIT': 'Egress cannot sustain the relay route',
+  'reason.RELAY_INGRESS_UNCLOSED': 'Ingress cannot receive the scheduled batches',
+  'repair.RELAY_EGRESS_DEFICIT': 'Keep X-band and choose the ground network with explicit egress windows. More storage does not create a route.',
+  'repair.RELAY_INGRESS_UNCLOSED': 'Check receive/store payload, ingress capacity and closure evidence. Egress cannot rescue missing ingress.',
+  'repair.RL-CAPABILITY': 'Fit the packet receive/store package, not a camera.',
+  'repair.RL-DELIVERY': 'Close both hops, sustain all batches and prevent buffer overflow. Nominal radio capacity alone is not delivery.',
+  'repair.RL-DELAY': 'Use egress windows after ingress; check FIFO completion and processing time.',
+  'repair.RL-DURATION': 'Fund and support one year within the engineering budget.',
 } as const
 
 export type MessageKey = keyof typeof en

@@ -12,6 +12,7 @@ import { URBAN_SCIENCE } from '../engine/science'
 import type { EvaluationContext, Evidence, MissionDefinition } from '../engine/types'
 import { FIRST_MISSION, WF_B } from '../fixtures/builds'
 import { VISIBLE_MISSION } from './missions/visible'
+import { RELAY_MISSION } from './missions/relay'
 
 /**
  * The audit fixture contract carries an access gap but no swath width. The 100 km
@@ -156,4 +157,4 @@ export const URBAN_MISSION: MissionDefinition = {
   ],
 }
 
-export const MISSIONS: readonly MissionDefinition[] = [WILDFIRE_MISSION, URBAN_MISSION, VISIBLE_MISSION]
+export const MISSIONS: readonly MissionDefinition[] = [WILDFIRE_MISSION, URBAN_MISSION, VISIBLE_MISSION, RELAY_MISSION]

@@ -1,5 +1,6 @@
 import type { EvaluationContext, Evidence, MissionConfiguration, Part } from './types'
 import { validSciencePolicy } from './science'
+import { validRelayFixture, validRelayPolicy } from './relay'
 
 export const CONFIG_KEYS = ['scenarioId', 'payloadId', 'busId', 'arrayId', 'batteryId', 'radioId', 'groundId', 'orbitId', 'launcherId'] as const
 export function parseRequest(request: unknown): { config: MissionConfiguration | null; issues: string[] } {
@@ -21,7 +22,7 @@ export function validatePart(part: Part): string[] {
   const issues: string[] = []
   const fields: Record<Part['category'], readonly string[]> = {
     bus: ['housekeepingW', 'storageGB', 'errorDeg', 'powerPackageLimitKg', 'spacecraftLimitKg', 'lifeYears'],
-    payload: ['activeW', 'peakW', 'widthPixels', 'heightPixels', 'bitsPerPixel', 'framesPerSecond', 'duty', 'referenceGSDm', 'referenceAltitudeKm', 'crossFovDeg', 'alongFovDeg', 'exposureSeconds', 'errorLimitDeg'],
+    payload: part.category === 'payload' && part.mode === 'packet-relay' ? ['activeW', 'peakW', 'duty', 'ingressMbps', 'bufferGB'] : ['activeW', 'peakW', 'widthPixels', 'heightPixels', 'bitsPerPixel', 'framesPerSecond', 'duty', 'referenceGSDm', 'referenceAltitudeKm', 'crossFovDeg', 'alongFovDeg', 'exposureSeconds', 'errorLimitDeg'],
     array: ['bolW', 'annualLoss'], battery: ['nominalWh', 'dod', 'dischargeW', 'lifeYears'],
     radio: ['lineMbps', 'dcW'], ground: ['contactsPerDay', 'lengthMin', 'efficiency', 'processingHours', 'annualOpsUsd'],
     orbit: ['altitudeKm', 'inclinationDeg', 'eclipseFraction', 'residenceYears'],
@@ -39,14 +40,14 @@ export function validatePart(part: Part): string[] {
   const positive = ['storageGB', 'spacecraftLimitKg', 'slotLimitKg', 'nominalWh', 'dischargeW', 'bolW', 'lineMbps', 'altitudeKm', 'referenceAltitudeKm', 'referenceGSDm', 'widthPixels', 'heightPixels', 'exposureSeconds']
   for (const key of positive) if (key in part && (part as unknown as Record<string, number>)[key] <= 0) issues.push(`${part.id}.${key}`)
   if (part.category === 'ground' && (!Number.isInteger(part.contactsPerDay) || (part.contactsPerDay > 0 && part.lengthMin <= 0) || part.lengthMin > 1440 || part.contactsPerDay * part.lengthMin > 1440 || part.efficiency <= 0 || part.efficiency > 1)) issues.push(`${part.id}.contacts-or-efficiency`)
-  if (part.category === 'payload' && (part.duty > 1 || part.errorLimitDeg <= 0 || part.crossFovDeg <= 0 || part.crossFovDeg >= 180)) issues.push(`${part.id}.payload-domain`)
+  if (part.category === 'payload' && (part.duty > 1 || (part.mode === 'packet-relay' ? part.ingressMbps <= 0 || part.bufferGB <= 0 : part.errorLimitDeg <= 0 || part.crossFovDeg <= 0 || part.crossFovDeg >= 180))) issues.push(`${part.id}.payload-domain`)
   if (part.category === 'battery' && (part.dod <= 0 || part.dod > 1)) issues.push(`${part.id}.dod`)
   if (part.category === 'array' && part.annualLoss >= 1) issues.push(`${part.id}.annualLoss`)
   if (part.category === 'orbit' && part.eclipseFraction > 1) issues.push(`${part.id}.eclipseFraction`)
   if (part.category === 'bus' && (!validEvidence(part.jitterArcsec, 'number') || part.jitterArcsec.state === 'known' && part.jitterArcsec.value < 0)) issues.push(`${part.id}.jitterArcsec`)
   if (part.category === 'radio' && (!part.antenna || !['directed', 'omni'].includes(part.antenna.kind) || part.antenna.kind === 'directed' && (!Number.isFinite(part.antenna.errorDeg) || part.antenna.errorDeg <= 0))) issues.push(`${part.id}.antenna`)
-  if (part.category === 'payload' && !validBands(part.bandsMicrometers)) issues.push(`${part.id}.bandsMicrometers`)
-  if (part.category === 'payload' && part.mode !== undefined && part.mode !== 'visible-bayer') issues.push(`${part.id}.mode`)
+  if (part.category === 'payload' && part.mode !== 'packet-relay' && !validBands(part.bandsMicrometers)) issues.push(`${part.id}.bandsMicrometers`)
+  if (part.category === 'payload' && part.mode !== undefined && !['visible-bayer', 'packet-relay'].includes(part.mode)) issues.push(`${part.id}.mode`)
   if ('busIds' in part && (!Array.isArray(part.busIds) || !part.busIds.every(id => typeof id === 'string'))) issues.push(`${part.id}.busIds`)
   if (!part.evidence || typeof part.evidence !== 'object' || Object.values(part.evidence).some(value => !validProvenance(value))) issues.push(`${part.id}.evidence`)
   return issues
@@ -71,6 +72,17 @@ export function validateContext(context: EvaluationContext): string[] {
       issues.push(...validatePart(row))
     }
   }
+  if (context?.catalog?.relayPayloads !== undefined) {
+    if (!Array.isArray(context.catalog.relayPayloads)) issues.push('catalog.relayPayloads')
+    else {
+      const ids = new Set((Array.isArray(context.catalog.payloads) ? context.catalog.payloads : []).filter(p => recordShape(p, 'payload')).map(p => p.id))
+      for (const p of context.catalog.relayPayloads) {
+        if (!recordShape(p, 'payload') || !('mode' in p) || p.mode !== 'packet-relay') { issues.push('catalog.relayPayloads.record'); continue }
+        if (ids.has(p.id)) issues.push('catalog.relayPayloads.duplicate-id')
+        ids.add(p.id); issues.push(...validatePart(p))
+      }
+    }
+  }
   for (const key of ['budgetUsd', 'availableMonths', 'plannedYears', 'fundedYears', 'acceptedFraction'] as const) {
     const value = context?.scenario?.[key]
     if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) issues.push(`scenario.${key}`)
@@ -79,10 +91,13 @@ export function validateContext(context: EvaluationContext): string[] {
   const scenario = context?.scenario
   const id = scenario?.id
   const policy = scenario?.science
-  if (id !== undefined && !['wildfire', 'urban-heat', 'visible-mapping'].includes(id)) issues.push('scenario.id')
+  if (id !== undefined && !['wildfire', 'urban-heat', 'visible-mapping', 'packet-relay'].includes(id)) issues.push('scenario.id')
   if (policy !== undefined && !validSciencePolicy(policy)) issues.push('scenario.science')
   if (id === 'urban-heat' && (!validSciencePolicy(policy) || policy.prefix !== 'UH')) issues.push('scenario.science')
   if (id === 'visible-mapping' && (!validSciencePolicy(policy) || policy.prefix !== 'VM')) issues.push('scenario.science')
+  if (id === 'packet-relay' && (!validRelayPolicy(scenario?.relay) || policy !== undefined)) issues.push('scenario.relay')
+  if (id !== 'packet-relay' && scenario?.relay !== undefined) issues.push('scenario.relay')
+  if (id === 'packet-relay' && !validRelayFixture(context?.fixture?.relay)) issues.push('fixture.relay')
   if ((id === 'wildfire' || id === undefined) && policy !== undefined && (!validSciencePolicy(policy) || policy.prefix !== 'WF')) issues.push('scenario.science')
   if (id === undefined && policy !== undefined) issues.push('scenario.id')
   if ((context?.fixture?.scenarioId ?? 'wildfire') !== (id ?? 'wildfire')) issues.push('fixture.scenarioId')
@@ -145,6 +160,7 @@ export function normalizeContext(context: EvaluationContext): EvaluationContext 
       arrays: rows('arrays', 'array') as EvaluationContext['catalog']['arrays'],
       batteries: rows('batteries', 'battery') as EvaluationContext['catalog']['batteries'],
       payloads: rows('payloads', 'payload') as EvaluationContext['catalog']['payloads'],
+      ...(Array.isArray(catalog?.relayPayloads) ? { relayPayloads: catalog.relayPayloads.filter(p => recordShape(p, 'payload') && 'mode' in p && p.mode === 'packet-relay') } : {}),
       radios: rows('radios', 'radio') as EvaluationContext['catalog']['radios'],
       grounds: rows('grounds', 'ground') as EvaluationContext['catalog']['grounds'],
       orbits: rows('orbits', 'orbit') as EvaluationContext['catalog']['orbits'],
@@ -153,11 +169,13 @@ export function normalizeContext(context: EvaluationContext): EvaluationContext 
     scenario: {
       ...(scenario && 'id' in scenario ? { id: scenario.id } : {}),
       ...(scenario && 'science' in scenario ? { science: scenario.science } : {}),
+      ...(scenario && 'relay' in scenario ? { relay: scenario.relay } : {}),
       budgetUsd: scenario?.budgetUsd ?? NaN, availableMonths: scenario?.availableMonths ?? NaN,
       plannedYears: scenario?.plannedYears ?? NaN, fundedYears: scenario?.fundedYears ?? NaN, acceptedFraction: scenario?.acceptedFraction ?? NaN,
     },
     fixture: {
       ...(raw && 'scenarioId' in raw ? { scenarioId: raw.scenarioId } : {}),
+      ...(raw && 'relay' in raw ? { relay: raw.relay } : {}),
       receiverCompatible: boolean(raw?.receiverCompatible), linkClosure: boolean(raw?.linkClosure),
       evenlySpaced: boolean(raw?.evenlySpaced), modePlacement: boolean(raw?.modePlacement),
       targetGapHours: validEvidence(raw?.targetGapHours, 'number') && (raw.targetGapHours.state !== 'known' || raw.targetGapHours.value > 0) ? raw.targetGapHours : missing,

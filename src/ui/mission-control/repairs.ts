@@ -5,6 +5,9 @@ import type { PartField } from './Spacecraft'
 export function repairDestination(diagnostic?: Diagnostic): PartField | null {
   if (!diagnostic || diagnostic.reasonCode === 'MISSING_EVIDENCE' || diagnostic.reasonCode === 'INVALID_INPUT') return null
   const id = diagnostic.detailId
+  if (id === 'RL-CAPABILITY') return 'payloadId'
+  if (diagnostic.reasonCode === 'RELAY_EGRESS_DEFICIT' || id === 'RL-DELAY') return 'groundId'
+  if (diagnostic.reasonCode === 'RELAY_INGRESS_UNCLOSED') return 'payloadId'
   if (/-SPECTRUM$|-GSD$|-FOOTPRINT$/.test(id)) return 'payloadId'
   if (/-LATENCY$|-ACCESS$/.test(id)) return 'groundId'
   const destinations: Readonly<Record<string, PartField>> = {

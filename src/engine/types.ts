@@ -82,6 +82,29 @@ export interface Ground extends PartBase {
   readonly processingHours: number
   readonly annualOpsUsd: number
 }
+/** Receive/process/store package. Deliberately has no camera/optical geometry fields. */
+export interface RelayPayload extends PartBase {
+  readonly category: 'payload'
+  readonly mode: 'packet-relay'
+  readonly activeW: number
+  readonly peakW: number
+  readonly duty: number
+  readonly ingressMbps: number
+  readonly bufferGB: number
+  readonly busIds: readonly string[]
+}
+export interface RelayPolicy {
+  readonly minDeliveredGBDay: number
+  readonly maxDelayHours: number
+  readonly minYears: number
+}
+export interface RelayFixture {
+  readonly ingressClosure: Evidence<boolean>
+  readonly ingressEfficiency: number
+  /** Complete batches become available at ingress contact end (conservative serialization). */
+  readonly ingress: readonly { readonly startMin: number; readonly endMin: number; readonly gb: number }[]
+  readonly egressByGround: Readonly<Record<string, readonly (readonly [number, number])[]>>
+}
 export interface Orbit extends PartBase {
   readonly category: 'orbit'
   readonly altitudeKm: number
@@ -97,13 +120,14 @@ export interface Launcher extends PartBase {
   readonly busIds: readonly string[]
   readonly queueMonths: number
 }
-export type Part = Bus | ArrayPart | Battery | Radio | Payload | Ground | Orbit | Launcher
+export type Part = Bus | ArrayPart | Battery | Radio | Payload | RelayPayload | Ground | Orbit | Launcher
 export interface Catalog {
   readonly buses: readonly Bus[]
   readonly arrays: readonly ArrayPart[]
   readonly batteries: readonly Battery[]
   readonly radios: readonly Radio[]
   readonly payloads: readonly Payload[]
+  readonly relayPayloads?: readonly RelayPayload[]
   readonly grounds: readonly Ground[]
   readonly orbits: readonly Orbit[]
   readonly launchers: readonly Launcher[]
@@ -165,6 +189,7 @@ export interface EvaluationContext {
     /** Absent only for backwards-compatible audited wildfire contexts. */
     readonly id?: string
     readonly science?: SciencePolicy
+    readonly relay?: RelayPolicy
     readonly budgetUsd: number
     readonly availableMonths: number
     readonly plannedYears: number
@@ -181,6 +206,7 @@ export interface EvaluationContext {
     readonly evenlySpaced: Evidence<boolean>
     readonly modePlacement: Evidence<boolean>
     readonly tracking: Tracking
+    readonly relay?: RelayFixture
   }
 }
 export interface CheckResult {
@@ -248,6 +274,15 @@ export interface EvaluationReport {
   readonly queue: QueueResult | null
   readonly merit: Metric
   readonly timelineEligible: boolean
+  readonly relay?: {
+    readonly ingressWindows: readonly { readonly startMin: number; readonly endMin: number; readonly gb: number }[]
+    readonly ingressStatus: Status
+    readonly routeStatus: Status
+    readonly ingressGBDay: Metric
+    readonly deliveredGBDay: Metric
+    readonly peakBufferGB: Metric
+    readonly worstDelayHours: Metric
+  }
 }
 export type ReportProvider = (request: unknown) => EvaluationReport
 export interface GeometryResult {

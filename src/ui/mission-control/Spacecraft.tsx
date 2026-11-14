@@ -39,7 +39,7 @@ export function Spacecraft({ config, context, locale, onInspect }: {
     </svg>
     <p className="bay-caption">{locale === 'en' ? 'Original schematic, not a flight layout. Select a slot to inspect and fit parts.' : 'Оригінальна схема, не льотне компонування. Виберіть слот для огляду й заміни деталей.'}</p>
     <div className="subsystem-slots">{slots.map(([field, category, group]) => {
-      const part = context.catalog[group].find(p => p.id === config[field])
+      const part = (group === 'payloads' ? [...context.catalog.payloads, ...(context.catalog.relayPayloads ?? [])] : context.catalog[group]).find(p => p.id === config[field])
       const effect = part && ('bolW' in part ? `${formatNumber(part.bolW, locale)} W BOL` : 'nominalWh' in part ? `${part.nominalWh} Wh` : 'lineMbps' in part ? `${part.lineMbps} Mbps` : 'contactsPerDay' in part ? `${part.contactsPerDay} ${locale === 'en' ? 'contacts/day' : 'сеансів/добу'}` : `${formatNumber(part.massKg, locale)} ${locale === 'en' ? 'kg' : 'кг'}`)
       return <button type="button" key={field} onClick={() => onInspect(field)}>
         <span>{translate(locale, `category.${category}`)}</span>
@@ -54,11 +54,17 @@ export function ContactStrip({ report, locale, stale }: { report: EvaluationRepo
   if (windows?.state !== 'known') return null
   return <figure className="contact-strip">
     <figcaption>{locale === 'en' ? 'Recorded contact fixture • 24 hours, repeating' : 'Зафіксована модель сеансів • 24 години, повторюється'}{stale ? (locale === 'en' ? ' • stale report' : ' • застарілий звіт') : ''}</figcaption>
-    <svg viewBox="0 0 1000 52" role="img" aria-label={`${windows.value.length} ${locale === 'en' ? 'synthetic contact windows per day, evenly spaced; not geographic predictions' : 'синтетичних сеансів на добу, рівномірно; не географічний прогноз'}`}>
+    {report.relay && <><p>{locale === 'en' ? 'Ingress → buffer → egress. Top row: receive windows. Bottom row: contracted return windows.' : 'Вхід → буфер → вихід. Верхній ряд: приймання. Нижній ряд: заброньоване повернення.'}</p>
+      <svg viewBox="0 0 1000 30" role="img" aria-label={locale === 'en' ? 'Recorded ingress windows' : 'Зафіксовані вхідні сеанси'}>
+        <rect width="1000" height="18" y="6" fill="#c9d6db" />
+        {report.relay.ingressWindows.map(w => <rect key={w.startMin} x={w.startMin / 1440 * 1000} y="2" width={(w.endMin - w.startMin) / 1440 * 1000} height="26" fill="#193d32" />)}
+      </svg></>}
+    <svg viewBox="0 0 1000 52" role="img" aria-label={`${windows.value.length} ${locale === 'en' ? 'synthetic egress contact windows per day; not geographic predictions' : 'синтетичних вихідних сеансів на добу; не географічний прогноз'}`}>
       <rect x="0" y="12" width="1000" height="18" rx="4" fill="#c9d6db" />
       {windows.value.map(w => <rect key={w.startMin} x={w.startMin / 1440 * 1000} y="8" width={Math.max(2, (w.endMin - w.startMin) / 1440 * 1000)} height="26" fill="#a64708" />)}
       <text x="0" y="50" fontSize="13">00:00</text><text x="480" y="50" fontSize="13">12:00</text><text x="958" y="50" fontSize="13">24:00</text>
     </svg>
-    <p>{locale === 'en' ? `${windows.value.length} opportunities to return data. Empty spans are waits, not a slow radio. Latency is valid only with a closing link and stable service.` : `${windows.value.length} можливостей повернути дані. Порожні проміжки — очікування, а не повільне радіо. Затримка чинна лише за замкненої лінії та стабільного обслуговування.`}</p>
+    <p>{report.relay ? (locale === 'en' ? 'Store batches until an egress opens. The evaluator checks both hops, peak buffer and FIFO completion plus ground processing; there is no camera geometry.' : 'Зберігайте пакети до вихідного сеансу. Модель перевіряє обидві лінії, пік буфера й завершення FIFO плюс наземну обробку; геометрія камери не використовується.')
+      : locale === 'en' ? `${windows.value.length} opportunities to return data. Empty spans are waits, not a slow radio. Latency is valid only with a closing link and stable service.` : `${windows.value.length} можливостей повернути дані. Порожні проміжки — очікування, а не повільне радіо. Затримка чинна лише за замкненої лінії та стабільного обслуговування.`}</p>
   </figure>
 }

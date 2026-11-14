@@ -172,7 +172,7 @@ const RESOURCE_SECTIONS: readonly ResourceSection[] = [
 function selectFields(context: EvaluationContext): readonly SelectField[] {
   const catalog = context.catalog
   return [
-    { key: 'payloadId', category: 'payload', options: catalog.payloads },
+    { key: 'payloadId', category: 'payload', options: [...catalog.payloads, ...(catalog.relayPayloads ?? [])] },
     { key: 'busId', category: 'bus', options: catalog.buses },
     { key: 'arrayId', category: 'array', options: catalog.arrays },
     { key: 'batteryId', category: 'battery', options: catalog.batteries },
@@ -283,7 +283,7 @@ function selectedParts(
 ): readonly SelectedPart[] {
   const catalog = context.catalog
   const groups: readonly { readonly key: PartField; readonly parts: readonly Part[] }[] = [
-    { key: 'payloadId', parts: catalog.payloads },
+    { key: 'payloadId', parts: [...catalog.payloads, ...(catalog.relayPayloads ?? [])] },
     { key: 'busId', parts: catalog.buses },
     { key: 'arrayId', parts: catalog.arrays },
     { key: 'batteryId', parts: catalog.batteries },
@@ -1123,7 +1123,7 @@ export default function MissionApp({
                           <dl>
                             {section.metrics.map((metric) => (
                               <div key={metric.key}>
-                                <dt>{t(metric.labelKey)}</dt>
+                                <dt>{report.relay && metric.key === 'generatedGBDay' ? (locale === 'en' ? 'Scheduled ingress demand' : 'Плановий вхідний потік') : t(metric.labelKey)}</dt>
                                 <dd>
                                   {report.metrics[metric.key] ? (
                                     formatMetric(
@@ -1141,8 +1141,9 @@ export default function MissionApp({
                           {section.titleKey === 'resource.communications' &&
                             report.metrics.latencyHours?.kind === 'finite' && (
                               <div className="latency-note">
-                                <p>{t('latency.short')}</p>
-                                <details>
+                                  <p>{report.relay ? (locale === 'en' ? 'Timestamped FIFO: ingress completion → last byte delivered + ground processing.' : 'FIFO з часовими мітками: завершення приймання → доставка останнього байта + наземна обробка.') : t('latency.short')}</p>
+                                  {!report.relay && <>
+                                  <details>
                                   <summary>{t('latency.detailTitle')}</summary>
                                   <p>{t('latency.detail')}</p>
                                   <p>{t('latency.basis')}</p>
@@ -1151,7 +1152,8 @@ export default function MissionApp({
                                     {t('evidence.physicalAgeUnknown')}.{' '}
                                     {t('evidence.notAGate')}
                                   </p>
-                                </details>
+                                  </details>
+                                  </>}
                               </div>
                             )}
                         </article>
@@ -1191,7 +1193,7 @@ export default function MissionApp({
                       {t('assumptions.baseline')}
                     </p>
                     <ul className="assumption-list" aria-describedby="assumption-baseline">
-                      {CORE_ASSUMPTIONS.map((key) => (
+                      {CORE_ASSUMPTIONS.filter(key => !report.relay || !['assumptions.tracking', 'assumptions.cloud', 'assumptions.access'].includes(key)).map((key) => (
                         <li key={key}>{t(key)}</li>
                       ))}
                     </ul>

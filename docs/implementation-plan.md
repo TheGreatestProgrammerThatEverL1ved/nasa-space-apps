@@ -1,6 +1,6 @@
 # MISSION FORGE — implementation plan for review
 
-**Status: planning only; execution is not authorized.** Baseline: reviewed commit **`8f07eb64d39cf10240b30c359f4a766972941eaf`** on **`mission-forge`**. This request passes the documentation-review gate and authorizes this plan, not application edits, dependency installation, scaffolding, or deployment. Stop for human approval of the plan before coding; review the implementation again at delivery.
+**Status: execution authorized** by the user's approval of **`71415323577c0cecc1764672e0621a47a0d74866`** on `mission-forge`. Original documentation baseline: `8f07eb64d39cf10240b30c359f4a766972941eaf`. Implement in milestone order, verify/push M1 before continuing, and stop at delivery review. Local implementation, verification and branch pushes are authorized; live publishing, PRs and merging `main` are not.
 
 Authority remains the [technical rulebook](game-rules-technical.md), derived from the [audited 14 November 2026 Step 2 record](02-game-rules.md). The [player guide](game-rules-player.md), [workflow](agent-workflow.md), and [agent entry point](../AGENTS.md) remain applicable. Their earlier documentation-phase stop records are historical; this planning authorization does not waive their execution gate. Decisions below resolve representation and delivery questions, **not science thresholds or hardware performance**.
 
@@ -146,7 +146,7 @@ Source generation, native sampling, jitter and tracking calculations are unchang
 
 For effective service known and a valid uniform-arrival/even-spacing fixture:
 
-1. Test **D≥G** and contact capacity≥arrivals/cycle using the audited inclusive tolerance.
+1. **Execution review correction:** for the evenly spaced fixture, the daily effective **D≥G** comparison using the audited `1e-9×max(1,abs(G))` allowance in GB/day is authoritative. Derive per-contact stability from that single decision; do not independently reapply a dimensionally rescaled tolerance to per-contact GB. Test a near-boundary deficit that fails the daily comparison but would pass an independently tolerated per-contact comparison. Storage remains a separate gate.
 2. Only a stable queue has the audited stable-periodic `queuePeakGB=G×gapMin/1440`. Require that peak≤usable storage separately. D=G passes the rate check but not automatically storage.
 3. For an unstable queue, mark stable-periodic peak not applicable; report backlog and, if defined, the fluid net-backlog storage estimate. **Do not report max queue zero, exact first-overflow time, or exact lost-byte totals.**
 4. Supported finite fixture latency requires established service, the supplied timing assumptions, rate stability, and no storage overflow. For positive generation with zero service, delay is tagged unbounded and WF-LATENCY NOT_MET. With positive but inadequate service or storage overflow, the stable lossless latency formula is unsupported; WF-LATENCY is UNVERIFIED, while the known data/storage failure fixes the overall outcome. Retain any conditional cadence-only expression as diagnostic, not a passing delay.

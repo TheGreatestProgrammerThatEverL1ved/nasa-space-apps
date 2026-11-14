@@ -218,3 +218,16 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- Node / Vite (Mission Forge) ---
+node_modules
+dist
+dist-ssr
+.vite
+coverage
+*.local
+.idea/
+
+# Local verification outputs (not application sources)
+test-results/
+playwright-report/

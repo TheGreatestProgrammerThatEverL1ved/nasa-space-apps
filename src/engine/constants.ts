@@ -1,0 +1,13 @@
+/** Audited model policy; warnings are not gates. Source: technical rulebook §§5–8. */
+export const MODEL_REVISION = 'step2-2026-11-14'
+export const CONTRACT_REVISION = '1.0.0'
+export const EARTH_RADIUS_KM = 6378.137
+export const MU_KM3_S2 = 398600.4418
+export const SCIENCE_IDS = ['WF-SPECTRUM', 'WF-GSD', 'WF-FOOTPRINT', 'WF-ACCESS', 'WF-DELIVERY', 'WF-LATENCY', 'WF-DURATION'] as const
+export const ENGINEERING_IDS = [
+  'ENG-MASS', 'ENG-SLOT', 'ENG-LAUNCH-INTERFACE', 'ENG-PAYLOAD-FIT',
+  'ENG-POWER-PACKAGE-FIT', 'ENG-BUDGET', 'ENG-SCHEDULE', 'ENG-MODES',
+  'ENG-POWER-BOL', 'ENG-POWER-EOL', 'ENG-ECLIPSE', 'ENG-PEAK-W',
+  'ENG-PEAK-WH', 'ENG-PAYLOAD-POINTING', 'ENG-MOTION-PROFILE',
+  'ENG-LINK', 'ENG-DATA-RATE', 'ENG-STORAGE', 'ENG-LIFETIME',
+] as const

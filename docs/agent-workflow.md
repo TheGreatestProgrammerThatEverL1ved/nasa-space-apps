@@ -6,9 +6,11 @@
 
 Three human review points are mandatory:
 
-1. **After documentation (current stop):** review these documents before authorizing implementation planning.
-2. **After planning:** review the proposed contract, slices, ownership, acceptance checks, and unresolved decisions before authorizing execution.
-3. **At delivery:** review the authorized implementation and its verification before accepting delivery.
+1. **After documentation (completed):** reviewed documentation authorized planning.
+2. **After planning (completed):** the user approved `71415323577c0cecc1764672e0621a47a0d74866` and explicitly authorized execution.
+3. **At delivery (next human gate):** review the authorized implementation and its verification before accepting delivery. No live publishing, PR or merge to `main` is authorized.
+
+Current milestone progress and actual execution checks are in [the execution log](execution-log.md). The historical Phase 1 record below remains unchanged as provenance, not a current prohibition on authorized implementation.
 
 During an authorized phase the orchestrator resolves routine editorial/integration choices and fixes recoverable errors. Do not ask the user to arbitrate every task. Escalate missing access, destructive Git conflicts, or genuine science/product decisions only when they block safe progress. Record nonblocking implementation questions beside the affected technical rule, not as invented answers.
 

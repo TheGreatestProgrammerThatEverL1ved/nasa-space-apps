@@ -7,7 +7,7 @@ A browser mission-design game for NASA Space Apps 2026, Dnipro, Ukraine. Design 
 - [Agent workflow and review gates](docs/agent-workflow.md)
 - [Agent entry point](AGENTS.md)
 
-**Current stage: playable implementation; final delivery verification in progress.** The approved [implementation plan](docs/implementation-plan.md) and [execution log](docs/execution-log.md) record authorization, progress and actual checks. Human delivery acceptance is still pending.
+**Current stage: delivery candidate ready for human review.** The authorized implementation and automated verification are complete. The [implementation plan](docs/implementation-plan.md) and [execution log](docs/execution-log.md) record scope, milestone commits and actual checks. Human delivery acceptance, including bilingual scientific/linguistic quality review, is pending. Nothing has been published live.
 
 ## Run locally
 
@@ -48,5 +48,9 @@ Only complete audited catalog choices are selectable. Results include seven scie
 The interface is text-first and has no animation or second simulated verdict. Keyboard controls, result focus, reduced motion and enlarged-text mobile reflow are tested. Automated accessibility scans do not replace assistive-technology testing or bilingual human scientific/linguistic review.
 
 See [third-party notices](docs/third-party-notices.md) for software licenses and attribution.
+
+## Verification
+
+A clean archive of committed files passed `npm ci`, typecheck, lint, build, **61 evaluator/conformance tests**, **19 UI tests**, and **6 real-Chrome tests against the production preview**. Coverage includes WF-A/B/C, all 15 audited cases, English/Ukrainian keyboard retry, snapshot staleness, automated axe scans and enlarged-text mobile reflow. `npm audit` reported zero vulnerabilities. Tested with Node **22.23.5** and npm **10.9.9**; Chrome must be separately installed for browser tests.
 
 All current passing examples are **provisional model passes**, conditional on synthetic access/contact fixtures and assumed tracking/integration. This is not a flight-feasibility claim, an operational fire-alert service, or NASA endorsement. The original full-region active-fire brief, coastal flood, and methane missions are deferred.

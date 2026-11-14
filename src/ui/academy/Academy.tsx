@@ -74,6 +74,18 @@ export default function Academy({ locale, onLocaleChange }: { locale: Locale; on
     if (open) { dialog?.showModal?.(); headingRef.current?.focus() }
     else dialog?.close?.()
   }, [open])
+  useEffect(() => {
+    const helpShortcut = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (event.key !== '?' || event.ctrlKey || event.metaKey || event.altKey
+        || target?.closest('input, select, textarea, [contenteditable="true"]') || dialogRef.current?.open) return
+      event.preventDefault()
+      returnRef.current = document.activeElement as HTMLElement
+      setGuided(false); setOpen(true)
+    }
+    document.addEventListener('keydown', helpShortcut)
+    return () => document.removeEventListener('keydown', helpShortcut)
+  }, [])
   const run = () => {
     setReport(evaluateMission({ ...FIRST_MISSION, groundId: ground }, DEFAULT_CONTEXT))
     setDirty(false)
@@ -81,7 +93,7 @@ export default function Academy({ locale, onLocaleChange }: { locale: Locale; on
   }
   const passed = !dirty && report?.outcome === 'MODEL_PASS_PROVISIONAL'
   return <>
-    <button className="help-entry" ref={helpRef} onClick={() => show(false)}>{c.help}</button>
+    <button className="help-entry" ref={helpRef} aria-keyshortcuts="?" title={locale === 'en' ? 'Help shortcut: ?' : 'Клавіша допомоги: ?'} onClick={() => show(false)}>{c.help}</button>
     {offered && <section className="academy-offer" aria-label={c.title}>
       <p>{c.offer}</p><button onClick={() => show(true)}>{c.start}</button><button onClick={remember}>{c.skip}</button>
     </section>}

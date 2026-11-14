@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent, type MouseEvent, type ReactNode } from 'react'
+import { useEffect, useImperativeHandle, useRef, useState, type ChangeEvent, type MouseEvent, type ReactNode, type Ref } from 'react'
 import type {
   Category,
   CheckResult,
@@ -47,7 +47,12 @@ export interface MissionAppProps {
   readonly focusMissionPicker?: boolean
   readonly campaignPanel?: ReactNode
   readonly onReport?: (report: EvaluationReport) => void
+  readonly onDraftChange?: (config: MissionConfiguration) => void
+  readonly ref?: Ref<MissionHandle>
+  readonly debriefAction?: ReactNode
 }
+export interface EquipmentRequest { readonly partId: string; readonly field: PartField; readonly refund?: boolean }
+export interface MissionHandle { fitEquipment: (request: EquipmentRequest, context: EvaluationContext) => void }
 
 type SelectOption = { readonly id: string; readonly label: Labels }
 type SelectField = {
@@ -469,6 +474,9 @@ export default function MissionApp({
   focusMissionPicker = false,
   campaignPanel,
   onReport,
+  onDraftChange,
+  ref,
+  debriefAction,
 }: MissionAppProps) {
   const [localLocale, setLocalLocale] = useState<Locale>('en')
   const locale = controlledLocale ?? localLocale
@@ -514,7 +522,9 @@ export default function MissionApp({
   const handleSelect = (field: PartField, event: ChangeEvent<HTMLSelectElement>) => {
     const value = event.currentTarget.value
     if (draft[field] === value) return
-    setDraft((previous) => ({ ...previous, [field]: value }) as MissionConfiguration)
+    const next = { ...draft, [field]: value }
+    setDraft(next)
+    onDraftChange?.(next)
     if (report) setStale(true)
   }
 
@@ -554,6 +564,19 @@ export default function MissionApp({
     event.preventDefault()
     inspectPart(repairDestination(report?.diagnostics[0]))
   }
+  useImperativeHandle(ref, () => ({
+    fitEquipment(request, nextContext) {
+      const field = selectFields(nextContext).find(f => f.key === request.field)
+      const available = field?.options.some(p => p.id === request.partId)
+      if (!field || (!available && !request.refund)) { pickerRef.current?.focus(); return }
+      if (!request.refund || draft[field.key] === request.partId) {
+        const next = { ...draft, [field.key]: request.refund ? field.options[0]?.id ?? '' : request.partId }
+        setDraft(next); onDraftChange?.(next)
+        if (report) setStale(true)
+      }
+      inspectPart(field.key)
+    },
+  }))
 
   const scienceChecks = report?.checks.filter((check) => check.scope === 'science') ?? []
   const engineeringChecks =
@@ -967,6 +990,7 @@ export default function MissionApp({
             </div>
           )}
           {report && <ContactStrip report={report} locale={locale} stale={isStale} />}
+          {report?.outcome === 'MODEL_PASS_PROVISIONAL' && !isStale && debriefAction}
 
           {report && (
             <>

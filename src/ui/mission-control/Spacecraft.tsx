@@ -15,12 +15,13 @@ export function Spacecraft({ config, context, locale, onInspect }: {
   onInspect: (field: PartField) => void
 }) {
   const array = context.catalog.arrays.find(p => p.id === config.arrayId)
+  const relay = context.catalog.relayPayloads?.some(p => p.id === config.payloadId) ?? false
   return <section className="spacecraft-bay" aria-label={locale === 'en' ? 'Spacecraft hangar' : 'Ангар апарата'}>
     <div className="bay-heading">
       <span>{locale === 'en' ? 'YOUR SPACECRAFT' : 'ВАШ АПАРАТ'}</span>
       <span>{locale === 'en' ? 'Draft • inspect a subsystem' : 'Чернетка • огляньте підсистему'}</span>
     </div>
-    <svg viewBox="0 0 680 300" role="img" aria-label={locale === 'en' ? 'Conceptual spacecraft with bus, camera, solar wings and antenna. Not to scale.' : 'Концептуальний апарат із платформою, камерою, сонячними крилами й антеною. Не в масштабі.'}>
+    <svg viewBox="0 0 680 300" role="img" aria-label={locale === 'en' ? 'Conceptual spacecraft with bus, payload, solar wings and antenna. Not to scale.' : 'Концептуальний апарат із платформою, приладом, сонячними крилами й антеною. Не в масштабі.'}>
       <defs><pattern id="solar-cells" width="24" height="26" patternUnits="userSpaceOnUse"><rect width="22" height="24" fill="#244b67" stroke="#8fb7cc" strokeWidth=".6" /></pattern></defs>
       <ellipse cx="340" cy="163" rx="286" ry="111" fill="none" stroke="#577286" strokeDasharray="4 9" />
       <g transform={`translate(340 145) scale(${array && array.bolW > 55 ? 1.15 : 1}) translate(-340 -145)`}>
@@ -30,11 +31,11 @@ export function Spacecraft({ config, context, locale, onInspect }: {
       <path d="M321 99 L415 78 L415 205 L321 230Z" fill="#768c9c" stroke="#c4d5dc" strokeWidth="2" />
       <path d="M270 65 L321 99 L321 230 L270 195Z" fill="#a7b9c3" />
       <path d="M321 99 L321 230 M270 129 L321 161 L415 138" fill="none" stroke="#354b5c" strokeWidth="4" />
-      <circle cx="351" cy="181" r="26" fill="#172d40" stroke="#f8bc74" strokeWidth="7" />
-      <circle cx="351" cy="181" r="12" fill="#82b2c4" />
+      {relay ? <g><rect x="329" y="156" width="46" height="48" rx="5" fill="#172d40" stroke="#f8bc74" strokeWidth="4" /><path d="M337 166h30 M337 180h30 M337 194h30" stroke="#82b2c4" strokeWidth="5" /></g>
+        : <g><circle cx="351" cy="181" r="26" fill="#172d40" stroke="#f8bc74" strokeWidth="7" /><circle cx="351" cy="181" r="12" fill="#82b2c4" /></g>}
       <path d="M371 48 L402 14 M387 30 L427 36" stroke="#f8bc74" strokeWidth="5" />
       <text x="36" y="266" fill="#d7e7ed" fontSize="14">{locale === 'en' ? 'SOLAR POWER' : 'СОНЯЧНЕ ЖИВЛЕННЯ'}</text>
-      <text x="290" y="272" fill="#f8bc74" fontSize="14">{locale === 'en' ? 'PAYLOAD' : 'ПРИЛАД'}</text>
+      <text x="290" y="272" fill="#f8bc74" fontSize="14">{relay ? (locale === 'en' ? 'PACKET BUFFER' : 'БУФЕР ПАКЕТІВ') : (locale === 'en' ? 'PAYLOAD' : 'ПРИЛАД')}</text>
       <text x="475" y="45" fill="#d7e7ed" fontSize="14">{locale === 'en' ? 'RADIO LINK' : 'РАДІОЛІНІЯ'}</text>
     </svg>
     <p className="bay-caption">{locale === 'en' ? 'Original schematic, not a flight layout. Select a slot to inspect and fit parts.' : 'Оригінальна схема, не льотне компонування. Виберіть слот для огляду й заміни деталей.'}</p>

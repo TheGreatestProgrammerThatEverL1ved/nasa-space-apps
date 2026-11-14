@@ -388,6 +388,20 @@ export const en = {
   'latency.basis': 'Metric basis: synthetic-smoothed-periodic-bound.',
   'latency.unknownAge':
     'Physical observation-to-product age: unknown. This is not an additional hard gate.',
+  'check.VM-SPECTRUM': 'Visible Bayer camera covers required visible light',
+  'check.VM-GSD': 'Effective detail is 60 m or finer',
+  'check.VM-FOOTPRINT': 'Usable visible corridor is at least 80 km wide',
+  'check.VM-ACCESS': 'Scheduled daylit access gap is 24 h or less',
+  'check.VM-DELIVERY': 'Useful clear-scene products meet the fixed plan',
+  'check.VM-LATENCY': 'Visible delivery bound is 12 h or less',
+  'check.VM-DURATION': 'Visible mapping lasts at least one year',
+  'repair.VM-SPECTRUM': 'Fit a visible Bayer camera. A thermal camera cannot record the required visible features.',
+  'repair.VM-GSD': 'The 8 mm wide lens is too coarse. Try the 35 mm analogue and rerun; check corridor width too.',
+  'repair.VM-FOOTPRINT': 'The 70 mm long lens is too narrow. Try the 35 mm analogue to retain corridor width.',
+  'repair.VM-ACCESS': 'Use the accepted daylit target fixture; no cloud-free revisit is inferred.',
+  'repair.VM-DELIVERY': 'Sustain the full Bayer frame stream and check useful return after rejection.',
+  'repair.VM-LATENCY': 'Check contact cadence and a stable queue, not bandwidth alone.',
+  'repair.VM-DURATION': 'Fund and support one year within the engineering budget.',
 } as const
 
 export type MessageKey = keyof typeof en

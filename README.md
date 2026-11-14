@@ -2,6 +2,8 @@
 
 A bilingual browser mission-design game for NASA Space Apps 2026, Dnipro, Ukraine. Play **Return the Heat Map** (scheduled wildfire imagery) or **Urban Heat Map** (city-scale thermal-pattern screening). Learn how mass, power, budget, data, communications and time shape a complete mission.
 
+Also playable: **Trace the Shoreline**, a genuinely visible-light lens-selection mission. Run the 8 mm starter, repair to the 35 mm analogue, then compare the narrower 70 mm option. Primary evidence, exact assumptions and reproducible figures are in [non-thermal missions](docs/nonthermal-missions.md).
+
 - [Player guide](docs/game-rules-player.md)
 - [Technical game rules](docs/game-rules-technical.md)
 - [New scenario policy and primary references](docs/scenario-expansion.md)

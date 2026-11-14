@@ -12,7 +12,7 @@ const urbanPass = URBAN_MISSION.passingConfiguration
 
 it('defines complete bilingual scenarios and preserves audited default context identity', () => {
   expect(WILDFIRE_MISSION.context).toBe(DEFAULT_CONTEXT)
-  expect(MISSIONS.map(m => m.id)).toEqual(['wildfire', 'urban-heat'])
+  expect(MISSIONS.map(m => m.id)).toEqual(['wildfire', 'urban-heat', 'visible-mapping'])
   for (const mission of MISSIONS) {
     for (const locale of ['en', 'ua'] as const) {
       for (const key of ['title', 'subtitle', 'brief', 'hint', 'goals', 'lesson'] as const) {

@@ -56,6 +56,8 @@ export interface Radio extends PartBase {
 }
 export interface Payload extends PartBase {
   readonly category: 'payload'
+  /** Legacy audited payload is thermal; new Bayer data is one mosaic, not three full bands. */
+  readonly mode?: 'visible-bayer'
   readonly activeW: number
   readonly peakW: number
   readonly bandsMicrometers: readonly (readonly [number, number])[]

@@ -46,6 +46,7 @@ export function validatePart(part: Part): string[] {
   if (part.category === 'bus' && (!validEvidence(part.jitterArcsec, 'number') || part.jitterArcsec.state === 'known' && part.jitterArcsec.value < 0)) issues.push(`${part.id}.jitterArcsec`)
   if (part.category === 'radio' && (!part.antenna || !['directed', 'omni'].includes(part.antenna.kind) || part.antenna.kind === 'directed' && (!Number.isFinite(part.antenna.errorDeg) || part.antenna.errorDeg <= 0))) issues.push(`${part.id}.antenna`)
   if (part.category === 'payload' && !validBands(part.bandsMicrometers)) issues.push(`${part.id}.bandsMicrometers`)
+  if (part.category === 'payload' && part.mode !== undefined && part.mode !== 'visible-bayer') issues.push(`${part.id}.mode`)
   if ('busIds' in part && (!Array.isArray(part.busIds) || !part.busIds.every(id => typeof id === 'string'))) issues.push(`${part.id}.busIds`)
   if (!part.evidence || typeof part.evidence !== 'object' || Object.values(part.evidence).some(value => !validProvenance(value))) issues.push(`${part.id}.evidence`)
   return issues
@@ -78,9 +79,10 @@ export function validateContext(context: EvaluationContext): string[] {
   const scenario = context?.scenario
   const id = scenario?.id
   const policy = scenario?.science
-  if (id !== undefined && !['wildfire', 'urban-heat'].includes(id)) issues.push('scenario.id')
+  if (id !== undefined && !['wildfire', 'urban-heat', 'visible-mapping'].includes(id)) issues.push('scenario.id')
   if (policy !== undefined && !validSciencePolicy(policy)) issues.push('scenario.science')
   if (id === 'urban-heat' && (!validSciencePolicy(policy) || policy.prefix !== 'UH')) issues.push('scenario.science')
+  if (id === 'visible-mapping' && (!validSciencePolicy(policy) || policy.prefix !== 'VM')) issues.push('scenario.science')
   if ((id === 'wildfire' || id === undefined) && policy !== undefined && (!validSciencePolicy(policy) || policy.prefix !== 'WF')) issues.push('scenario.science')
   if (id === undefined && policy !== undefined) issues.push('scenario.id')
   if ((context?.fixture?.scenarioId ?? 'wildfire') !== (id ?? 'wildfire')) issues.push('fixture.scenarioId')

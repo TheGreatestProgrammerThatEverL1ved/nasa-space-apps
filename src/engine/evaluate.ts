@@ -34,7 +34,7 @@ export function evaluateMission(request: unknown, context: EvaluationContext): E
   const c = parsed.config
   const science = validSciencePolicy(context.scenario.science) ? context.scenario.science
     : context.scenario.id === undefined && context.scenario.science === undefined ? WILDFIRE_SCIENCE : null
-  const prefix = context.scenario.id === 'urban-heat' ? 'UH' : 'WF'
+  const prefix = context.scenario.id === 'urban-heat' ? 'UH' : context.scenario.id === 'visible-mapping' ? 'VM' : 'WF'
   const scienceCheckIds = scienceIds({ prefix })
   const cat = context.catalog
   const b = cat.buses.find(p => p.id === c?.busId)
@@ -125,7 +125,7 @@ export function evaluateMission(request: unknown, context: EvaluationContext): E
   const supported = b && battery && o ? Math.min(b.lifeYears, battery.lifeYears, o.residenceYears, context.scenario.fundedYears) : undefined
   if (supported !== undefined) store('supportedYears', supported, 'year')
   add('ENG-LIFETIME', supported === undefined ? missing('year') : finite(supported, 'year'), '>=', context.scenario.plannedYears, 'LIFETIME_SHORT')
-  add(`${prefix}-SPECTRUM`, science && p && validBands(p.bandsMicrometers) ? finite(p.bandsMicrometers.some(([low, high]) => low <= science.spectrumMicrometers[0] && high >= science.spectrumMicrometers[1]) ? 1 : 0) : missing(), 'true', science ? 1 : NaN, 'SCIENCE_REQUIREMENT_UNMET')
+  add(`${prefix}-SPECTRUM`, science && p && validBands(p.bandsMicrometers) ? finite((prefix !== 'VM' || p.mode === 'visible-bayer') && p.bandsMicrometers.some(([low, high]) => low <= science.spectrumMicrometers[0] && high >= science.spectrumMicrometers[1]) ? 1 : 0) : missing(), 'true', science ? 1 : NaN, 'SCIENCE_REQUIREMENT_UNMET')
   add(`${prefix}-GSD`, geom?.effectiveScaleM ?? missing('m'), '<=', science?.maxScaleM ?? NaN, 'SCIENCE_REQUIREMENT_UNMET', ['ENG-MOTION-PROFILE'])
   add(`${prefix}-FOOTPRINT`, geom ? finite(geom.usableSwathKm, 'km') : missing('km'), '>=', science?.minFootprintKm ?? NaN, 'SCIENCE_REQUIREMENT_UNMET')
   const access = o && context.fixture.targetOrbitIds.includes(o.id) && context.fixture.targetGapHours.state === 'known' ? finite(context.fixture.targetGapHours.value, 'h') : missing('h')

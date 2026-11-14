@@ -33,7 +33,7 @@ export default function App() {
   const onReport = (report: EvaluationReport) => {
     if (campaignActive) saveProgress(awardCampaignPass(campaign.progress, report, mission.id))
   }
-  const campaignMissions = campaignActive && !campaign.progress.completedMissionIds.includes('wildfire') ? [MISSIONS[0]!] : MISSIONS
+  const campaignMissions = !campaignActive ? MISSIONS : !campaign.progress.completedMissionIds.includes('wildfire') ? [MISSIONS[0]!] : MISSIONS.filter(m => ['wildfire', 'urban-heat'].includes(m.id))
   return <MissionApp key={`${mission.id}:${campaignActive ? campaign.progress.unlockedPartIds.join(',') : 'direct'}`}
     context={context}
     initialConfiguration={campaignActive && mission.id === 'wildfire' ? WF_A : mission.initialConfiguration}

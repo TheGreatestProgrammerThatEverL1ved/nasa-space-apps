@@ -40,4 +40,6 @@ All passes remain **MODEL_PASS_PROVISIONAL**. Physical observation-to-product ag
 
 ## Further-scenario backlog
 
+Night-02 adds [visible-light mapping and its independently verified analogue policy](nonthermal-missions.md). This supplement's wildfire/urban thresholds remain unchanged.
+
 A lunar far-side relay is not a renamed Earth-imaging mission. It needs lunar geometry/occultation, Earth visibility, two-hop service/queue/link assumptions, power/launch interfaces and independent passing/failing fixtures. Do not apply Earth optical swath equations or a nominal Earth ground network to it. Other scenarios likewise require distinct supported capability and test evidence before becoming selectable.

@@ -16,6 +16,14 @@ export const URBAN_SCIENCE: SciencePolicy = Object.freeze({
   stretch: Object.freeze({ scaleM: 150, accessHours: 12, usefulGBDay: 2, latencyHours: 6, years: 3 }),
 })
 
+/** Daylit clear-scene visible corridor mapping. Synthetic educational limits. */
+export const VISIBLE_SCIENCE: SciencePolicy = Object.freeze({
+  prefix: 'VM', spectrumMicrometers: Object.freeze([.45, .69] as const),
+  maxScaleM: 60, minFootprintKm: 80, maxAccessHours: 24,
+  minUsefulGBDay: .4, maxLatencyHours: 12, minYears: 1,
+  stretch: Object.freeze({ scaleM: 45, accessHours: 12, usefulGBDay: .5, latencyHours: 6, years: 3 }),
+})
+
 export function scienceIds(policy: Pick<SciencePolicy, 'prefix'>): readonly string[] {
   return ['SPECTRUM', 'GSD', 'FOOTPRINT', 'ACCESS', 'DELIVERY', 'LATENCY', 'DURATION']
     .map(suffix => `${policy.prefix}-${suffix}`)

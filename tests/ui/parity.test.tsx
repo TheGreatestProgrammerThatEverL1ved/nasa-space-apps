@@ -11,6 +11,10 @@ import { finite, unknown, unavailable } from '../../src/engine/metric'
 import { contextCopy, evidenceCopy } from '../conformance/helpers'
 
 afterEach(cleanup)
+async function openEvidence(user: ReturnType<typeof userEvent.setup>, locale: 'en' | 'ua' = 'en') {
+  const summary = screen.queryByText(MESSAGES[locale]['control.evidence'], { selector: 'summary' })
+  if (summary && !summary.closest('details')?.open) await user.click(summary)
+}
 it('has identical dictionary keys and interpolation parameters, with no empty translations', () => {
   expect(Object.keys(MESSAGES.ua).sort()).toEqual(Object.keys(MESSAGES.en).sort())
   for (const key of Object.keys(MESSAGES.en) as (keyof typeof MESSAGES.en)[]) {
@@ -40,6 +44,7 @@ it('retains evaluated field evidence after draft edits and catalog changes', asy
   const context = structuredClone(DEFAULT_CONTEXT)
   const { rerender } = render(<MissionApp context={context} initialConfiguration={FIRST_MISSION} evaluate={r => evaluateMission(r, context)} />)
   await user.click(screen.getByRole('button', { name: 'Run mission' }))
+  await openEvidence(user)
   const evidence = screen.getByRole('region', { name: 'Field-level provenance' })
   const original = evidence.textContent
   await user.selectOptions(screen.getByLabelText('Ground service', { exact: true }), 'gs-network')
@@ -90,6 +95,7 @@ for (const locale of ['en', 'ua'] as const) {
     render(<MissionApp context={context} initialConfiguration={{ ...FIRST_MISSION, groundId: 'gs-network' }} evaluate={r => evaluateMission(r, context)} />)
     if (locale === 'ua') await user.click(screen.getByRole('button', { name: 'Українська' }))
     await user.click(screen.getByRole('button', { name: locale === 'en' ? 'Run mission' : 'Запустити місію' }))
+    await openEvidence(user, locale)
     const assumptions = screen.getByRole('region', { name: MESSAGES[locale]['assumptions.title'] })
     expect(assumptions.textContent).toMatch(locale === 'en' ? /nominal|baseline/i : /номінальн|базов/i)
     expect(assumptions.textContent).toMatch(locale === 'en' ? /not established|not confirmed/i : /не підтвердж|не встановлен/i)

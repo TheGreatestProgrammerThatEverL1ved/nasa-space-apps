@@ -1,6 +1,6 @@
 /* Global reset and control-room theme tokens. No external fonts or assets. */
 :root {
-  --bg: #f7f1e6;
+  --bg: #eeeade;
   --surface: #fffdf8;
   --surface-alt: #f1e8d8;
   --ink: #101c33;

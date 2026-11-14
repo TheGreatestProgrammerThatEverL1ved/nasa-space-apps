@@ -5,7 +5,7 @@ export const en = {
   'app.missionName': 'Return the Heat Map',
   'app.missionType': 'Scheduled wildfire thermal-anomaly training mission',
   'app.brief':
-    'Design a scheduled thermal-imaging mission for a land-management science team. Choose eight parts, review six resources, and run the model. This is a training model, not operational fire detection or a flight-qualification claim.',
+    'Design a scheduled thermal-imaging mission for a land-management science team. Choose eight parts, run the model, and repair what fails. Training model — not operational fire detection or flight qualification.',
   'app.notPlayable': 'Flood and methane missions are not playable in this version.',
   'app.skipToControls': 'Skip to mission controls',
   'app.scenarioLabel': 'Scenario',
@@ -18,11 +18,30 @@ export const en = {
   'locale.en': 'English',
   'locale.ua': 'Українська',
 
+  'control.eyebrow': 'MISSION CONTROL / TRAINING SIMULATOR',
+  'control.sequence': 'Choose parts → run the model → repair the failed gate.',
+  'control.stepBrief': 'Mission brief',
+  'control.stepBuild': 'Build the design',
+  'control.stepRun': 'Run the model',
+  'control.stepRepair': 'Repair and rerun',
+  'control.telemetry': 'Resource telemetry',
+  'control.margin': 'Resource headroom · after reserve',
+  'control.scheduleSlack': 'Schedule slack',
+  'control.details': 'Checks, resources and assumptions',
+  'control.evidence': 'Sources and field-level evidence',
+  'control.repairTitle': 'Repair the failed gate',
+  'control.awaiting': 'Run to measure this design',
+  'control.contactLesson':
+    'A single station gives a 7.1 h fixture latency bound; the ground network gives 3.1 h. More Mbps cannot create a missing contact.',
+  'control.groundAction': 'Review ground service',
+  'control.goal': 'Every science and engineering gate must pass',
+  'control.diagramCaption': 'Concept illustration · not a propagated orbit',
+
   'config.title': 'Design your mission',
   'config.intro':
-    'Choose one part in each category. Any change marks the current result as out of date.',
+    'Choose one part per category, then run the model. Any change marks the current result as out of date.',
   'config.groundHint':
-    'Contact cadence changes delivery latency. A faster radio cannot create a missing contact.',
+    'A single station bounds fixture delivery at 7.1 h; the ground network bounds it at 3.1 h. To meet the 6 h limit, change Ground service to the network — more Mbps cannot create a missing contact.',
   'config.run': 'Run mission',
   'config.runNote':
     'The evaluation runs locally and deterministically. Run again to check the current design.',

@@ -1,0 +1,35 @@
+import { expect, test } from '@playwright/test'
+
+for (const locale of ['en', 'ua'] as const) {
+  test(`mission-control repair and accessible disclosures (${locale})`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await page.goto('./')
+    if (locale === 'ua') await page.getByRole('button', { name: 'Українська', exact: true }).click()
+    await expect(page.locator('#ground-hint')).toContainText(/7[.,]1/)
+    await expect(page.locator('#ground-hint')).toContainText(/3[.,]1/)
+    await page.screenshot({ path: testInfo.outputPath(`control-ready-${locale}.png`) })
+    const run = page.getByRole('button', { name: locale === 'en' ? 'Run mission' : 'Запустити місію', exact: true })
+    await run.click()
+    await expect(page.getByTestId('verdict')).toBeFocused()
+    await expect(page.getByTestId('latency-value')).toBeVisible()
+    await expect(page.getByTestId('latency-value')).toContainText(/7[.,]1/)
+    // Detailed audit material is retained, but does not bury the immediate repair.
+    const disclosures = page.locator('details').filter({ has: page.getByTestId('requirement-ENG-MASS') })
+    expect(await disclosures.count()).toBeGreaterThan(0)
+    const audit = disclosures.first()
+    await expect(audit).not.toHaveAttribute('open', '')
+    const summary = audit.locator(':scope > summary')
+    await summary.focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('requirement-ENG-MASS')).toBeVisible()
+    await page.keyboard.press('Enter')
+    await expect(page.getByTestId('requirement-ENG-MASS')).not.toBeVisible()
+    await page.screenshot({ path: testInfo.outputPath(`control-failed-${locale}.png`) })
+    await page.locator('#groundId').selectOption('gs-network')
+    await expect(page.getByTestId('stale-notice')).toBeVisible()
+    await run.click()
+    await expect(page.getByTestId('latency-value')).toContainText(/3[.,]1/)
+    await expect(page.getByTestId('verdict')).toContainText(locale === 'en' ? /provisional/i : /попередн|умовн/i)
+    await page.screenshot({ path: testInfo.outputPath(`control-pass-${locale}.png`) })
+  })
+}

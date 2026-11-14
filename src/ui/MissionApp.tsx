@@ -7,6 +7,7 @@ import type {
   EvaluationReport,
   Labels,
   Locale,
+  Metric,
   MissionConfiguration,
   Outcome,
   Part,
@@ -26,7 +27,6 @@ import {
   formatLimit,
   formatMetric,
   formatNumber,
-  formatUnit,
   formatValue,
 } from './format'
 import '../App.css'
@@ -105,6 +105,14 @@ const KNOWN_ASSUMPTION_CODES = new Set([
   'life',
   'cloud-rejection',
 ])
+
+/** Compact rail: audited headroom ratios that the evaluator reports at Run. */
+const MARGIN_ROWS: readonly { readonly key: string; readonly labelKey: MessageKey }[] = [
+  { key: 'massMargin', labelKey: 'resource.mass' },
+  { key: 'powerMargin', labelKey: 'resource.power' },
+  { key: 'budgetMargin', labelKey: 'resource.budget' },
+  { key: 'dataMargin', labelKey: 'resource.data' },
+]
 
 const RESOURCE_SECTIONS: readonly ResourceSection[] = [
   {
@@ -427,22 +435,18 @@ function checkLimitText(check: CheckResult, locale: Locale): string {
   return `${relation} ${formatLimit(check.limit, check.actual.unit, locale, check.checkId)}`
 }
 
-function latencyQuantity(
+function latencyText(
   metric: EvaluationReport['metrics'][string] | undefined,
   locale: Locale,
-) {
-  if (!metric) {
-    return <span data-testid="latency-value">{translate(locale, 'metric.unavailable')}</span>
-  }
-  if (metric.kind !== 'finite') {
-    return <span data-testid="latency-value">{formatMetric(metric, locale, 'latencyHours')}</span>
-  }
-  return (
-    <>
-      <span data-testid="latency-value">{formatValue(metric.value, '', locale, 'latencyHours')}</span>{' '}
-      <span>{formatUnit(metric.unit, locale)}</span>
-    </>
-  )
+): string {
+  if (!metric) return translate(locale, 'metric.absent')
+  return formatMetric(metric, locale, 'latencyHours')
+}
+
+/** Decorative fill only; the exact reported percent always stays in text. */
+function marginPercent(metric: Metric | undefined): number | null {
+  if (!metric || metric.kind !== 'finite') return null
+  return Math.max(0, Math.min(100, metric.value * 100))
 }
 
 export default function MissionApp({
@@ -461,6 +465,7 @@ export default function MissionApp({
   const groundRef = useRef<HTMLSelectElement>(null)
 
   const t = (key: MessageKey) => translate(locale, key)
+  const tc = (key: MessageKey, _fallback?: string) => translate(locale, key)
   const fields = selectFields(context)
 
   useEffect(() => {
@@ -471,6 +476,7 @@ export default function MissionApp({
   useEffect(() => {
     if (runSignal === 0) return
     resultHeadingRef.current?.focus()
+    resultHeadingRef.current?.scrollIntoView?.({ block: 'start' })
   }, [runSignal])
 
   // A report only describes the five revision strings it was computed under.
@@ -586,35 +592,117 @@ export default function MissionApp({
       </a>
 
       <header className="mission-header">
-        <div className="mission-identity">
-          <p className="brand">{t('app.brand')}</p>
-          <h1>{t('app.missionName')}</h1>
-          <p className="mission-type">{t('app.missionType')}</p>
-        </div>
-        <div className="locale-switch" role="group" aria-label={t('app.language')}>
-          <button
-            type="button"
-            className={locale === 'en' ? 'locale-active' : undefined}
-            aria-pressed={locale === 'en'}
-            onClick={() => setLocale('en')}
-          >
-            {t('locale.en')}
-          </button>
-          <button
-            type="button"
-            className={locale === 'ua' ? 'locale-active' : undefined}
-            aria-pressed={locale === 'ua'}
-            onClick={() => setLocale('ua')}
-          >
-            {t('locale.ua')}
-          </button>
+        <div className="header-grid">
+          <div className="mission-identity">
+            <p className="product-mark">{t('app.brand')}</p>
+            <p className="brand">{tc('control.eyebrow', 'Mission control')}</p>
+            <h1>{t('app.missionName')}</h1>
+            <p className="mission-type">{t('app.missionType')}</p>
+            <ol
+              className="mission-steps"
+              aria-label={tc('control.sequence', 'Brief, build, run, repair')}
+            >
+              <li>{tc('control.stepBrief', 'Brief')}</li>
+              <li>{tc('control.stepBuild', 'Build')}</li>
+              <li>{tc('control.stepRun', 'Run')}</li>
+              <li>{tc('control.stepRepair', 'Repair')}</li>
+            </ol>
+          </div>
+
+          <div className="header-side">
+            <div className="locale-switch" role="group" aria-label={t('app.language')}>
+              <button
+                type="button"
+                className={locale === 'en' ? 'locale-active' : undefined}
+                aria-pressed={locale === 'en'}
+                onClick={() => setLocale('en')}
+              >
+                {t('locale.en')}
+              </button>
+              <button
+                type="button"
+                className={locale === 'ua' ? 'locale-active' : undefined}
+                aria-pressed={locale === 'ua'}
+                onClick={() => setLocale('ua')}
+              >
+                {t('locale.ua')}
+              </button>
+            </div>
+
+            <figure className="orbit-figure">
+              <svg
+                className="orbit-svg"
+                viewBox="0 0 280 128"
+                role="presentation"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <defs>
+                  <linearGradient id="orbit-fade" x1="0" x2="1" y1="0" y2="1">
+                    <stop offset="0" stopColor="#f3b678" stopOpacity="0.95" />
+                    <stop offset="1" stopColor="#8fa8d4" stopOpacity="0.25" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M14 104 C 72 14, 206 8, 266 74"
+                  fill="none"
+                  stroke="url(#orbit-fade)"
+                  strokeWidth="2"
+                  strokeDasharray="5 7"
+                />
+                <path
+                  d="M196 30 l18 -10 8 14 -18 10 z"
+                  fill="#f5ecdd"
+                  stroke="#f3b678"
+                  strokeWidth="1.4"
+                />
+                <path d="M199 33 l12 -7 M205 41 l8 -5" stroke="#8fa8d4" strokeWidth="1.6" />
+                <path
+                  d="M186 20 l-8 -8 M222 22 l8 -9"
+                  stroke="#f5ecdd"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M52 110 h52 M64 110 v-12 h28 v12 M78 98 v-9"
+                  fill="none"
+                  stroke="#f5ecdd"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M88 98 a13 13 0 0 1 18 5"
+                  fill="none"
+                  stroke="#f3b678"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M188 42 C 150 60, 118 74, 100 96"
+                  fill="none"
+                  stroke="#f3b678"
+                  strokeWidth="1.6"
+                  strokeDasharray="3 6"
+                />
+                <circle cx="100" cy="96" r="3.4" fill="#f3b678" />
+                <circle cx="188" cy="42" r="3" fill="#f5ecdd" />
+              </svg>
+              <figcaption>
+                {tc(
+                  'control.diagramCaption',
+                  'Training schematic: satellite downlink to a ground station',
+                )}
+              </figcaption>
+            </figure>
+          </div>
         </div>
       </header>
 
-      <main>
+      <main className="command-grid">
         <section className="panel brief-panel" aria-labelledby="brief-heading">
+          <p className="section-kicker">{tc('control.goal', 'Mission goal')}</p>
           <h2 id="brief-heading">{t('app.briefTitle')}</h2>
-          <p>{t('app.brief')}</p>
+          <p className="brief-copy">{t('app.brief')}</p>
           <ul className="fact-list">
             <li>
               <span className="fact-label">{t('app.scenarioLabel')}:</span> {t('app.missionName')}
@@ -641,10 +729,11 @@ export default function MissionApp({
 
         <section
           id="mission-controls"
-          className="panel"
+          className="panel workbench-panel"
           aria-labelledby="config-heading"
           tabIndex={-1}
         >
+          <p className="section-kicker">{tc('control.stepBuild', 'Build')}</p>
           <h2 id="config-heading">{t('config.title')}</h2>
           <p>{t('config.intro')}</p>
           <div
@@ -659,7 +748,9 @@ export default function MissionApp({
                   id={field.key}
                   ref={field.key === 'groundId' ? groundRef : undefined}
                   value={draft[field.key]}
-                  aria-describedby={field.key === 'groundId' ? 'ground-hint' : undefined}
+                  aria-describedby={
+                    field.key === 'groundId' ? 'ground-hint contact-lesson' : undefined
+                  }
                   onChange={(event) => handleSelect(field.key, event)}
                 >
                   {field.options.map((option) => (
@@ -685,68 +776,88 @@ export default function MissionApp({
             >
               {t('config.run')}
             </button>
+            <p id="run-note" className="note run-note">
+              {t('config.runNote')}
+            </p>
           </div>
-          <p id="run-note" className="note">
-            {t('config.runNote')}
-          </p>
         </section>
 
-        <section className="panel resources-panel" aria-labelledby="resources-heading">
-          <h2 id="resources-heading">{t('resources.title')}</h2>
-          <p>{t('resources.intro')}</p>
-          {isStale && report && (
-            <p className="stale-hint">{t('resources.stale')}</p>
-          )}
-          <div className="resource-grid">
-            {RESOURCE_SECTIONS.map((section) => (
-              <article className="resource-card" key={section.titleKey}>
-                <h3>{t(section.titleKey)}</h3>
-                {report ? (
-                  <dl>
-                    {section.metrics.map((metric) => (
-                      <div key={metric.key}>
-                        <dt>{t(metric.labelKey)}</dt>
-                        <dd>
-                          {metric.key === 'latencyHours' ? (
-                            latencyQuantity(report.metrics[metric.key], locale)
-                          ) : report.metrics[metric.key] ? (
-                            formatMetric(report.metrics[metric.key], locale, metric.key)
-                          ) : (
-                            t('metric.absent')
-                          )}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                ) : (
-                  <p>{t('resources.awaiting')}</p>
-                )}
-                {section.titleKey === 'resource.communications' &&
-                  report?.metrics.latencyHours?.kind === 'finite' && (
-                    <div className="latency-note">
-                      <p>{t('latency.short')}</p>
-                      <details>
-                        <summary>{t('latency.detailTitle')}</summary>
-                        <p>{t('latency.detail')}</p>
-                        <p>{t('latency.basis')}</p>
-                        <p>
-                          {t('evidence.physicalAge')}: {t('evidence.physicalAgeUnknown')}.{' '}
-                          {t('evidence.notAGate')}
-                        </p>
-                      </details>
+        <aside className="panel telemetry-panel" aria-labelledby="telemetry-heading">
+          <p className="section-kicker rail-kicker">{tc('control.stepRun', 'Run')}</p>
+          <h2 id="telemetry-heading">{tc('control.telemetry', 'Resource telemetry')}</h2>
+          {isStale && report && <p className="rail-stale">{t('resources.stale')}</p>}
+          <p className="rail-label">{tc('control.margin', 'Margin')}</p>
+          {report ? (
+            <>
+              <dl className="margin-list">
+                {MARGIN_ROWS.map((row) => {
+                  const metric = report.metrics[row.key]
+                  const percent = marginPercent(metric)
+                  return (
+                    <div className={`margin-row${metric?.kind === 'finite' && metric.value < 0 ? ' margin-negative' : ''}`} key={row.key}>
+                      <dt>{t(row.labelKey)}</dt>
+                      <dd>
+                        <span className="margin-value">
+                          {metric ? formatMetric(metric, locale, row.key) : t('metric.absent')}
+                        </span>
+                        {percent !== null && (
+                          <span className="margin-track" aria-hidden="true">
+                            <span className="margin-fill" style={{ width: `${percent}%` }} />
+                          </span>
+                        )}
+                      </dd>
                     </div>
-                  )}
-              </article>
-            ))}
-          </div>
-          <p className="note">{t('resources.help')}</p>
-        </section>
+                  )
+                })}
+                <div className="margin-row">
+                  <dt>{t('control.scheduleSlack')}</dt>
+                  <dd>
+                    <span className="margin-value">
+                      {report.metrics.scheduleSlackMonths
+                        ? formatMetric(
+                            report.metrics.scheduleSlackMonths,
+                            locale,
+                            'scheduleSlackMonths',
+                          )
+                        : t('metric.absent')}
+                    </span>
+                  </dd>
+                </div>
+                <div className="margin-row margin-latency">
+                  <dt>{t('metric.latencyHours')}</dt>
+                  <dd>
+                    <span className="margin-value" data-testid="latency-value">
+                      {latencyText(report.metrics.latencyHours, locale)}
+                    </span>
+                  </dd>
+                </div>
+              </dl>
+              <p id="contact-lesson" className="contact-lesson">
+                {tc(
+                  'control.contactLesson',
+                  'Contact cadence sets delivery time: a more frequent ground service can move the delivery bound from 7.1 h to 3.1 h. More radio bandwidth cannot create a missing contact.',
+                )}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="awaiting">{tc('control.awaiting', 'Awaiting first run')}</p>
+              <p id="contact-lesson" className="contact-lesson">
+                {tc(
+                  'control.contactLesson',
+                  'Contact cadence sets delivery time: a more frequent ground service can move the delivery bound from 7.1 h to 3.1 h. More radio bandwidth cannot create a missing contact.',
+                )}
+              </p>
+            </>
+          )}
+        </aside>
 
         <section
           id="mission-result"
           className={`panel results-panel${isStale ? ' is-stale' : ''}`}
           aria-labelledby="result-heading"
         >
+          <p className="section-kicker">{tc('control.stepRepair', 'Repair')}</p>
           <h2
             id="result-heading"
             ref={resultHeadingRef}
@@ -772,6 +883,19 @@ export default function MissionApp({
           <p id="verdict-summary">
             {report ? summaryText(report, locale) : t('results.placeholderBody')}
           </p>
+          {report && (
+            <div className="verdict-facts">
+              <span>{translate(locale, 'results.scienceCounts', {
+                met: formatNumber(report.counts.science.MET, locale),
+                total: formatNumber(report.counts.science.total, locale),
+              })}</span>
+              {report.checks.filter(check => check.status !== 'MET').slice(0, 1).map(check => (
+                <strong key={check.checkId}>
+                  {checkActualText(check, locale)} / {checkLimitText(check, locale)}
+                </strong>
+              ))}
+            </div>
+          )}
 
           {report && (
             <>
@@ -798,58 +922,10 @@ export default function MissionApp({
                 </div>
               )}
 
-              <a className="back-link" href="#mission-controls" onClick={backToConfiguration}>
-                {t('results.backToConfig')}
-              </a>
-
-              <section className="result-section" aria-labelledby="science-heading">
-                <h3 id="science-heading">{t('results.scienceTitle')}</h3>
-                <p>
-                  {translate(locale, 'results.scienceCounts', {
-                    met: formatNumber(report.counts.science.MET, locale),
-                    total: formatNumber(report.counts.science.total, locale),
-                  })}
-                </p>
-                <p>
-                  {translate(locale, 'results.countsDetail', {
-                    met: formatNumber(report.counts.science.MET, locale),
-                    notMet: formatNumber(report.counts.science.NOT_MET, locale),
-                    unverified: formatNumber(report.counts.science.UNVERIFIED, locale),
-                  })}
-                </p>
-                <p className="note">{t('results.checksIntro')}</p>
-                {scienceChecks.length > 0 ? (
-                  <ul className="check-list">{scienceChecks.map(renderCheck)}</ul>
-                ) : (
-                  <p>{t('results.scienceEmpty')}</p>
-                )}
-              </section>
-
-              <section className="result-section" aria-labelledby="engineering-heading">
-                <h3 id="engineering-heading">{t('results.engineeringTitle')}</h3>
-                <p>
-                  {translate(locale, 'results.engineeringCounts', {
-                    met: formatNumber(report.counts.engineering.MET, locale),
-                    total: formatNumber(report.counts.engineering.total, locale),
-                  })}
-                </p>
-                <p>
-                  {translate(locale, 'results.countsDetail', {
-                    met: formatNumber(report.counts.engineering.MET, locale),
-                    notMet: formatNumber(report.counts.engineering.NOT_MET, locale),
-                    unverified: formatNumber(report.counts.engineering.UNVERIFIED, locale),
-                  })}
-                </p>
-                {engineeringChecks.length > 0 ? (
-                  <ul className="check-list">{engineeringChecks.map(renderCheck)}</ul>
-                ) : (
-                  <p>{t('results.engineeringEmpty')}</p>
-                )}
-              </section>
-
-              <section className="result-section" aria-labelledby="diagnostics-heading">
+              {report.diagnostics.length > 0 && <div className="repair-card" aria-labelledby="diagnostics-heading">
+                <p className="section-kicker">{tc('control.repairTitle', 'Repair priorities')}</p>
                 <h3 id="diagnostics-heading">{t('diagnostics.title')}</h3>
-                <p>{t('diagnostics.intro')}</p>
+                <p className="repair-intro">{t('diagnostics.intro')}</p>
                 {report.diagnostics.length > 0 ? (
                   <ul className="diagnostic-list">
                     {report.diagnostics.map((diagnostic, index) => (
@@ -858,7 +934,8 @@ export default function MissionApp({
                           <div>
                             <dt>{t('diagnostics.reasonLabel')}</dt>
                             <dd>
-                              {reasonText(locale, diagnostic)} <code>{diagnostic.reasonCode}</code>
+                              {reasonText(locale, diagnostic)}{' '}
+                              <code>{diagnostic.reasonCode}</code>
                             </dd>
                           </div>
                           <div>
@@ -896,190 +973,315 @@ export default function MissionApp({
                 ) : (
                   <p>{t('diagnostics.empty')}</p>
                 )}
-              </section>
+                <a
+                  className="repair-cta"
+                  href="#mission-controls"
+                  onClick={backToConfiguration}
+                  aria-describedby="contact-lesson"
+                >
+                  {tc('control.groundAction', 'Open ground-service selection')}
+                </a>
+                <a className="back-link" href="#mission-controls" onClick={backToConfiguration}>
+                  {t('results.backToConfig')}
+                </a>
+              </div>}
 
-              <section className="result-section" aria-labelledby="warnings-heading">
-                <h3 id="warnings-heading">{t('warnings.title')}</h3>
-                <p>{t('warnings.intro')}</p>
-                {report.warnings.length > 0 ? (
-                  <ul className="warning-list">
-                    {report.warnings.map((warning, index) => (
-                      <li key={`${warning}-${index}`}>
-                        {warningText(locale, warning)}
-                        {!hasMessage(
-                          `warning.${warning.toLowerCase().replace(/[^a-z0-9-]/g, '')}`,
-                        ) && (
-                          <>
-                            {' '}
-                            <code>{warning}</code>
-                          </>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>{t('warnings.empty')}</p>
-                )}
-              </section>
+              <details className="drawer">
+                <summary>{tc('control.details', 'Detailed checks and resources')}</summary>
+                <div className="drawer-body">
+                  <section
+                    className="result-section"
+                    aria-labelledby="science-heading"
+                  >
+                    <h3 id="science-heading">{t('results.scienceTitle')}</h3>
+                    <p>
+                      {translate(locale, 'results.scienceCounts', {
+                        met: formatNumber(report.counts.science.MET, locale),
+                        total: formatNumber(report.counts.science.total, locale),
+                      })}
+                    </p>
+                    <p>
+                      {translate(locale, 'results.countsDetail', {
+                        met: formatNumber(report.counts.science.MET, locale),
+                        notMet: formatNumber(report.counts.science.NOT_MET, locale),
+                        unverified: formatNumber(report.counts.science.UNVERIFIED, locale),
+                      })}
+                    </p>
+                    <p className="note">{t('results.checksIntro')}</p>
+                    {scienceChecks.length > 0 ? (
+                      <ul className="check-list">{scienceChecks.map(renderCheck)}</ul>
+                    ) : (
+                      <p>{t('results.scienceEmpty')}</p>
+                    )}
+                  </section>
 
-              <section className="result-section" aria-labelledby="assumptions-heading">
-                <h3 id="assumptions-heading">{t('assumptions.title')}</h3>
-                <p>{t('assumptions.intro')}</p>
-                <p id="assumption-baseline" className="assumption-scope">
-                  {t('assumptions.baseline')}
-                </p>
-                <ul className="assumption-list" aria-describedby="assumption-baseline">
-                  {CORE_ASSUMPTIONS.map((key) => (
-                    <li key={key}>{t(key)}</li>
-                  ))}
-                </ul>
-                {extraAssumptions.length > 0 && (
-                  <details>
-                    <summary>{t('assumptions.recordsTitle')}</summary>
-                    <ul>
-                      {extraAssumptions.map((assumption, index) => (
-                        <li key={`${assumption}-${index}`}>
-                          <code>{assumption}</code>
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
-              </section>
+                  <section
+                    className="result-section"
+                    aria-labelledby="engineering-heading"
+                  >
+                    <h3 id="engineering-heading">{t('results.engineeringTitle')}</h3>
+                    <p>
+                      {translate(locale, 'results.engineeringCounts', {
+                        met: formatNumber(report.counts.engineering.MET, locale),
+                        total: formatNumber(report.counts.engineering.total, locale),
+                      })}
+                    </p>
+                    <p>
+                      {translate(locale, 'results.countsDetail', {
+                        met: formatNumber(report.counts.engineering.MET, locale),
+                        notMet: formatNumber(report.counts.engineering.NOT_MET, locale),
+                        unverified: formatNumber(report.counts.engineering.UNVERIFIED, locale),
+                      })}
+                    </p>
+                    {engineeringChecks.length > 0 ? (
+                      <ul className="check-list">{engineeringChecks.map(renderCheck)}</ul>
+                    ) : (
+                      <p>{t('results.engineeringEmpty')}</p>
+                    )}
+                  </section>
 
-              <section className="result-section" aria-labelledby="evidence-heading">
-                <h3 id="evidence-heading">{t('evidence.title')}</h3>
-                <p>{t('evidence.intro')}</p>
-                <dl className="evidence-list">
-                  <div>
-                    <dt>{t('evidence.modelRevision')}</dt>
-                    <dd>
-                      <code>{report.modelRevision}</code>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>{t('evidence.contractRevision')}</dt>
-                    <dd>
-                      <code>{report.contractRevision}</code>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>{t('evidence.configurationKey')}</dt>
-                    <dd>
-                      <code>{report.configurationKey}</code>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>{t('evidence.validation')}</dt>
-                    <dd>
-                      {report.validation.kind === 'valid'
-                        ? t('evidence.valid')
-                        : t('evidence.invalid')}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>{t('evidence.serviceState')}</dt>
-                    <dd>
-                      {report.service
-                        ? t(SERVICE_MESSAGE[report.service.state])
-                        : t('evidence.notReported')}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>{t('evidence.queueStatus')}</dt>
-                    <dd>
-                      {report.queue
-                        ? t(QUEUE_MESSAGE[report.queue.status])
-                        : t('evidence.notReported')}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>{t('evidence.timelineEligible')}</dt>
-                    <dd>{report.timelineEligible ? t('evidence.yes') : t('evidence.no')}</dd>
-                  </div>
-                  <div>
-                    <dt>{t('metric.merit')}</dt>
-                    <dd>{formatMetric(report.merit, locale, 'merit')}</dd>
-                  </div>
-                  <div>
-                    <dt>{t('evidence.sources')}</dt>
-                    <dd>
-                      {report.sources.length > 0 ? (
-                        <ul className="source-list">
-                          {report.sources.map((source, index) => (
-                            <li key={`${source}-${index}`}>
-                              <SourceReference sourceRef={source} locale={locale} />
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        t('evidence.noSources')
-                      )}
-                    </dd>
-                  </div>
-                </dl>
-                <p className="note">{t('evidence.roundingNote')}</p>
-              </section>
-
-              <section className="result-section" aria-labelledby="field-evidence-heading">
-                <h3 id="field-evidence-heading">{t('fieldEvidence.title')}</h3>
-                <p>{t('fieldEvidence.intro')}</p>
-                {isStale && <p className="note">{t('fieldEvidence.stale')}</p>}
-                {provenanceParts.length > 0 ? (
-                  <div className="field-evidence-grid">
-                    {provenanceParts.map(({ key, part }) => (
-                      <article className="field-evidence-card" key={key}>
-                        <h4>{part.label[locale]}</h4>
-                        <p className="field-evidence-category">
-                          {t(CATEGORY_MESSAGE[part.category])}
-                        </p>
-                        {Object.keys(part.evidence).length > 0 ? (
-                          <dl className="field-evidence-list">
-                            {Object.entries(part.evidence).map(([field, provenance]) => (
-                              <div key={field}>
-                                <dt>
-                                  <code>{field}</code>
-                                </dt>
+                  <section
+                    className="result-section"
+                    aria-labelledby="resources-heading"
+                  >
+                    <h3 id="resources-heading">{t('resources.title')}</h3>
+                    <p>{t('resources.intro')}</p>
+                    <div className="resource-grid">
+                      {RESOURCE_SECTIONS.map((section) => (
+                        <article className="resource-card" key={section.titleKey}>
+                          <h4>{t(section.titleKey)}</h4>
+                          <dl>
+                            {section.metrics.map((metric) => (
+                              <div key={metric.key}>
+                                <dt>{t(metric.labelKey)}</dt>
                                 <dd>
-                                  <span
-                                    className={`provenance-kind provenance-${provenance.kind}`}
-                                  >
-                                    {t(PROVENANCE_MESSAGE[provenance.kind])}
-                                  </span>
-                                  {provenance.sourceRefs.length > 0 && (
-                                    <ul className="source-list">
-                                      {provenance.sourceRefs.map((sourceRef) => (
-                                        <li key={sourceRef}>
-                                          <SourceReference
-                                            sourceRef={sourceRef}
-                                            locale={locale}
-                                          />
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  )}
-                                  {provenance.assumptionIds.length > 0 && (
-                                    <p className="assumption-ids">
-                                      <span>{t('fieldEvidence.assumptions')}: </span>
-                                      {provenance.assumptionIds.map((assumptionId) => (
-                                        <code key={assumptionId}>{assumptionId}</code>
-                                      ))}
-                                    </p>
+                                  {report.metrics[metric.key] ? (
+                                    formatMetric(
+                                      report.metrics[metric.key],
+                                      locale,
+                                      metric.key,
+                                    )
+                                  ) : (
+                                    t('metric.absent')
                                   )}
                                 </dd>
                               </div>
                             ))}
                           </dl>
-                        ) : (
-                          <p>{t('fieldEvidence.noFields')}</p>
-                        )}
-                      </article>
-                    ))}
-                  </div>
-                ) : (
-                  <p>{t('fieldEvidence.noFields')}</p>
-                )}
-              </section>
+                          {section.titleKey === 'resource.communications' &&
+                            report.metrics.latencyHours?.kind === 'finite' && (
+                              <div className="latency-note">
+                                <p>{t('latency.short')}</p>
+                                <details>
+                                  <summary>{t('latency.detailTitle')}</summary>
+                                  <p>{t('latency.detail')}</p>
+                                  <p>{t('latency.basis')}</p>
+                                  <p>
+                                    {t('evidence.physicalAge')}:{' '}
+                                    {t('evidence.physicalAgeUnknown')}.{' '}
+                                    {t('evidence.notAGate')}
+                                  </p>
+                                </details>
+                              </div>
+                            )}
+                        </article>
+                      ))}
+                    </div>
+                    <p className="note">{t('resources.help')}</p>
+                  </section>
+
+                  <section className="result-section" aria-labelledby="warnings-heading">
+                    <h3 id="warnings-heading">{t('warnings.title')}</h3>
+                    <p>{t('warnings.intro')}</p>
+                    {report.warnings.length > 0 ? (
+                      <ul className="warning-list">
+                        {report.warnings.map((warning, index) => (
+                          <li key={`${warning}-${index}`}>
+                            {warningText(locale, warning)}
+                            {!hasMessage(
+                              `warning.${warning.toLowerCase().replace(/[^a-z0-9-]/g, '')}`,
+                            ) && (
+                              <>
+                                {' '}
+                                <code>{warning}</code>
+                              </>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>{t('warnings.empty')}</p>
+                    )}
+                  </section>
+
+                  <section className="result-section" aria-labelledby="assumptions-heading">
+                    <h3 id="assumptions-heading">{t('assumptions.title')}</h3>
+                    <p>{t('assumptions.intro')}</p>
+                    <p id="assumption-baseline" className="assumption-scope">
+                      {t('assumptions.baseline')}
+                    </p>
+                    <ul className="assumption-list" aria-describedby="assumption-baseline">
+                      {CORE_ASSUMPTIONS.map((key) => (
+                        <li key={key}>{t(key)}</li>
+                      ))}
+                    </ul>
+                    {extraAssumptions.length > 0 && (
+                      <details>
+                        <summary>{t('assumptions.recordsTitle')}</summary>
+                        <ul>
+                          {extraAssumptions.map((assumption, index) => (
+                            <li key={`${assumption}-${index}`}>
+                              <code>{assumption}</code>
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+                  </section>
+                </div>
+              </details>
+
+              <details className="drawer">
+                <summary>{tc('control.evidence', 'Evidence and provenance')}</summary>
+                <div className="drawer-body">
+                  <section className="result-section" aria-labelledby="evidence-heading">
+                    <h3 id="evidence-heading">{t('evidence.title')}</h3>
+                    <p>{t('evidence.intro')}</p>
+                    <dl className="evidence-list">
+                      <div>
+                        <dt>{t('evidence.modelRevision')}</dt>
+                        <dd>
+                          <code>{report.modelRevision}</code>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>{t('evidence.contractRevision')}</dt>
+                        <dd>
+                          <code>{report.contractRevision}</code>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>{t('evidence.configurationKey')}</dt>
+                        <dd>
+                          <code>{report.configurationKey}</code>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>{t('evidence.validation')}</dt>
+                        <dd>
+                          {report.validation.kind === 'valid'
+                            ? t('evidence.valid')
+                            : t('evidence.invalid')}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>{t('evidence.serviceState')}</dt>
+                        <dd>
+                          {report.service
+                            ? t(SERVICE_MESSAGE[report.service.state])
+                            : t('evidence.notReported')}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>{t('evidence.queueStatus')}</dt>
+                        <dd>
+                          {report.queue
+                            ? t(QUEUE_MESSAGE[report.queue.status])
+                            : t('evidence.notReported')}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>{t('evidence.timelineEligible')}</dt>
+                        <dd>{report.timelineEligible ? t('evidence.yes') : t('evidence.no')}</dd>
+                      </div>
+                      <div>
+                        <dt>{t('metric.merit')}</dt>
+                        <dd>{formatMetric(report.merit, locale, 'merit')}</dd>
+                      </div>
+                      <div>
+                        <dt>{t('evidence.sources')}</dt>
+                        <dd>
+                          {report.sources.length > 0 ? (
+                            <ul className="source-list">
+                              {report.sources.map((source, index) => (
+                                <li key={`${source}-${index}`}>
+                                  <SourceReference sourceRef={source} locale={locale} />
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            t('evidence.noSources')
+                          )}
+                        </dd>
+                      </div>
+                    </dl>
+                    <p className="note">{t('evidence.roundingNote')}</p>
+                  </section>
+
+                  <section
+                    className="result-section"
+                    aria-labelledby="field-evidence-heading"
+                  >
+                    <h3 id="field-evidence-heading">{t('fieldEvidence.title')}</h3>
+                    <p>{t('fieldEvidence.intro')}</p>
+                    {isStale && <p className="note">{t('fieldEvidence.stale')}</p>}
+                    {provenanceParts.length > 0 ? (
+                      <div className="field-evidence-grid">
+                        {provenanceParts.map(({ key, part }) => (
+                          <article className="field-evidence-card" key={key}>
+                            <h4>{part.label[locale]}</h4>
+                            <p className="field-evidence-category">
+                              {t(CATEGORY_MESSAGE[part.category])}
+                            </p>
+                            {Object.keys(part.evidence).length > 0 ? (
+                              <dl className="field-evidence-list">
+                                {Object.entries(part.evidence).map(([field, provenance]) => (
+                                  <div key={field}>
+                                    <dt>
+                                      <code>{field}</code>
+                                    </dt>
+                                    <dd>
+                                      <span
+                                        className={`provenance-kind provenance-${provenance.kind}`}
+                                      >
+                                        {t(PROVENANCE_MESSAGE[provenance.kind])}
+                                      </span>
+                                      {provenance.sourceRefs.length > 0 && (
+                                        <ul className="source-list">
+                                          {provenance.sourceRefs.map((sourceRef) => (
+                                            <li key={sourceRef}>
+                                              <SourceReference
+                                                sourceRef={sourceRef}
+                                                locale={locale}
+                                              />
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      )}
+                                      {provenance.assumptionIds.length > 0 && (
+                                        <p className="assumption-ids">
+                                          <span>{t('fieldEvidence.assumptions')}: </span>
+                                          {provenance.assumptionIds.map((assumptionId) => (
+                                            <code key={assumptionId}>{assumptionId}</code>
+                                          ))}
+                                        </p>
+                                      )}
+                                    </dd>
+                                  </div>
+                                ))}
+                              </dl>
+                            ) : (
+                              <p>{t('fieldEvidence.noFields')}</p>
+                            )}
+                          </article>
+                        ))}
+                      </div>
+                    ) : (
+                      <p>{t('fieldEvidence.noFields')}</p>
+                    )}
+                  </section>
+                </div>
+              </details>
             </>
           )}
         </section>

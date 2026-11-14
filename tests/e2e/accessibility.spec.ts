@@ -21,6 +21,10 @@ for (const locale of ['en', 'ua'] as const) {
     await page.getByRole('button', { name: locale === 'en' ? 'Run mission' : 'Запустити місію', exact: true }).click()
     await expect(page.getByTestId('latency-value')).toContainText(/3[.,]1/)
     await page.setViewportSize({ width: 320, height: 844 })
+    // Audit the disclosed content too, not just the compact control deck.
+    for (const summary of await page.locator('details > summary').all()) {
+      if (!(await summary.evaluate(el => el.parentElement?.hasAttribute('open')))) await summary.click()
+    }
     const narrowOverflow = await page.evaluate(() => [...document.querySelectorAll('body *')]
       .filter(el => el.getBoundingClientRect().right > innerWidth + 1)
       .map(el => ({ tag: el.tagName, className: el.className, text: el.textContent?.slice(0, 60), right: el.getBoundingClientRect().right })).slice(0, 15))

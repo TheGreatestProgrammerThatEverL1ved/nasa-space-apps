@@ -878,6 +878,8 @@ details ul {
 
 /* Command deck: primary controls first, audit detail on demand. */
 .mission-shell { max-width: 1440px; padding: 0 32px 64px; }
+.skip-link { top: 0; transform: translateY(-150%); }
+.skip-link:focus-visible { top: 16px; transform: translateY(0); }
 .mission-header {
   display: block;
   padding: 32px 36px 26px;
@@ -906,6 +908,12 @@ details ul {
 .command-grid { grid-template-columns: minmax(0, 1fr) minmax(250px, 320px); gap: 20px; padding-top: 24px; align-items: start; }
 .panel { padding: 24px; border-radius: 12px; border-color: #d4cdbd; box-shadow: 0 3px 12px #17243a04; }
 .brief-panel { grid-column: 1 / -1; border-left: 4px solid var(--orange); }
+.mission-picker { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 360px); gap: 16px; align-items: center; }
+.mission-picker h2 { margin-bottom: 0; }
+.mission-goals { margin-top: 18px; font-size: .83rem; }
+.mission-goals h3 { font-size: .8rem; margin-bottom: 8px; }
+.mission-goals details { margin-top: 14px; }
+.mission-source-list { display: grid; gap: 14px; }
 .brief-panel h2 { font-size: 1.1rem; }
 .brief-copy { max-width: 100ch; font-size: .94rem; }
 .section-kicker { font: 700 .65rem var(--mono); text-transform: uppercase; letter-spacing: .12em; color: var(--orange); margin-bottom: 8px; }
@@ -977,7 +985,9 @@ details ul {
   .mission-steps { gap: 10px 18px; }
   .product-mark { font-size: .85rem; }
   .panel { padding: 20px 16px; }
+  .results-panel h2 { font-size: 1.25rem; }
   .select-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .mission-picker { grid-template-columns: minmax(0, 1fr); }
   .margin-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .brief-panel > .note { display: block; margin-left: 0; }
   .run-row { flex-wrap: wrap; }

@@ -26,7 +26,7 @@ Every threshold/stretch is a **synthetic game-design choice**, not a NASA requir
 
 ### Reproducible teaching designs
 
-- **Starting failure:** WF-B hardware with S-band and the ground network. Effective capacity **1.890 GB/day <3.1850496 GB/day**; both the growing queue and **1.134 GB/day <1.5 GB/day** useful products fail. Repair: select X-band and recheck cost, power and all gates.
+- **Starting failure:** WF-B hardware with S-band and the ground network. Effective capacity **1.890 GB/day <3.1850496 GB/day**; the growing queue fails. Even the optimistic useful-return ceiling **1.134 GB/day <1.5 GB/day** proves insufficiency. That ceiling is explicitly labelled, not represented as established achieved delivery; latency and achieved useful delivery remain unknown while the queue is unstable. Repair: select X-band and recheck cost, power and all gates.
 - **Passing alternative:** WF-B hardware with X-band and a single station. Capacity **12.6 GB/day**, useful products **1.91102976 GB/day**, effective scale **170.334026 m**, footprint **104.231570 km**, fixture latency **7.1 h**. Urban can accept that latency; wildfire cannot.
 - The single-station setup plus annual cost is **$95,000** versus network **$320,000**; after reserve this saves **$258,750**. The difference is a game allocation, not a vendor quote.
 

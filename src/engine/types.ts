@@ -121,6 +121,37 @@ export type Tracking =
   | { readonly mode: 'accepted'; readonly busIds: readonly string[]; readonly maxRateDegSec: number; readonly residualSpeedMps: number; readonly provenance: Provenance }
   | { readonly mode: 'disabled' }
   | { readonly mode: 'unknown' }
+/** Scenario science policy. All limits are explicit teaching choices, not flight requirements. */
+export interface SciencePolicy {
+  readonly prefix: string
+  readonly spectrumMicrometers: readonly [number, number]
+  readonly maxScaleM: number
+  readonly minFootprintKm: number
+  readonly maxAccessHours: number
+  readonly minUsefulGBDay: number
+  readonly maxLatencyHours: number
+  readonly minYears: number
+  readonly stretch: {
+    readonly scaleM: number
+    readonly accessHours: number
+    readonly usefulGBDay: number
+    readonly latencyHours: number
+    readonly years: number
+  }
+}
+export interface MissionDefinition {
+  readonly id: string
+  readonly title: Labels
+  readonly subtitle: Labels
+  readonly brief: Labels
+  readonly lesson: Labels
+  readonly hint: Labels
+  readonly goals: Labels
+  readonly context: EvaluationContext
+  readonly initialConfiguration: MissionConfiguration
+  readonly passingConfiguration: MissionConfiguration
+  readonly sources: readonly { readonly title: string; readonly url: string; readonly scope: Labels }[]
+}
 export interface EvaluationContext {
   readonly modelRevision: string
   readonly contractRevision: string
@@ -129,6 +160,9 @@ export interface EvaluationContext {
   readonly fixtureRevision: string
   readonly catalog: Catalog
   readonly scenario: {
+    /** Absent only for backwards-compatible audited wildfire contexts. */
+    readonly id?: string
+    readonly science?: SciencePolicy
     readonly budgetUsd: number
     readonly availableMonths: number
     readonly plannedYears: number
@@ -136,6 +170,8 @@ export interface EvaluationContext {
     readonly acceptedFraction: number
   }
   readonly fixture: {
+    /** Required for newly added scenarios; legacy absence denotes audited wildfire. */
+    readonly scenarioId?: string
     readonly targetGapHours: Evidence<number>
     readonly targetOrbitIds: readonly string[]
     readonly receiverCompatible: Evidence<boolean>
@@ -146,6 +182,8 @@ export interface EvaluationContext {
   }
 }
 export interface CheckResult {
+  /** An insufficient ceiling can prove failure without proving achieved delivery. */
+  readonly actualBasis?: 'upper-bound'
   readonly checkId: string
   readonly scope: 'science' | 'engineering'
   readonly status: Status

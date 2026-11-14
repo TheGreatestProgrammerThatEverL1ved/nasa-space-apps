@@ -4,7 +4,8 @@
 
 - User authorized redesign and scenario expansion beyond the historical wildfire-only phase; audited wildfire mechanics remain frozen.
 - Branch: `mission-forge`; origin: `https://github.com/TheGreatestProgrammerThatEverL1ved/nasa-space-apps.git`.
-- Baseline / last remotely verified checkpoint: `397c041591ce3efaaa6d49faf7d67b4dd36fed55` (M4).
+- Baseline: `397c041591ce3efaaa6d49faf7d67b4dd36fed55` (M4).
+- Last remotely verified checkpoint: **`adc8ddec23a7e6dc85f1eb061e1fd82a1a41a504`**, independently playable wildfire redesign; push and `ls-remote` equality succeeded.
 - Fetch confirms 0 ahead / 0 behind. No tracked local changes at entry.
 - Preserve unrelated untracked `docs/01-analysis-and-plan.md`, `docs/research/`, `opencode.jsonc`, `public/`, `src/assets/`. Never blanket-stage.
 - No deployment, PR, merge, extra branch/worktree, force push, credential changes, reset or clean.
@@ -34,6 +35,10 @@ Sol owns shared contracts, routing, integration, tests, documentation and all Gi
 
 **Checkpoint 1 ready for push:** `npm run typecheck`, `npm run lint`, `npm test` (**61**), `npm run test:ui` (**19**), `npm run build`, `MISSION_FORGE_PREVIEW=1 npm run test:e2e` (**8**) passed. Chrome covers both languages, keyboard repair, focus/staleness, WF-A/B/C, native disclosure keyboard activation, zero axe findings, 390/320px at 200% root text, opened detail content and reduced motion. Fixed one actual contrast finding; corrected a dynamic-locator test bug before the final passing run. Final before/after screenshots are captured and visually inspected, including the immediate failure/repair screen.
 
-**Exact resume step:** inspect actual Git state; finish explicit checkpoint-1 staging/scope review, commit and push on `mission-forge`, verify remote SHA equality, then integrate checkpoint 2. The last remotely verified checkpoint remains M4 until that verification succeeds.
+**Checkpoint 1 clean-copy proof:** archived committed `adc8dde` into an isolated cache directory (no branch/worktree or local/private inputs), then `npm ci`, typecheck, lint, 61 evaluator tests, 19 UI tests, build and 8 production Chrome tests all passed; npm reported zero vulnerabilities.
 
-Checkpoint-2 WIP `src/engine/types.ts`, `src/engine/science.ts`, `src/data/scenarios.ts` must **not** enter the independently usable checkpoint-1 application commit. No evaluator integration yet. Checkpoint-1 test additions are `tests/e2e/redesign.spec.ts`; hidden-region unit assertions will need accessible disclosures opened. Finish tests, screenshot inspection and exact staging before checkpoint-1 push; then implement scenario evaluator/router.
+**Checkpoint 2 integration now in working tree:** additive science/mission contracts, explicit policy guard/context+fixture binding, unchanged shared engineering/queue, parameterized science checks/merit, bilingual scenario definitions, mission picker and fresh per-mission report state with language/focus preservation. Urban S/network has a labelled insufficient useful-return *upper bound*, not fictional achieved delivery; wildfire outputs remain unchanged. Sol's independent review caught the upper-bound and picker-focus gaps; both are fixed. Starter latency hints now explicitly require starter X-band hardware, closing link and stable queue; negative schedule slack is deficit-styled.
+
+**Checkpoint 2 checks passed:** typecheck, lint, **90 evaluator**, **22 UI**, build and **10 real-Chrome production-preview** tests. Both languages exercise urban failure → X-band repair → cheaper single-station provisional pass, then return to wildfire's 7.1 h failure. Inclusive urban boundaries, malformed policy/missing evidence/context swaps, unchanged WF-A/B/C/all 15 cases, picker focus, stale state, zero axe findings and 320px/200% disclosed reflow pass. Screenshot inspection found an enlarged-text skip-link hiding bug; transform-based hiding and a browser regression fixed it. Captured five urban screenshots. Independent connected Sol targeted rereview found no remaining must-fix item; no Codex coverage claimed.
+
+**Exact resume step:** inspect actual Git state, review/stage only checkpoint-2 paths, commit candidate, prove its clean archived install/build/tests, then push and verify remote SHA equality. Lunar relay is a documented backlog rather than dishonest Earth-geometry reuse. Campaign is optional only after checkpoint 2 is green and pushed. All workers are idle; free DeepSeek quota is exhausted, so do not redispatch it or choose a paid route.

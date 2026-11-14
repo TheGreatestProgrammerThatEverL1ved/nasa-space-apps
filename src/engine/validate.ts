@@ -1,4 +1,5 @@
 import type { EvaluationContext, Evidence, MissionConfiguration, Part } from './types'
+import { validSciencePolicy } from './science'
 
 export const CONFIG_KEYS = ['scenarioId', 'payloadId', 'busId', 'arrayId', 'batteryId', 'radioId', 'groundId', 'orbitId', 'launcherId'] as const
 export function parseRequest(request: unknown): { config: MissionConfiguration | null; issues: string[] } {
@@ -74,6 +75,15 @@ export function validateContext(context: EvaluationContext): string[] {
     if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) issues.push(`scenario.${key}`)
   }
   if (context?.scenario?.acceptedFraction > 1) issues.push('scenario.acceptedFraction')
+  const scenario = context?.scenario
+  const id = scenario?.id
+  const policy = scenario?.science
+  if (id !== undefined && !['wildfire', 'urban-heat'].includes(id)) issues.push('scenario.id')
+  if (policy !== undefined && !validSciencePolicy(policy)) issues.push('scenario.science')
+  if (id === 'urban-heat' && (!validSciencePolicy(policy) || policy.prefix !== 'UH')) issues.push('scenario.science')
+  if ((id === 'wildfire' || id === undefined) && policy !== undefined && (!validSciencePolicy(policy) || policy.prefix !== 'WF')) issues.push('scenario.science')
+  if (id === undefined && policy !== undefined) issues.push('scenario.id')
+  if ((context?.fixture?.scenarioId ?? 'wildfire') !== (id ?? 'wildfire')) issues.push('fixture.scenarioId')
   for (const key of ['receiverCompatible', 'linkClosure', 'evenlySpaced', 'modePlacement'] as const) {
     if (!validEvidence(context?.fixture?.[key], 'boolean')) issues.push(`fixture.${key}`)
   }
@@ -139,10 +149,13 @@ export function normalizeContext(context: EvaluationContext): EvaluationContext 
       launchers: rows('launchers', 'launcher') as EvaluationContext['catalog']['launchers'],
     },
     scenario: {
+      ...(scenario && 'id' in scenario ? { id: scenario.id } : {}),
+      ...(scenario && 'science' in scenario ? { science: scenario.science } : {}),
       budgetUsd: scenario?.budgetUsd ?? NaN, availableMonths: scenario?.availableMonths ?? NaN,
       plannedYears: scenario?.plannedYears ?? NaN, fundedYears: scenario?.fundedYears ?? NaN, acceptedFraction: scenario?.acceptedFraction ?? NaN,
     },
     fixture: {
+      ...(raw && 'scenarioId' in raw ? { scenarioId: raw.scenarioId } : {}),
       receiverCompatible: boolean(raw?.receiverCompatible), linkClosure: boolean(raw?.linkClosure),
       evenlySpaced: boolean(raw?.evenlySpaced), modePlacement: boolean(raw?.modePlacement),
       targetGapHours: validEvidence(raw?.targetGapHours, 'number') && (raw.targetGapHours.state !== 'known' || raw.targetGapHours.value > 0) ? raw.targetGapHours : missing,

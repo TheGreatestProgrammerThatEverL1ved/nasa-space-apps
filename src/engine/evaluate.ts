@@ -1,5 +1,6 @@
 import type { CheckResult, Counts, EvaluationContext, EvaluationReport, Metric, MissionConfiguration, Outcome, Part } from './types'
-import { ENGINEERING_IDS, SCIENCE_IDS } from './constants'
+import { ENGINEERING_IDS } from './constants'
+import { scienceIds, validSciencePolicy, WILDFIRE_SCIENCE } from './science'
 import { atLeast, compare, finite, numberOf, unknown } from './metric'
 import { geometry } from './geometry'
 import { power } from './power'
@@ -31,6 +32,10 @@ export function evaluateMission(request: unknown, context: EvaluationContext): E
   context = normalizeContext(context)
   const parsed = parseRequest(request)
   const c = parsed.config
+  const science = validSciencePolicy(context.scenario.science) ? context.scenario.science
+    : context.scenario.id === undefined && context.scenario.science === undefined ? WILDFIRE_SCIENCE : null
+  const prefix = context.scenario.id === 'urban-heat' ? 'UH' : 'WF'
+  const scienceCheckIds = scienceIds({ prefix })
   const cat = context.catalog
   const b = cat.buses.find(p => p.id === c?.busId)
   const p = cat.payloads.find(p => p.id === c?.payloadId)
@@ -43,15 +48,16 @@ export function evaluateMission(request: unknown, context: EvaluationContext): E
   const parts = [b, p, a, battery, r, g, o, launch]
   const issues = [...parsed.issues, ...contextIssues]
   if (c) {
-    if (!['wildfire', 'flood', 'methane'].includes(c.scenarioId)) issues.push('scenarioId')
+    if (context.scenario.id !== undefined ? c.scenarioId !== context.scenario.id
+      : !['wildfire', 'flood', 'methane'].includes(c.scenarioId)) issues.push('scenarioId')
     for (const [index, part] of parts.entries()) if (!part) issues.push(['busId', 'payloadId', 'arrayId', 'batteryId', 'radioId', 'groundId', 'orbitId', 'launcherId'][index])
   }
   for (const part of parts) if (part) issues.push(...validatePart(part))
   const metrics: Record<string, Metric> = {}
   const checks: CheckResult[] = []
-  const add = (id: string, actual: Metric, operator: CheckResult['operator'], limit: number, reasonCode: string, prerequisites: readonly string[] = []) => {
+  const add = (id: string, actual: Metric, operator: CheckResult['operator'], limit: number, reasonCode: string, prerequisites: readonly string[] = [], actualBasis?: 'upper-bound') => {
     if (!Number.isFinite(limit)) { actual = unknown(actual.unit, 'invalid-limit'); limit = 0 }
-    checks.push({ checkId: id, scope: id.startsWith('WF-') ? 'science' : 'engineering', actual, operator, limit, status: compare(actual, operator, limit), reasonCode, ruleRef: 'docs/game-rules-technical.md#6-hard-gates-reason-codes-and-outcome-precedence', prerequisiteIds: prerequisites })
+    checks.push({ ...(actualBasis ? { actualBasis } : {}), checkId: id, scope: scienceCheckIds.includes(id) ? 'science' : 'engineering', actual, operator, limit, status: compare(actual, operator, limit), reasonCode, ruleRef: scienceCheckIds.includes(id) && prefix !== 'WF' ? 'docs/scenario-expansion.md' : 'docs/game-rules-technical.md#6-hard-gates-reason-codes-and-outcome-precedence', prerequisiteIds: prerequisites })
   }
   const store = (key: string, value: number, unit: string) => { metrics[key] = finite(value, unit); return metrics[key] }
   const missing = (unit = '') => unknown(unit, 'invalid-or-missing-prerequisite')
@@ -119,15 +125,22 @@ export function evaluateMission(request: unknown, context: EvaluationContext): E
   const supported = b && battery && o ? Math.min(b.lifeYears, battery.lifeYears, o.residenceYears, context.scenario.fundedYears) : undefined
   if (supported !== undefined) store('supportedYears', supported, 'year')
   add('ENG-LIFETIME', supported === undefined ? missing('year') : finite(supported, 'year'), '>=', context.scenario.plannedYears, 'LIFETIME_SHORT')
-  add('WF-SPECTRUM', p && validBands(p.bandsMicrometers) ? finite(p.bandsMicrometers.some(([low, high]) => low <= 8 && high >= 12) ? 1 : 0) : missing(), 'true', 1, 'SCIENCE_REQUIREMENT_UNMET')
-  add('WF-GSD', geom?.effectiveScaleM ?? missing('m'), '<=', 200, 'SCIENCE_REQUIREMENT_UNMET', ['ENG-MOTION-PROFILE'])
-  add('WF-FOOTPRINT', geom ? finite(geom.usableSwathKm, 'km') : missing('km'), '>=', 90, 'SCIENCE_REQUIREMENT_UNMET')
+  add(`${prefix}-SPECTRUM`, science && p && validBands(p.bandsMicrometers) ? finite(p.bandsMicrometers.some(([low, high]) => low <= science.spectrumMicrometers[0] && high >= science.spectrumMicrometers[1]) ? 1 : 0) : missing(), 'true', science ? 1 : NaN, 'SCIENCE_REQUIREMENT_UNMET')
+  add(`${prefix}-GSD`, geom?.effectiveScaleM ?? missing('m'), '<=', science?.maxScaleM ?? NaN, 'SCIENCE_REQUIREMENT_UNMET', ['ENG-MOTION-PROFILE'])
+  add(`${prefix}-FOOTPRINT`, geom ? finite(geom.usableSwathKm, 'km') : missing('km'), '>=', science?.minFootprintKm ?? NaN, 'SCIENCE_REQUIREMENT_UNMET')
   const access = o && context.fixture.targetOrbitIds.includes(o.id) && context.fixture.targetGapHours.state === 'known' ? finite(context.fixture.targetGapHours.value, 'h') : missing('h')
   metrics.targetGapHours = access
-  add('WF-ACCESS', access, '<=', 24, 'SCIENCE_REQUIREMENT_UNMET')
-  add('WF-DELIVERY', q?.usefulGBDay ?? missing('GB/day'), '>=', 1, 'SCIENCE_REQUIREMENT_UNMET', ['ENG-LINK', 'ENG-DATA-RATE', 'ENG-STORAGE'])
-  add('WF-LATENCY', q?.latencyHours ?? missing('h'), '<=', 6, 'SCIENCE_REQUIREMENT_UNMET', ['ENG-LINK', 'ENG-DATA-RATE', 'ENG-STORAGE'])
-  add('WF-DURATION', finite(context.scenario.plannedYears, 'year'), '>=', 1, 'LIFETIME_SHORT')
+  add(`${prefix}-ACCESS`, access, '<=', science?.maxAccessHours ?? NaN, 'SCIENCE_REQUIREMENT_UNMET')
+  // Preserve audited WF reports. For new missions, an insufficient optimistic
+  // ceiling proves failure even when unstable-queue achieved delivery is unknown.
+  const capacity = service ? numberOf(service.effectiveCapacityGBDay) : undefined
+  const usefulCeiling = prefix !== 'WF' && generation !== undefined && capacity !== undefined
+    ? store('usefulUpperBoundGBDay', Math.min(generation, capacity) * context.scenario.acceptedFraction, 'GB/day') : undefined
+  const insufficientCeiling = science && usefulCeiling && compare(usefulCeiling, '>=', science.minUsefulGBDay) === 'NOT_MET'
+    && q?.usefulGBDay.kind !== 'finite'
+  add(`${prefix}-DELIVERY`, insufficientCeiling ? usefulCeiling! : q?.usefulGBDay ?? missing('GB/day'), '>=', science?.minUsefulGBDay ?? NaN, 'SCIENCE_REQUIREMENT_UNMET', ['ENG-LINK', 'ENG-DATA-RATE', 'ENG-STORAGE'], insufficientCeiling ? 'upper-bound' : undefined)
+  add(`${prefix}-LATENCY`, q?.latencyHours ?? missing('h'), '<=', science?.maxLatencyHours ?? NaN, 'SCIENCE_REQUIREMENT_UNMET', ['ENG-LINK', 'ENG-DATA-RATE', 'ENG-STORAGE'])
+  add(`${prefix}-DURATION`, finite(context.scenario.plannedYears, 'year'), '>=', science?.minYears ?? NaN, 'LIFETIME_SHORT')
   const deferred = c && ['flood', 'methane'].includes(c.scenarioId) && !issues.length
   if (deferred) {
     for (let i = 0; i < checks.length; i++) checks[i] = { ...checks[i], status: 'UNVERIFIED', actual: missing() }
@@ -150,14 +163,14 @@ export function evaluateMission(request: unknown, context: EvaluationContext): E
     margin('peakPower', battery?.dischargeW, energy?.peakW)
     if (schedule.kind === 'finite') { store('scheduleSlackMonths', context.scenario.availableMonths - schedule.value, 'month'); if (context.scenario.availableMonths - schedule.value < 6) warnings.push('SCHEDULE') }
   }
-  const merit = outcome === 'MODEL_PASS_PROVISIONAL' ? finite(scienceMerit([
-    { value: numberOf(metrics.effectiveScaleM)!, minimum: 200, stretch: 150, weight: .25, direction: 'lower' },
-    { value: numberOf(access)!, minimum: 24, stretch: 12, weight: .25, direction: 'lower' },
-    { value: numberOf(metrics.deliveredUsefulGBDay)!, minimum: 1, stretch: 2, weight: .20, direction: 'higher' },
-    { value: numberOf(metrics.latencyHours)!, minimum: 6, stretch: 2, weight: .20, direction: 'lower' },
-    { value: context.scenario.plannedYears, minimum: 1, stretch: 3, weight: .10, direction: 'higher' },
+  const merit = outcome === 'MODEL_PASS_PROVISIONAL' && science ? finite(scienceMerit([
+    { value: numberOf(metrics.effectiveScaleM)!, minimum: science.maxScaleM, stretch: science.stretch.scaleM, weight: .25, direction: 'lower' },
+    { value: numberOf(access)!, minimum: science.maxAccessHours, stretch: science.stretch.accessHours, weight: .25, direction: 'lower' },
+    { value: numberOf(metrics.deliveredUsefulGBDay)!, minimum: science.minUsefulGBDay, stretch: science.stretch.usefulGBDay, weight: .20, direction: 'higher' },
+    { value: numberOf(metrics.latencyHours)!, minimum: science.maxLatencyHours, stretch: science.stretch.latencyHours, weight: .20, direction: 'lower' },
+    { value: context.scenario.plannedYears, minimum: science.minYears, stretch: science.stretch.years, weight: .10, direction: 'higher' },
   ]), 'points') : unknown('points', 'hard-gates-not-all-met')
-  const ordered = [...ENGINEERING_IDS, ...SCIENCE_IDS].map(id => checks.find(c => c.checkId === id)!)
+  const ordered = [...ENGINEERING_IDS, ...scienceCheckIds].map(id => checks.find(c => c.checkId === id)!)
   return freeze(structuredClone({
     origin: 'evaluator', configurationKey: c ? configurationKey(c, context) : JSON.stringify(['invalid', issues]), config: c,
     modelRevision: context.modelRevision, contractRevision: context.contractRevision,

@@ -9,6 +9,7 @@ import type {
   Locale,
   Metric,
   MissionConfiguration,
+  MissionDefinition,
   Outcome,
   Part,
   Provenance,
@@ -35,6 +36,12 @@ export interface MissionAppProps {
   readonly context: EvaluationContext
   readonly initialConfiguration: MissionConfiguration
   readonly evaluate: ReportProvider
+  readonly mission?: MissionDefinition
+  readonly missions?: readonly MissionDefinition[]
+  readonly onMissionChange?: (id: string) => void
+  readonly locale?: Locale
+  readonly onLocaleChange?: (locale: Locale) => void
+  readonly focusMissionPicker?: boolean
 }
 
 type PartField = Exclude<keyof MissionConfiguration, 'scenarioId'>
@@ -453,8 +460,16 @@ export default function MissionApp({
   context,
   initialConfiguration,
   evaluate,
+  mission,
+  missions,
+  onMissionChange,
+  locale: controlledLocale,
+  onLocaleChange,
+  focusMissionPicker = false,
 }: MissionAppProps) {
-  const [locale, setLocale] = useState<Locale>('en')
+  const [localLocale, setLocalLocale] = useState<Locale>('en')
+  const locale = controlledLocale ?? localLocale
+  const setLocale = onLocaleChange ?? setLocalLocale
   const [draft, setDraft] = useState<MissionConfiguration>(() => ({ ...initialConfiguration }))
   const [report, setReport] = useState<EvaluationReport | null>(null)
   const [snapshot, setSnapshot] = useState<ReportSnapshot | null>(null)
@@ -463,15 +478,22 @@ export default function MissionApp({
   const [runSignal, setRunSignal] = useState(0)
   const resultHeadingRef = useRef<HTMLHeadingElement>(null)
   const groundRef = useRef<HTMLSelectElement>(null)
+  const radioRef = useRef<HTMLSelectElement>(null)
+  const pickerRef = useRef<HTMLSelectElement>(null)
 
   const t = (key: MessageKey) => translate(locale, key)
   const tc = (key: MessageKey, _fallback?: string) => translate(locale, key)
   const fields = selectFields(context)
+  const missionName = mission?.title[locale] ?? t('app.missionName')
+  const groundHint = mission?.hint[locale] ?? t('config.groundHint')
 
   useEffect(() => {
     document.documentElement.lang = htmlLang(locale)
-    document.title = translate(locale, 'app.documentTitle')
-  }, [locale])
+    document.title = `MISSION FORGE — ${missionName}`
+  }, [locale, missionName])
+  useEffect(() => {
+    if (focusMissionPicker) pickerRef.current?.focus()
+  }, [focusMissionPicker])
 
   useEffect(() => {
     if (runSignal === 0) return
@@ -519,8 +541,9 @@ export default function MissionApp({
 
   const backToConfiguration = (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault()
-    groundRef.current?.focus()
-    groundRef.current?.scrollIntoView?.({ block: 'center' })
+    const target = report?.diagnostics[0]?.reasonCode === 'DATA_BOTTLENECK' ? radioRef.current : groundRef.current
+    target?.focus()
+    target?.scrollIntoView?.({ block: 'center' })
   }
 
   const scienceChecks = report?.checks.filter((check) => check.scope === 'science') ?? []
@@ -547,7 +570,7 @@ export default function MissionApp({
       </div>
       <dl className="check-values">
         <div>
-          <dt>{t('metric.actual')}</dt>
+          <dt>{t(check.actualBasis === 'upper-bound' ? 'metric.upperBound' : 'metric.actual')}</dt>
           <dd>{checkActualText(check, locale)}</dd>
         </div>
         <div>
@@ -555,6 +578,7 @@ export default function MissionApp({
           <dd>{checkLimitText(check, locale)}</dd>
         </div>
       </dl>
+      {check.actualBasis === 'upper-bound' && <p className="note">{t('metric.upperBoundNote')}</p>}
       {check.actual.kind === 'finite' && hasRoundedBoundary(check, locale) && (
         <div className="boundary-note">
           <p>{t('boundary.ambiguous')}</p>
@@ -596,8 +620,8 @@ export default function MissionApp({
           <div className="mission-identity">
             <p className="product-mark">{t('app.brand')}</p>
             <p className="brand">{tc('control.eyebrow', 'Mission control')}</p>
-            <h1>{t('app.missionName')}</h1>
-            <p className="mission-type">{t('app.missionType')}</p>
+            <h1>{missionName}</h1>
+            <p className="mission-type">{mission?.subtitle[locale] ?? t('app.missionType')}</p>
             <ol
               className="mission-steps"
               aria-label={tc('control.sequence', 'Brief, build, run, repair')}
@@ -699,13 +723,45 @@ export default function MissionApp({
       </header>
 
       <main className="command-grid">
+        {mission && missions && onMissionChange && (
+          <section className="panel mission-picker" aria-labelledby="picker-heading">
+            <div>
+              <p className="section-kicker">{t('mission.intro')}</p>
+              <h2 id="picker-heading">{t('mission.picker')}</h2>
+            </div>
+            <div className="field">
+              <label htmlFor="mission-picker">{t('mission.select')}</label>
+              <select id="mission-picker" ref={pickerRef} value={mission.id} onChange={event => onMissionChange(event.currentTarget.value)}>
+                {missions.map(option => <option key={option.id} value={option.id}>{option.title[locale]}</option>)}
+              </select>
+            </div>
+          </section>
+        )}
         <section className="panel brief-panel" aria-labelledby="brief-heading">
           <p className="section-kicker">{tc('control.goal', 'Mission goal')}</p>
           <h2 id="brief-heading">{t('app.briefTitle')}</h2>
-          <p className="brief-copy">{t('app.brief')}</p>
+          <p className="brief-copy">{mission?.brief[locale] ?? t('app.brief')}</p>
+          {mission && (
+            <div className="mission-goals">
+              <h3>{t('mission.goals')}</h3>
+              <p>{mission.goals[locale]}</p>
+              <details>
+                <summary>{t('mission.sources')}</summary>
+                <p>{mission.lesson[locale]}</p>
+                <ul className="mission-source-list">
+                  {mission.sources.map(source => (
+                    <li key={source.url}>
+                      <a href={source.url} target="_blank" rel="noopener noreferrer">{source.title}</a>
+                      <p>{source.scope[locale]}</p>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </div>
+          )}
           <ul className="fact-list">
             <li>
-              <span className="fact-label">{t('app.scenarioLabel')}:</span> {t('app.missionName')}
+              <span className="fact-label">{t('app.scenarioLabel')}:</span> {missionName}
             </li>
             <li>
               {translate(locale, 'app.budgetFact', {
@@ -746,7 +802,7 @@ export default function MissionApp({
                 <label htmlFor={field.key}>{t(CATEGORY_MESSAGE[field.category])}</label>
                 <select
                   id={field.key}
-                  ref={field.key === 'groundId' ? groundRef : undefined}
+                  ref={field.key === 'groundId' ? groundRef : field.key === 'radioId' ? radioRef : undefined}
                   value={draft[field.key]}
                   aria-describedby={
                     field.key === 'groundId' ? 'ground-hint contact-lesson' : undefined
@@ -761,7 +817,7 @@ export default function MissionApp({
                 </select>
                 {field.key === 'groundId' && (
                   <p id="ground-hint" className="field-hint">
-                    {t('config.groundHint')}
+                    {groundHint}
                   </p>
                 )}
               </div>
@@ -809,7 +865,7 @@ export default function MissionApp({
                     </div>
                   )
                 })}
-                <div className="margin-row">
+                <div className={`margin-row${report.metrics.scheduleSlackMonths?.kind === 'finite' && report.metrics.scheduleSlackMonths.value < 0 ? ' margin-negative' : ''}`}>
                   <dt>{t('control.scheduleSlack')}</dt>
                   <dd>
                     <span className="margin-value">
@@ -833,7 +889,7 @@ export default function MissionApp({
                 </div>
               </dl>
               <p id="contact-lesson" className="contact-lesson">
-                {tc(
+                {mission?.hint[locale] ?? tc(
                   'control.contactLesson',
                   'Contact cadence sets delivery time: a more frequent ground service can move the delivery bound from 7.1 h to 3.1 h. More radio bandwidth cannot create a missing contact.',
                 )}
@@ -843,7 +899,7 @@ export default function MissionApp({
             <>
               <p className="awaiting">{tc('control.awaiting', 'Awaiting first run')}</p>
               <p id="contact-lesson" className="contact-lesson">
-                {tc(
+                {mission?.hint[locale] ?? tc(
                   'control.contactLesson',
                   'Contact cadence sets delivery time: a more frequent ground service can move the delivery bound from 7.1 h to 3.1 h. More radio bandwidth cannot create a missing contact.',
                 )}
@@ -979,7 +1035,7 @@ export default function MissionApp({
                   onClick={backToConfiguration}
                   aria-describedby="contact-lesson"
                 >
-                  {tc('control.groundAction', 'Open ground-service selection')}
+                  {report.diagnostics[0]?.reasonCode === 'DATA_BOTTLENECK' ? t('results.backToConfig') : tc('control.groundAction', 'Open ground-service selection')}
                 </a>
                 <a className="back-link" href="#mission-controls" onClick={backToConfiguration}>
                   {t('results.backToConfig')}

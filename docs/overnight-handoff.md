@@ -47,4 +47,18 @@ Sol owns shared contracts, routing, integration, tests, documentation and all Gi
 
 **Campaign checks actually passed:** typecheck, lint, **105 evaluator/progression**, **25 UI**, build, **12 production Chrome** tests. Both complete language loops, failure-free retry costs, no repeat awards before/after reload, owned/unaffordable purchase enforcement, catalogue availability, unchanged USD costs, save-error disclosure, solvent X-band and alternative-array routes, direct picker preservation, focus, axe and 320px/200% reflow pass. Campaign completion screenshots in both languages were captured and inspected. Independent connected Sol static review found no must-fix findings. Node22.23.5/npm10.9.9 verified. All 44 then-current local Markdown targets resolved and all 9 unrelated-file hashes matched.
 
-**Exact resume step:** inspect actual Git state; stage only campaign/delivery paths, inspect staged scope/security and diff, commit the candidate, then run clean archived `npm ci` → typecheck → lint → evaluator/UI tests → build → production Chrome → audit. If green, update handoff before push, push and verify remote SHA. Record final evidence in a documentation-only handoff if needed, verify that push too, then stop for human review. Do not expand scope. Lunar relay remains backlog. All workers are idle; free DeepSeek quota is exhausted—do not redispatch it or select a paid route.
+## Last fully verified application checkpoint
+
+**`699b6a23e8e135ccc2703deeca82147629c2ec55`** contains the complete two-mission/campaign application. An isolated `git archive` of that exact commit, without local dependencies/config/user files, passed `npm ci` → `npm run typecheck` → `npm run lint` → `npm test` (**105**) → `npm run test:ui` (**25**) → `npm run build` → `MISSION_FORGE_PREVIEW=1 npm run test:e2e` (**12**) → `npm audit --audit-level=low` (**zero vulnerabilities**). Actual toolchain: Node22.23.5, npm10.9.9, Chrome157.0.8103.78. No new dependency was needed.
+
+Independent Python arithmetic reproduced WF-A/B/C and urban single-station mass, reserved cost, service, useful products, latency and periodic queue; campaign balance100−100+100=100. The preserved source record, catalog, default context, build fixtures, link, queue, geometry and power files remain byte-identical to M4. All nine unrelated-file hashes still match.
+
+The delivery wrap after `699b6a2` is **documentation only**: README, this handoff, execution log and rulebook scope/link banners. It does not change runtime, tests, lockfile or build inputs. The normal final push/remote comparison follows this pre-push handoff update; exact final delivery SHA is reported in the final response rather than guessed here.
+
+## Delivery stop / exact resume step
+
+Inspect `git status --short --branch`, actual `HEAD` and `git ls-remote origin refs/heads/mission-forge`. If the documentation-only delivery wrap is locally ahead, inspect it, push normally and verify SHA equality; otherwise **stop at human delivery review**. Do not resume feature expansion automatically.
+
+Playable: redesigned bilingual wildfire and urban direct missions, optional locally saved two-mission campaign. Unshipped: lunar relay (missing honest lunar geometry/two-hop fixtures), full-region active-fire, flood and methane; no deployment/PR/merge. Pending human review: bilingual scientific/linguistic quality, screen reader/assistive technology and broader devices/browsers. Passes are provisional teaching-model passes, not flight qualification or validated physical observation ages.
+
+All workers are reconciled and idle. Free DeepSeek quota is exhausted; do not redispatch it or choose a paid route. The original untracked user files/config remain untouched and unstaged.

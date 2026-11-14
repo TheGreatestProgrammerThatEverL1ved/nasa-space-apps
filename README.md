@@ -75,6 +75,8 @@ The complete candidate passed typecheck, lint, build, **105 evaluator/progressio
 
 The historical M4 archive passed a fresh install and all checks; the redesigned wildfire checkpoint `adc8dde` independently repeated that proof with **61 evaluator /19 UI /8 production Chrome** tests and zero install-audit vulnerabilities. Tested with Node **22.23.5** and npm **10.9.9**; Chrome must be separately installed for browser tests. Current-candidate clean-copy results are recorded in the execution log.
 
+**Final clean-copy proof:** committed application `699b6a23e8e135ccc2703deeca82147629c2ec55` passed fresh `npm ci`, all verification commands, **105 /25 /12** tests and `npm audit --audit-level=low` (zero vulnerabilities), from an isolated archive with no private config, research drafts or existing dependencies. Actual Chrome: **157.0.8103.78**. The delivery wrap changes documentation only.
+
 All passing examples are **provisional model passes**, conditional on synthetic access/contact fixtures and assumed tracking/integration. Fixture latency is not validated physical observation age. An insufficient optimistic useful-return ceiling can prove urban failure; it is labelled as a ceiling, not achieved delivery. This is not flight qualification, an operational alert service, or NASA endorsement.
 
 The lunar relay remains a short [scenario backlog](docs/scenario-expansion.md#further-scenario-backlog): no Earth-imaging equations have been misused as lunar geometry. Full-region active-fire, flood and methane remain deferred. Local campaign saves are convenience state, not tamper-proof accounts or cross-device synchronization.

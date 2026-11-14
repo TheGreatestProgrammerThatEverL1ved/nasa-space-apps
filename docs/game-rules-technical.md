@@ -1,5 +1,7 @@
 # MISSION FORGE — technical game rules
 
+> **Post-M4 scope note:** this document preserves the audited **wildfire** mechanics. Newly authorized urban heat policy is separate in [the scenario supplement](scenario-expansion.md); optional credits/unlocks are specified in [Mission Campaign](mission-campaign.md). Neither changes the wildfire thresholds or the preserved source record.
+
 **Model authority:** audited Step 2, **14 November 2026**. **Active mission: Return the Heat Map.**
 
 This is the canonical implementation-facing reorganization of the [preserved audited source](02-game-rules.md), not a rebalanced model. Read [the workflow](agent-workflow.md) for authorization and ownership; [the player guide](game-rules-player.md) omits implementation detail. Questions explicitly marked **Planning question** are unresolved, not permission to invent rules.

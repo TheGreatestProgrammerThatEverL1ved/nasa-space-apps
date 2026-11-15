@@ -64,7 +64,7 @@ function compatibility(part: Part, config: MissionConfiguration, locale: Locale)
   const en = locale === 'en'
   if (config.busId && 'busIds' in part && !part.busIds.includes(config.busId)) return en ? 'Incompatible bus' : 'Несумісна платформа'
   if (part.category === 'orbit' && part.id !== 'orb-sso-low') return en ? 'No accepted target-access fixture for this orbit.' : 'Для цієї орбіти немає прийнятої моделі доступу до цілі.'
-  if (part.category === 'launcher' && part.id !== 'lv-heavy') return en ? 'Booking/interface unverified — cannot pass preflight.' : 'Бронювання/інтерфейс не перевірено — передстартовий контроль не пройде.'
+  if (part.category === 'launcher' && config.orbitId && !part.orbitIds.includes(config.orbitId)) return en ? 'Booking does not support the selected orbit.' : 'Бронювання не підтримує вибрану орбіту.'
   return null
 }
 function tradeoffText(field: PartField, locale: Locale): string {

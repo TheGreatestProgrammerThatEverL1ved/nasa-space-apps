@@ -73,8 +73,8 @@ export default function ResearchScreen({active,progress,locale,onCampaign,onBack
         ['arrayId',en?'Power':'Живлення'],['radioId',en?'Communications':'Зв’язок'],
         ['payloadId',en?'Instruments':'Прилади'],['batteryId',en?'Storage':'Накопичення'],
       ] as const).map(([field,title])=><section key={field}><h2>{title}</h2><ol>{CAMPAIGN_UPGRADES.filter(n=>n.field===field && n.prerequisiteId==='bus-12u').map(n=>renderNode(n.partId))}</ol></section>)}</div>
-    </div><aside id="research-inspector" className="research-inspector" aria-live="polite">
-      <h2>{name(selected)}</h2><dl>
+    </div><aside id="research-inspector" className="research-inspector" aria-live="polite" tabIndex={0} aria-labelledby="research-part-title">
+      <h2 id="research-part-title">{name(selected)}</h2><dl>
         <div><dt>{en?'Price':'Ціна'}</dt><dd data-testid="research-price">{item?.credits ?? 0} {en?'credits':'кредитів'}</dd></div>
         <div><dt>{en?'Effect':'Дія'}</dt><dd>{node.tradeoff[locale]}</dd></div>
         {node.prerequisiteId && <div><dt>{en?'Prerequisite':'Передумова'}</dt><dd>{name(node.prerequisiteId)}</dd></div>}

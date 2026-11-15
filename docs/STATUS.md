@@ -2,6 +2,14 @@
 
 ## Refinement for integration
 
+**Final playtest update:** the `fca23df` follow-up reproduced the production
+Expedition smoke successfully on this machine in both languages. The final
+[integration handoff](integration-handoff.md#final-playtest--15-november-2026)
+records the supported-booking label and keyboard-scrollable Research inspector
+fixes, expanded browser checks and remaining destination-integration limits.
+The Chromium-startup limitation below describes the earlier environment, not
+the final playtest.
+
 Start with [the integration handoff](integration-handoff.md). Space Mission Design
 (the supplied ZIP) is the destination project. Use this branch as the source for
 features, campaign rules and tests. The refinement follows baseline `1a63a23727b80cd27a77eddc4802185c8d9f1ba0`.

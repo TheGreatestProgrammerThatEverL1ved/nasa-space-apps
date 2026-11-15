@@ -19,6 +19,7 @@
 .research-name { font-size:.7rem; overflow-wrap:anywhere; }
 .research-state { font-size:.65rem; }
 .research-inspector { position:sticky; top:1rem; border:1px solid #626d76; padding:1rem; background:#102030; min-width:0; overflow-wrap:anywhere; }
+.research-inspector:focus-visible { outline:3px solid #b6eaff; outline-offset:2px; }
 .research-inspector h2 { font-size:1rem; }
 .research-inspector dt { color:#a9c1d3; font-size:.7rem; margin-top:.75rem; }
 .research-inspector dd,.research-inspector p { font-size:.8rem; }

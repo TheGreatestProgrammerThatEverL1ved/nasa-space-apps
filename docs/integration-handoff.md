@@ -4,6 +4,88 @@ Use the **Space Mission Design ZIP as the destination project**. Its React/Vite 
 
 Baseline on our branch: `1a63a23727b80cd27a77eddc4802185c8d9f1ba0`. The earlier [QA dossier](qa-goal-dossier.md) records the bilingual empty-build, 12-part, wallet, and Research verification. The latest [status](STATUS.md) gives the delta and reproduction commands.
 
+## Final playtest — 15 November 2026
+
+This polish pass starts from `fca23df5c380191a24fffde56ab7ba0e997e1a2d`.
+Space Mission Design remains the integration base; this is not a merged build.
+
+### Playable and checked in English and Ukrainian
+
+- Open **Expedition** from the top bar. Compare Economy's **+1 point and +1
+  retry supply (capped at 3)** with Priority's **+2 points**, budget cap and
+  preparation deadline before accepting. Complete three contracts, inspect run
+  history, reload a completed run, or start a new seeded expedition.
+- A double-clicked failed launch records **one** failed attempt: supplies **3 → 2**,
+  points **0**. A successful Economy retry leaves **3 supplies / 1 point**;
+  Priority leaves **2 supplies / 2 points**. Double-clicks and reloads leave exactly
+  those two attempts. The tests enter from an active Campaign with a nonempty
+  saved wallet and verify its ledger remains byte-for-byte unchanged.
+- Expand **Data handoff** after a failure or pass. The failed wildfire delivery
+  shows **7.1 h / 6 h**, names the land-management recipient and thermal imagery,
+  and warns against relying on the product. A passing delivery shows the modeled
+  result and its intended follow-up use, not operational fire-detection assurance.
+- Assemble all eight Hangar slots. Compare the fictional **24 kg Economy booking:
+  $355,000 / 13-month queue** with **30 kg Express: $475,000 / 4-month queue** in
+  the inspector before launch. With the same wildfire witness build, the
+  reserve-inclusive totals are **$2,665,700** and **$2,803,700** respectively.
+  Both bookings have browser-tested passing builds; Expedition also displays the
+  full preparation time against the contract deadline.
+- Visit **Research**, inspect a locked node without spending, return through
+  **Back → Customize**, and retain every draft selection. The mobile inspector
+  can now be reached with Tab and scrolled with the keyboard.
+
+### Corrections
+
+1. Both new bookings previously displayed “unverified — cannot pass preflight”
+   while the same build said “Ready for preflight.” Reproduced in both languages.
+   The warning now checks the booking's supported orbit rather than assuming only
+   the original 50 kg booking is valid. No evaluator or balance values changed.
+2. At **320px / 200% text**, a locked Research node's inspector overflowed
+   vertically without a keyboard focus target. Added a labeled focusable
+   inspector and visible focus outline; Tab → End reaches the hidden description.
+   The new browser test caught the original axe `scrollable-region-focusable`
+   violation and now requires zero violations.
+
+### Reproduction and browser boundaries
+
+```bash
+npm run typecheck
+npm run lint
+npm test
+npm run test:ui -- --maxWorkers=1
+npm run build
+MISSION_FORGE_PREVIEW=1 npm run test:e2e -- tests/e2e/expedition.spec.ts --workers=1
+MISSION_FORGE_PREVIEW=1 npm run test:e2e -- tests/e2e/final-playtest.spec.ts --workers=1
+# Full clean-copy gate, after npm ci:
+MISSION_FORGE_PREVIEW=1 npm run test:e2e -- --workers=1
+npm audit --audit-level=moderate
+```
+
+The original Expedition acceptance assertions are unchanged. The focused production
+browser run passed **8/8** (original smoke **2**, added playtests **6**).
+Typecheck, lint, **162 engine tests** and **41 UI tests** passed. The new tests
+capture screenshots under ignored `test-results/`, check English desktop and
+Ukrainian 320px/200% reflow, expanded handoffs, keyboard inspector scrolling,
+and axe accessibility on Research and passing debriefs.
+
+An isolated archive of `fca23df` plus this pass's six changed files also passed
+`npm ci`, typecheck, lint, **162/162 engine tests**, **41/41 UI tests**, production
+build, the **full 59/59 browser suite** (3.8 minutes, one worker) and audit
+(**0 vulnerabilities**). This includes real WebGL, context-loss fallback, animated
+launch settlement, touch Research, historical refunds and both Campaign routes.
+No original acceptance assertion was relaxed and no known flake occurred.
+Historical screenshots in the working checkout were not regenerated.
+
+The former Chromium-startup blocker did **not** reproduce on this machine:
+the configured installed Chrome **157.0.8103.78** starts normally. The focused pass uses the SVG
+fallback and reduced motion for deterministic interaction checks. It is not
+Firefox, Safari, real-device or cross-tab concurrency certification. Reload
+returns to the English menu: it restores Expedition progress and the accepted
+contract, but not the tab-local draft; resuming requires rebuilding the craft.
+Production build retains the existing large-chunk warning. The destination
+FastAPI/browser integration, backend-unreachable behavior and SQLite migration
+remain unverified here and must be tested in Space Mission Design itself.
+
 ## What the ZIP already contains
 
 - Five destinations in `backend/app/catalog.py`: Earth, Moon, Mars, asteroid, Jupiter. There are 11 orbit entries, three launch vehicles and 24 components.

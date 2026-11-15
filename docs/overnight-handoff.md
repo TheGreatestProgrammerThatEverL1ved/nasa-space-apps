@@ -1,12 +1,14 @@
 # MISSION FORGE — overnight handoff
 
-## Night-03 active — 15 November 2026
+## Night-03 delivery complete — 15 November 2026
 
 User authorization: root `mission-forge-night-03.md`; supersedes the previous delivery stop. Entry HEAD and origin both **`0c0196d3b5629758e4b20ebf5149812df382da98`**, `mission-forge`, 0 ahead/behind. Untracked user drafts, private `opencode.jsonc`, `public/` and `src/assets/` are preserved and excluded.
 
+**Outcome:** all three requested slices are pushed and remotely verified. Application **`f23fee534aa9418f6e32a87259c06fe73d9081b8`** passed a fresh exact committed-archive install and every required check. Final wrap changes **README + this handoff + execution log only**; runtime/tests/build inputs stay identical to that clean-tested application. All workers are idle. **Stop for user review; do not resume feature work.**
+
 Order: (1) full-screen orbital menu + live hangar, inspect desktop/mobile/WebGL/fallback and push; (2) illustrated selector + auto academy + frozen launch/debrief, inspect bilingual browser flow and push; (3) only after visual acceptance, branching economy with explicit historical migration and exhaustive solvency; (4) complete checks and committed-copy proof, update delivery evidence and stop for user review. No deployment or paid routes.
 
-Ownership: connected Sol root owns integration, `App`/`MissionApp`, new game screens, tests, documentation, package inputs and all Git. Free DeepSeek smoke succeeded; worker `ses_e21cf84eaffeWJRUMhkcMZkZQ6` owns only new `src/ui/orbital/{appearance.ts,CraftScene.tsx,CraftCanvas.tsx,CraftFallback.tsx,scene.css}`. No progression writes before the visual gate. Reconcile this worker before taking over these paths.
+Initial ownership: connected Sol root owned integration, `App`/`MissionApp`, game screens, tests, documentation, package inputs and all Git. Free DeepSeek smoke succeeded; renderer worker `ses_e21cf84eaffeWJRUMhkcMZkZQ6` owned only `src/ui/orbital/{appearance.ts,CraftScene.tsx,CraftCanvas.tsx,CraftFallback.tsx,scene.css}` until handoff. Root reconciled all workers before takeover. Progression writes waited for the pushed visual gate.
 
 Actual dependency preflight: npm metadata for R3F **9.8.2** accepts React/ReactDOM `>=19 <19.4`, Three `>=0.156`; installed exact R3F9.8.2 / Three0.183.2 and dev types0.183.1 normally, with lockfile; install audit zero vulnerabilities. No force/legacy peer overrides.
 
@@ -22,11 +24,11 @@ Actual dependency preflight: npm metadata for R3F **9.8.2** accepts React/ReactD
 
 **Verified and pushed slice 1:** **`53a46e7dccf8747dfd7d995e1eeb88ae6f2d520a`**, normal push and exact `ls-remote` equality succeeded.
 
-### Slice 2 active ownership / exact resume
+### Slice 2 verification record
 
 Both free DeepSeek UI workers handed off and are **idle/reconciled**: `ses_e21cf84eaffeWJRUMhkcMZkZQ6` delivered `src/ui/game/{MissionGallery.tsx,gallery.css}`; `ses_e21afa370ffeI2IE5Ovrv9S6Vn` delivered `src/ui/academy/{Academy.tsx,academy.css}`. Root Sol now owns all paths, launch/debrief, integration/tests/docs/Git. Read-only progression and visual reviewers are idle.
 
-Slice 2 is implemented in the working tree: illustrated four-card **Earth** selector with actual context/prerequisites, automatic fresh-profile academy (explicit training-contract acceptance, actual 7.1→3.1 repair), persistent skip/replay/Help isolation, real shared-craft launch with immediate skip/instant reduced-motion path and visible preflight hold, frozen clean debrief with typed repair focus and disclosed audit/evidence. Settlement happens once synchronously at preflight; no animation callback can award. Repeated launch clicks cannot retarget to another screen's controls. Main menu preserves the same craft/locale and Sandbox access.
+Slice 2 ships an illustrated four-card **Earth** selector with actual context/prerequisites, automatic fresh-profile academy (explicit training-contract acceptance, actual 7.1→3.1 repair), persistent skip/replay/Help isolation, real shared-craft launch with immediate skip/instant reduced-motion path and visible preflight hold, frozen clean debrief with typed repair focus and disclosed audit/evidence. Settlement happens once synchronously at preflight; no animation callback can award. Repeated launch clicks cannot retarget to another screen's controls. Main menu preserves the same craft/locale and Sandbox access.
 
 **Final slice-2 verification passed:** **137 engine /32 UI /33 production Chrome**, typecheck, lint (zero warnings), build and audit0. New browser tests run every shipped repair path in both languages, fresh keyboard skip/replay/Help, natural launch completion, skip, language change during launch, exit/reentry, no duplicate/guide awards, preflight hold and both-language 320px/200% disclosed reflow. Tests exposed/fixed late focus restoration, double-click retargeting, dark detail contrast and a Ukrainian long-word overflow. Read-only connected Sol inspected all 11 full-flow captures; its only must-fix was a success debrief still saying “Repair and rerun”; root corrected the kicker and added regression coverage. The reviewer re-read the corrected pass and narrow academy captures: resolved, no new visual blockers. Narrow academy is one naturally scrollable screen with unbroken language controls; browser tests **complete** its 7.1→3.1 guide at 320px/200%. Held preflight remains visibly held until review, rather than expiring while read/captured. Final reshoots are inspected and included. Actual toolchain: Node22.23.5/npm10.9.9/Chrome157.0.8103.78.
 
@@ -34,7 +36,9 @@ Slice 2 is implemented in the working tree: illustrated four-card **Earth** sele
 
 Root owns all slice-3 paths; all workers are idle/reconciled. No dependency, physics, new mission or private-file changes.
 
-### Slice 3 — implemented and verified, pending checkpoint push
+### Slice 3 — verified and pushed
+
+**`f23fee534aa9418f6e32a87259c06fe73d9081b8`**, normal push and exact remote SHA equality succeeded.
 
 Shipped implementation: eight useful real-ID nodes rather than paid failing filler: owned starter `bus-12u` → power `arr-deploy-l` → optional `arr-deploy-xl`; comms `rf-s` → `rf-x` → `pl-relay`; payload `pl-thermal` → `pl-visible-35`. Four owned foundations + four purchases. First-clear rewards **120/140/180/200** (wildfire/urban/visible/relay); prices **100 X-band /120 XL /100 visible35 /140 relay**. Urban and visible branch after wildfire; relay requires wildfire plus owned X-band/relay, not another contract clear. All four clears still finish the campaign. All formerly free catalog choices remain free. Foundation/owned parts fit through the same hangar, with actual prerequisite/cost/ownership/fitted/affordability text. Unequipped refunds leave the orbital tree open; equipped refunds repair/focus the slot.
 
@@ -44,7 +48,19 @@ Version3 retains IDs and explicit per-ID `awards`/`paidParts`. V1/v2 are validat
 
 Actual bilingual orbital browser campaigns complete **wildfire → mapping → refund camera → X-band/relay → relay → urban → rebuy camera**, finishing with300, then exercise keyboard refund/rebuy and reload at320px/200%. Legacy engineering campaign retains a different branch order and its physical repair/focus/staleness assertions. Root inspected desktop, phone and narrow tree captures and fixed excessive enlarged-text insets; connected Sol independently inspected all eight final tree captures and policy documentation: **no must-fix blockers**. Separate read-only connected Sol progression-integrity review also found none. Neither is Codex or human/native-speaker certification. One intermediate tree-only run had a worker SIGSEGV before the Ukrainian test started; a single-worker rerun passed3/3, followed by the full final default-worker36/36 pass. No failure was hidden by retries.
 
-**First unfinished step:** scope/security/link audit → commit/push slice3 → verify exact remote SHA → extract that exact committed archive outside checkout → fresh `npm ci` and all required checks → documentation-only final handoff/push. Stop for user review. No feature work remains planned.
+### Final clean committed-copy proof — actually completed
+
+Extracted exact application **`f23fee534aa9418f6e32a87259c06fe73d9081b8`** with `git archive` to `~/.cache/mission-forge-night03-clean-uq8sju4w`, outside checkout (not a branch/worktree), with no private config, untracked inputs, preexisting dependencies or old assets. Actually passed:
+
+`npm ci` → `npm run typecheck` → `npm run lint` → `npm test` (**147**) → `npm run test:ui` (**33**) → `npm run build` → `MISSION_FORGE_PREVIEW=1 npm run test:e2e` (**36**) → `npm audit --audit-level=low` (**zero vulnerabilities**).
+
+Actual toolchain rechecked: **Node22.23.5 /npm10.9.9 /Google Chrome157.0.8103.78**. Clean Chrome suite passed at its default12 workers, without retries. The lazy3D chunk warning remains **916.43 kB /244.01 kB gzip**; DOM navigation and SVG fallback are separate. No broader GPU/browser, human native-speaker/scientific or assistive-technology certification is claimed.
+
+Scope/security checks: explicit23-path slice-3 index; no private/unrelated inputs or credential patterns; all52 local links in changed Markdown resolved; whitespace checks passed. Independent integer arithmetic reproduced both solvent300-credit routes. Engine/catalog/fixtures remain byte-identical to entry. Original untracked inputs remain intact and unstaged. No deployment/submission/PR/merge/extra branch/worktree/force push/reset/clean or paid route.
+
+Demo: `npm ci && npm run dev`, open `/nasa-space-apps/` → automatic academy (7.1→network→3.1) → main menu → Customize, swap wings/antenna, inspect battery → Missions → Launch/debrief. Campaign → clear wildfire → choose urban or buy visible35 for shoreline → inspect tree/refunds → all four clears. [README demo](../README.md#60-second-local-demo); actual `night03-*` evidence covers every requested screen and tree in both languages.
+
+**Exact resume / stop:** inspect Git status/HEAD/remote. Only if the inspected **documentation-only wrap** is locally ahead, push normally and verify remote SHA equality; otherwise stop for user review. Do not restart features or deploy. Final wrap SHA is reported in the delivery response rather than guessed inside its own content.
 
 Historical night-02 notes below are provenance, not current authorization.
 

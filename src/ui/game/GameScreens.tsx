@@ -9,9 +9,10 @@ import PartPreview from './PartPreview'
 import { completeDraft, draftOptions, missingSlots } from '../../engine/draft'
 import './game.css'
 import { PLAYER_TRADEOFFS } from '../../data/player/catalog'
+import { OPERATIONS_TRADEOFFS } from '../../data/player/operations'
 import { partShortName } from '../partLabels'
 
-export type GameScreen = 'menu' | 'hangar' | 'missions' | 'launch' | 'debrief' | 'research'
+export type GameScreen = 'menu' | 'hangar' | 'missions' | 'launch' | 'debrief' | 'research' | 'expedition'
 const categories = [
   ['busId', 'bus'], ['payloadId', 'payload'], ['arrayId', 'array'], ['batteryId', 'battery'],
   ['radioId', 'radio'], ['groundId', 'ground'], ['orbitId', 'orbit'], ['launcherId', 'launcher'],
@@ -92,7 +93,10 @@ function keyStats(part: Part, locale: Locale): [string, number, string][] {
     else rows.push([en ? 'Peak load' : 'Пікове навантаження', part.peakW, 'W'])
   }
   if (part.category === 'orbit' && 'altitudeKm' in part) rows.push([en ? 'Altitude' : 'Висота', part.altitudeKm, 'km'])
-  if (part.category === 'launcher' && 'slotLimitKg' in part) rows.push([en ? 'Booked slot' : 'Заброньований слот', part.slotLimitKg, 'kg'])
+  if (part.category === 'launcher' && 'slotLimitKg' in part) rows.push(
+    [en ? 'Booked slot' : 'Заброньований слот', part.slotLimitKg, 'kg'],
+    [en ? 'Booking queue' : 'Черга на запуск', part.queueMonths, 'months'],
+  )
   if (!['ground', 'orbit', 'launcher'].includes(part.category)) rows.push([en ? 'Allocated mass' : 'Виділена маса', part.massKg, 'kg'])
   rows.push([en ? 'Engineering cost' : 'Інженерна вартість', part.costUsd, 'USD'])
   return rows
@@ -169,6 +173,9 @@ export default function LiveHangar({ config, context, locale, selectedField, onI
     <header className="hangar-heading"><div><h1 id="hangar-title" tabIndex={-1}>{en ? 'Spacecraft hangar' : 'Ангар апарата'}</h1></div>
       <div className="build-actions"><strong data-testid="build-progress">{8-missing.length}/8</strong>
         <span data-testid="build-usd">{missing.length ? (en ? 'Selected subtotal' : 'Підсумок вибраного') : (en?'Total':'Усього')}: {formatValue(subtotal,'USD',locale)} / {formatValue(context.scenario.budgetUsd,'USD',locale)}</span>
+        {context.scenarioRevision.includes(':expedition-v1:') && <span data-testid="build-schedule">
+          {en ? 'Schedule' : 'Строк підготовки'}: {metrics.scheduleMonths?.kind === 'finite' ? formatValue(metrics.scheduleMonths.value, 'months', locale) : '—'} / {formatValue(context.scenario.availableMonths, 'months', locale)}
+        </span>}
         <button onClick={onClear}>{en ? 'Clear Build' : 'Очистити проєкт'}</button>
         <button className="game-primary" disabled={missing.length > 0} aria-describedby="build-blocker" onClick={onLaunch}>{en ? 'Launch' : 'Запуск'} <span aria-hidden="true">↗</span></button></div></header>
     <div id="build-blocker" role="status">{notice || (missing.length ? (en ? 'Next: select ' : 'Далі виберіть ') + translate(locale,`category.${categories.find(([f])=>f===missing[0])![1]}`)
@@ -203,7 +210,7 @@ export default function LiveHangar({ config, context, locale, selectedField, onI
       </section>
       <aside className="part-hud" aria-label={en ? 'Installed part and live system data' : 'Установлена деталь і поточні дані системи'}>
         {part && <><span className="game-eyebrow">{external ? (en ? 'SERVICE / SELECTED' : 'СЕРВІС / ВИБРАНО') : (en ? 'INSTALLED' : 'УСТАНОВЛЕНО')}</span><h2>{part.label[locale]}</h2>
-          <p className="tradeoff">{PLAYER_TRADEOFFS[part.id]?.[locale] ?? tradeoffText(selectedField, locale)}</p>
+          <p className="tradeoff">{OPERATIONS_TRADEOFFS[part.id]?.[locale] ?? PLAYER_TRADEOFFS[part.id]?.[locale] ?? tradeoffText(selectedField, locale)}</p>
           <dl className="hud-stats">{keyStats(part, locale).slice(0,3).map(([label, value, unit]) => <div key={label}><dt>{label}</dt><dd>{unit === 'Mbps' ? formatExactValue(value, unit, locale) : formatValue(value, unit, locale)}</dd></div>)}</dl>
           <details className="spec-details"><summary>{en ? 'Exact part figures' : 'Точні параметри деталі'}</summary>
             {external && <p>{en ? 'Mission choice — not attached hardware.' : 'Параметр місії — не обладнання на апараті.'}</p>}

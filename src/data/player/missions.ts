@@ -1,8 +1,9 @@
 import { MISSIONS } from '../scenarios'
 import type { EvaluationContext, MissionDefinition, Provenance } from '../../engine/types'
 import { NEW_ARRAYS, NEW_BATTERIES, NEW_BUSES, NEW_GROUNDS, NEW_PAYLOADS, NEW_RADIOS, PLAYER_PROVENANCE } from './catalog'
+import { OPERATIONS_ARRAYS, OPERATIONS_BATTERIES, OPERATIONS_GROUNDS, OPERATIONS_RADIOS, PLAYER_LAUNCH_BOOKINGS } from './operations'
 
-export const PLAYER_BALANCE_REVISION = 'player-balance-r1'
+export const PLAYER_BALANCE_REVISION = 'player-balance-r2'
 export const PLAYER_BUDGETS: Readonly<Record<string, number>> = {
   wildfire: 2850000, 'urban-heat': 2750000, 'visible-mapping': 2400000, 'packet-relay': 2500000,
 }
@@ -16,9 +17,10 @@ export function playerContext(context: EvaluationContext): EvaluationContext {
     scenarioRevision:`${context.scenarioRevision}:${PLAYER_BALANCE_REVISION}`,
     fixtureRevision:`${context.fixtureRevision}:${PLAYER_BALANCE_REVISION}`,
     scenario:{...context.scenario,budgetUsd:PLAYER_BUDGETS[context.scenario.id ?? 'wildfire']!},
-    catalog:{...c,buses:[...c.buses,...NEW_BUSES],arrays:[...c.arrays.map(extend),...NEW_ARRAYS],
-      batteries:[...c.batteries,...NEW_BATTERIES],radios:[...c.radios,...NEW_RADIOS],
-      grounds:[...c.grounds,...NEW_GROUNDS],launchers:c.launchers.map(extend),
+    catalog:{...c,buses:[...c.buses,...NEW_BUSES],arrays:[...c.arrays.map(extend),...NEW_ARRAYS,...OPERATIONS_ARRAYS],
+      batteries:[...c.batteries,...NEW_BATTERIES,...OPERATIONS_BATTERIES],radios:[...c.radios,...NEW_RADIOS,...OPERATIONS_RADIOS],
+      grounds:[...c.grounds,...NEW_GROUNDS,...(relay ? [] : OPERATIONS_GROUNDS)],
+      launchers:[...c.launchers.map(extend),...PLAYER_LAUNCH_BOOKINGS],
       payloads:[...c.payloads.map(extend),...NEW_PAYLOADS.filter(p=>p.mode!=='visible-bayer' || context.scenario.id==='visible-mapping')],
       ...(c.relayPayloads ? {relayPayloads:c.relayPayloads.map(extend)} : {})},
     fixture:{...context.fixture,tracking:context.fixture.tracking.mode==='accepted'

@@ -1,0 +1,34 @@
+.expedition {
+  inline-size: min(64rem, 100%);
+  margin-inline: auto;
+  padding: clamp(1rem, 4vw, 3rem);
+  overflow-wrap: anywhere;
+}
+.expedition h1 { margin-block: 0 1rem; }
+.expedition-status,
+.expedition-offers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1rem;
+}
+.expedition-status > div,
+.expedition-offers > article {
+  padding: 1rem;
+  border: 1px solid #42617a;
+  background: #0e1c2a;
+}
+.expedition dl { margin-block: 0 1rem; }
+.expedition dt { color: #bdccda; }
+.expedition dd { margin-inline-start: 0; font-weight: 700; }
+.expedition-offers article > dl > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem 1rem;
+  justify-content: space-between;
+  padding-block: .3rem;
+}
+.expedition-return { margin-block-start: 1rem; }
+.data-handoff { margin-block: 1rem; padding: .75rem; border: 1px solid #42617a; overflow-wrap: anywhere; }
+.data-handoff summary { cursor: pointer; }
+.data-handoff dt { color: #bdccda; }
+.data-handoff dd { margin: 0 0 .5rem; }

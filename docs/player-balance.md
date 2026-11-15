@@ -115,3 +115,18 @@ after visible, at least 300, enough for relay's 240-credit radio + payload.
 Optional purchases cannot destroy this route. No refund/rebuy can increase
 capital (wallet + settled paid bases). Automated player witnesses verify this
 invariant and fresh/historical minimum-capital completion routes.
+
+## Player balance r2
+
+Eight player-only fictional choices expand the previous 35-ID catalog to 43.
+Economy 24 kg, base 50 kg and express 30 kg bookings all deliver to the same
+model orbit. The economy booking reduces USD but adds four queue months relative
+to the 50 kg booking and has a 2.5 kg adapter. Express reduces the queue from
+nine to four months, with higher USD and a smaller allocated slot. The two new
+ground services cover imaging only until explicit relay windows exist. A rigid
+62 W array, two batteries with opposing energy/peak-power choices, and a low-power
+8 Mbps S-band radio add tradeoffs without changing the reference catalog.
+
+Expedition derives a revisioned scenario context from the player balance. Economy
+cuts the cap by 50,000 USD and leaves the preparation limit unchanged. Priority
+keeps the base cap and limits preparation to 27 months. These are game rules.

@@ -9,6 +9,9 @@ import CampaignPanel from './ui/CampaignPanel'
 import ResearchScreen from './ui/research/ResearchScreen'
 import { translate } from './i18n'
 import type { GameScreen } from './ui/game/GameScreens'
+import ExpeditionBoard from './ui/game/ExpeditionBoard'
+import { chooseExpeditionLeg, createExpedition, EXPEDITION_KEY, expeditionContext, expeditionOffers,
+  readExpedition, settleExpeditionLeg, type ExpeditionLeg, type ExpeditionRun } from './campaign/expedition'
 import {
   awardCampaignPass, buyCampaignPart, campaignComplete, campaignContext, campaignContractAvailable,
   campaignCredits, CAMPAIGN_CONTRACTS, CAMPAIGN_UPGRADES, campaignOwnsPart, CAMPAIGN_STORAGE_KEY,
@@ -18,6 +21,10 @@ import {
 function readCampaign(): { progress: CampaignProgress; storageError: boolean } {
   try { return { progress: parseCampaign(localStorage.getItem(CAMPAIGN_STORAGE_KEY)), storageError: false } }
   catch { return { progress: EMPTY_CAMPAIGN, storageError: true } }
+}
+function loadExpedition() {
+  try { return readExpedition(localStorage.getItem(EXPEDITION_KEY)) }
+  catch { return null }
 }
 export default function App({ presentation }: { presentation?: 'orbital' | 'engineering' } = {}) {
   const engineering = presentation === 'engineering' || new URLSearchParams(window.location.search).get('view') === 'engineering'
@@ -29,12 +36,37 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
   const [pickerWasUsed, setPickerWasUsed] = useState(false)
   const [campaignActive, setCampaignActive] = useState(false)
   const [campaign, setCampaign] = useState(readCampaign)
+  const [expedition, setExpedition] = useState(loadExpedition)
+  const [expeditionStorageError, setExpeditionStorageError] = useState(false)
+  const [expeditionFlight, setExpeditionFlight] = useState<{ run: ExpeditionRun; leg: ExpeditionLeg } | null>(null)
   const [creditDelta, setCreditDelta] = useState<number | null>(null)
   const [refundedDrafts, setRefundedDrafts] = useState(false)
   const [drafts, setDrafts] = useState<Record<string, MissionDraft>>({})
   const missionRef = useRef<MissionHandle>(null)
-  const mission = MISSIONS.find(m => m.id === missionId) ?? MISSIONS[0]!
-  const context = campaignActive ? campaignContext(mission.context, campaign.progress) : mission.context
+  const mission = MISSIONS.find(m => m.id === (expeditionFlight?.leg.missionId ?? missionId)) ?? MISSIONS[0]!
+  const context = expeditionFlight ? expeditionContext(mission.context, expeditionFlight.run, expeditionFlight.leg)
+    : campaignActive ? campaignContext(mission.context, campaign.progress) : mission.context
+  const saveExpedition = (run: ExpeditionRun) => {
+    setExpedition(run)
+    try { localStorage.setItem(EXPEDITION_KEY, JSON.stringify(run)); setExpeditionStorageError(false) }
+    catch { setExpeditionStorageError(true) }
+  }
+  const acceptLeg = (id: string) => {
+    if (!expedition) return
+    const leg = expeditionOffers(expedition).find(offer => offer.id === id)
+    if (!leg) return
+    const run = chooseExpeditionLeg(expedition, id)
+    saveExpedition(run)
+    setExpeditionFlight({ run, leg })
+    setScreen('hangar')
+  }
+  const navigateGame = (next: GameScreen) => {
+    if (expeditionFlight && next === 'hangar' && !expedition?.legId) next = 'expedition'
+    if (expeditionFlight && ['menu', 'missions', 'expedition'].includes(next)) {
+      setExpeditionFlight(null)
+    }
+    setScreen(next)
+  }
   const saveProgress = (progress: CampaignProgress) => {
     setCreditDelta(campaignCredits(progress) - campaignCredits(campaign.progress))
     if (progress === campaign.progress) return
@@ -44,7 +76,10 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
     setCampaign({ progress, storageError })
   }
   const onReport = (report: EvaluationReport) => {
-    if (campaignActive && !reference) saveProgress(awardCampaignPass(campaign.progress, report, mission.id))
+    if (expeditionFlight && expedition) {
+      const next = settleExpeditionLeg(expedition, report, mission.context)
+      if (next !== expedition) saveExpedition(next)
+    } else if (campaignActive && !reference) saveProgress(awardCampaignPass(campaign.progress, report, mission.id))
   }
   const chooseMission = (id: string) => {
     if (campaignActive && !campaignContractAvailable(campaign.progress, id)) return
@@ -76,22 +111,27 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
   const nextContract = remaining.find(c => campaignContractAvailable(campaign.progress, c.missionId)) ?? remaining[0]
   const nextMission = MISSIONS.find(m => m.id === nextContract?.missionId)
   const nextAvailable = nextContract && campaignContractAvailable(campaign.progress, nextContract.missionId)
-  const draftKey = `${campaignActive ? 'campaign' : 'direct'}:${mission.id}`
+  const draftKey = expeditionFlight
+    ? `expedition:${expeditionFlight.run.seed}:${expeditionFlight.leg.id}`
+    : `${campaignActive ? 'campaign' : 'direct'}:${mission.id}`
   const initialConfiguration = drafts[draftKey] ?? emptyDraft(mission.id)
   // A refunded part is not silently kept selected when returning to a saved draft.
   const safeInitial = sanitizeDraft(initialConfiguration, context)
   return <>{reference && <p role="status">Internal audited reference tooling · not player balance / Внутрішні аудитовані еталони · не ігровий баланс</p>}
-    <MissionApp ref={missionRef} key={`${mission.id}:${campaignActive ? 'campaign' : 'direct'}`}
+    <MissionApp ref={missionRef} key={draftKey}
     context={context} initialConfiguration={safeInitial}
     evaluate={request => evaluateMission(request, context)}
     mission={mission} missions={engineering ? campaignMissions : MISSIONS} onMissionChange={chooseMission}
     focusMissionPicker={pickerWasUsed} onReport={onReport}
+    expeditionPanel={<ExpeditionBoard run={expedition} locale={locale} storageError={expeditionStorageError}
+      onChoose={acceptLeg} onStart={() => saveExpedition(createExpedition(crypto.getRandomValues(new Uint32Array(1))[0]!))} />}
+    expeditionNavigation={expeditionFlight ? () => navigateGame('expedition') : undefined}
     onDraftChange={config => { setDrafts(previous => ({ ...previous, [draftKey]: config })) }}
     researchPanel={<ResearchScreen active={campaignActive} progress={campaign.progress} locale={locale}
       storageError={campaign.storageError} refundedDrafts={refundedDrafts}
       onBuy={buy} onRefund={refund} onBack={() => setScreen('menu')}
       onCampaign={() => { setCampaignActive(true); setMissionId('wildfire'); setCreditDelta(null) }} />}
-    debriefAction={campaignActive ? <div className="debrief-next">
+    debriefAction={expeditionFlight ? undefined : campaignActive ? <div className="debrief-next">
       <p>{creditDelta !== null && creditDelta > 0 ? `+${creditDelta} ${locale === 'en' ? 'credits • First clear collected.' : 'кредитів • Перший прохід зараховано.'}`
         : (locale === 'en' ? 'No additional reward. First-clear awards are collected once.' : 'Без додаткової нагороди. Перший прохід оплачується один раз.')}</p>
       <p>{campaignComplete(campaign.progress) ? translate(locale, 'campaign.complete')
@@ -113,7 +153,7 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
       compactBoard={!engineering}
       onToggle={() => { setCampaignActive(!campaignActive); setMissionId('wildfire'); setPickerWasUsed(true); setCreditDelta(null) }}
       onBuy={buy} />}
-    game={engineering ? undefined : { screen, onNavigate: setScreen, campaignActive, onCampaign: () => {
+    game={engineering ? undefined : { screen, onNavigate: navigateGame, campaignActive, onCampaign: () => {
       setCampaignActive(!campaignActive); setMissionId('wildfire'); setPickerWasUsed(true); setCreditDelta(null)
       setScreen(campaignActive ? 'menu' : 'missions')
     }, contracts: CAMPAIGN_CONTRACTS.map(contract => {
@@ -124,7 +164,7 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
         completed: campaign.progress.completedMissionIds.includes(contract.missionId), reward: campaign.progress.awards[contract.missionId] ?? contract.reward,
         reason: [
           missingMissions.length ? `${locale === 'en' ? 'Complete first: ' : 'Спершу пройдіть: '}${missingMissions.map(id => MISSIONS.find(m => m.id === id)?.title[locale]).join(', ')}` : '',
-          missingParts.length ? `${locale === 'en' ? 'Buy equipment below: ' : 'Купіть обладнання нижче: '}${missingParts.map(id => all.find(p => p.id === id)?.label[locale] ?? id).join(', ')}` : '',
+          missingParts.length ? `${locale === 'en' ? 'Unlock in Research: ' : 'Відкрийте в дослідженнях: '}${missingParts.map(id => all.find(p => p.id === id)?.label[locale] ?? id).join(', ')}` : '',
         ].filter(Boolean).join('. ') }
     }) }}
     locale={locale} onLocaleChange={setLocale} /></>

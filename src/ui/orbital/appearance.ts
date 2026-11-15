@@ -245,6 +245,18 @@ export const APPEARANCES: Readonly<Record<string, Appearance>> = {
     barrelLength:.35,barrelRadius:.19,rings:5}),
   'gs-regional':variant<ExternalAppearance>('gs-network',{id:'gs-regional',label:{en:'Regional service',ua:'Регіональний сервіс'},short:'REG'}),
   'gs-priority':variant<ExternalAppearance>('gs-service',{id:'gs-priority',label:{en:'Priority service',ua:'Пріоритетний сервіс'},short:'PRI'}),
+  'gs-fast-local':variant<ExternalAppearance>('gs-service',{id:'gs-fast-local',label:{en:'Fast local',ua:'Швидка локальна'},short:'FAST'}),
+  'gs-leased-nights':variant<ExternalAppearance>('gs-single',{id:'gs-leased-nights',label:{en:'Leased contacts',ua:'Орендовані сеанси'},short:'LEASE'}),
+  'lv-shared-24':variant<ExternalAppearance>('lv-heavy',{id:'lv-shared-24',label:{en:'24 kg economy',ua:'Економний 24 кг'},short:'24 KG'}),
+  'lv-express-30':variant<ExternalAppearance>('lv-heavy',{id:'lv-express-30',label:{en:'30 kg express',ua:'Пріоритетний 30 кг'},short:'30 KG'}),
+  'arr-rigid-62':variant<ArrayAppearance>('arr-deploy-l',{id:'arr-rigid-62',label:{en:'Rigid wings',ua:'Жорсткі крила'},short:'62',
+    span:1.69,chord:.64,segments:2,rows:3,cols:7,yoke:.18}),
+  'bat-pulse-105':variant<BatteryAppearance>('bat-m',{id:'bat-pulse-105',label:{en:'High-discharge pack',ua:'Блок високої потужності'},short:'105',
+    nominalWh:105,pack:[.25,.16,.39]}),
+  'bat-reserve-145':variant<BatteryAppearance>('bat-m',{id:'bat-reserve-145',label:{en:'Reserve pack',ua:'Резервний блок'},short:'145',
+    nominalWh:145,pack:[.41,.12,.31]}),
+  'rf-s-efficient':variant<RadioAppearance>('rf-s',{id:'rf-s-efficient',label:{en:'Low-power S-band',ua:'Малопотужний S-діапазон'},short:'S8',
+    antenna:'dish-small',mast:.14,dishRadius:.21}),
 }
 
 export function hasAppearance(id: string): boolean {

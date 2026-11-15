@@ -14,6 +14,17 @@ Also playable: **Trace the Shoreline**, a genuinely visible-light lens-selection
 
 **Current stage: QA implementation checkpoint, clean-copy acceptance pending.** Fresh builds are empty; the revisioned player catalog has **35 unique IDs**, including **12 new parts**. Research is a first-level **12-node / eight-purchase** map. [QA dossier](docs/qa-goal-dossier.md) records counts, witnesses, worker limits and verification. [Player balance and exact recipes](docs/player-balance.md) distinguish the new engineering caps from preserved audited contexts. Human bilingual scientific/linguistic and assistive-technology review remains pending. Nothing has been deployed.
 
+## Expedition and integration
+
+From the main menu, open **Expedition**. Each seeded run offers three mission legs.
+Take the economy offer for a tighter budget, or the priority offer for a shorter
+schedule and more points. Each evaluated failed launch consumes one of three
+supplies. A completed run keeps its result on this device until you start a new one.
+The permanent Campaign wallet is independent. Debriefs include an optional
+**Data handoff** with the intended user and product.
+
+Planning the combined project? Start with the [integration handoff](docs/integration-handoff.md).
+
 ## Run locally
 
 A fresh profile automatically enters **Flight Academy**, with immediate Skip and language selection. Accept its training contract, explicitly select all eight components (including the single station), launch (7.1 h), select the network and rerun (3.1 h provisional pass). Accept/Continue alone never equips. The menu's **Tutorial** replays an empty isolated build; **Help / Academy** or **?** preserves player drafts, reports and credits. Guided runs never pay credits.

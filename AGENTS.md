@@ -4,11 +4,11 @@
 
 Read [the status handoff](docs/STATUS.md) first: what is implemented, what is verified, the two
 known environment flakes, what to do next, and what cost time last round. Current pushed
-checkpoint: `5b7d29919df4b712becb5c1febaab5340ae12edc` on `mission-forge`.
+checkpoint is the tip of `mission-forge`. For the combined project, start with the [integration handoff](docs/integration-handoff.md). The supplied Space Mission Design project is the integration base.
 
 ## Post-M4 authorization
 
-The current user authorizes a visual/bilingual redesign and scenario expansion from M4 `397c041591ce3efaaa6d49faf7d67b4dd36fed55`, with local tests, commits and pushes on `mission-forge`. This supersedes the historical wildfire-only execution boundary below, **not** the audited wildfire mechanics. Ship the redesigned wildfire checkpoint independently before integrating urban heat. New scenario policy is documented separately in [the expansion supplement](docs/scenario-expansion.md). All preservation, ownership, permitted-model routing and Git restrictions below still apply. No live deployment, PR or merge; stop at a reviewable delivery candidate.
+The current user authorizes a visual/bilingual redesign and scenario expansion from M4 `397c041591ce3efaaa6d49faf7d67b4dd36fed55`, with local tests, commits and pushes on `mission-forge`. This supersedes the historical wildfire-only execution boundary below, **not** the audited wildfire mechanics. Wildfire, urban heat, visible mapping and packet relay are shipped on this branch. New scenario policy is documented separately in [the expansion supplement](docs/scenario-expansion.md). All preservation, ownership, permitted-model routing and Git restrictions below still apply. No live deployment, PR or merge; stop at a reviewable delivery candidate.
 
 ## Authority and phase boundary
 
@@ -16,7 +16,7 @@ The current user authorizes a visual/bilingual redesign and scenario expansion f
 - The audited Step 2 revision of **14 November 2026**, preserved in [the source record](docs/02-game-rules.md), governs gameplay and engineering. The technical rules reorganize it; they do not authorize rebalancing. Escalate a genuine contradiction instead of silently changing a threshold.
 - Step 1 supplies consistent challenge context and React + TypeScript + Vite direction. Local research drafts are supporting evidence, not rules. Existing source constants/types are older implementation history, not authority.
 - **Execution authorized** from approved plan `71415323577c0cecc1764672e0621a47a0d74866`: implement [the plan](docs/implementation-plan.md) in milestone order. Push M1 after real bilingual keyboard acceptance, then continue conformance/accessibility/delivery checks. Stop at delivery review. No live publishing, PR, or merge to `main`.
-- Only **Return the Heat Map**, a scheduled wildfire thermal-anomaly training mission, is active. All current passes are conditional model passes. Do not revive full-region active-fire, flood, or methane gameplay.
+- The four Earth-orbit training missions are active. **Return the Heat Map** models scheduled thermal anomalies. All current passes are conditional model passes. Do not revive full-region active-fire, flood, or methane gameplay.
 
 ## Ownership
 

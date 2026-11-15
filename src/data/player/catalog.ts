@@ -11,7 +11,7 @@ export const PLAYER_PROVENANCE: Provenance = { kind: 'provisional', sourceRefs: 
   assumptionIds: ['fictional-player-hardware-r1', 'synthetic-engineering-allocation', 'integration-unverified'] }
 const provenance=PLAYER_PROVENANCE
 /** Even inherited numbers describe the fictional package, not the reference product. */
-function fictional<T extends Part>(base: T, changes: Partial<T>): T {
+export function fictional<T extends Part>(base: T, changes: Partial<T>): T {
   const part = { ...base, ...changes }
   return { ...part, evidence: Object.fromEntries(Object.keys(part)
     .filter(key => !['id', 'category', 'label', 'evidence'].includes(key)).map(key => [key, provenance])),

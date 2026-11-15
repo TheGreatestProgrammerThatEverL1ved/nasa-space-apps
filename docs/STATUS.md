@@ -1,5 +1,35 @@
 # MISSION FORGE — status handoff
 
+## Refinement for integration
+
+Start with [the integration handoff](integration-handoff.md). Space Mission Design
+(the supplied ZIP) is the destination project. Use this branch as the source for
+features, campaign rules and tests. The refinement follows baseline `1a63a23727b80cd27a77eddc4802185c8d9f1ba0`.
+
+- **43 unique choices, up from 35.** Two launch bookings, two ground plans, two
+  batteries, a solar array and a radio. They affect the real evaluator. The launcher
+  choices vary price, booked mass, adapter mass and queue. The two new ground plans
+  appear in imaging missions; the relay uses its existing explicit window fixtures.
+- **Expedition.** Three mission legs in a seeded order, economy and priority offers,
+  three retry supplies and a persistent score. Priority requires a shorter preparation
+  schedule and awards two points. Economy cuts the mission's USD cap by 50,000 and
+  awards one point. Permanent campaign unlocks and credits are independent.
+- **Data handoff.** All four debriefs identify the recipient, product, applicability
+  and modeled timing status where evidence exists. The foldout preserves the compact
+  default UI.
+- Reproduce with `npm ci`, `npm run typecheck`, `npm run lint`, `npm test`,
+  `npm run test:ui`, `npm run build` and `npm audit --audit-level=moderate`.
+  Browser smoke test: `MISSION_FORGE_PREVIEW=1 npm run test:e2e -- tests/e2e/expedition.spec.ts --workers=1`.
+  Use `MISSION_FORGE_CHROMIUM=/usr/bin/chromium` to select an installed Chromium on Linux.
+  Build, typecheck, lint, 161 engine tests and 41 UI tests passed; npm audit found
+  zero vulnerabilities. A parallel UI run timed out in the existing English
+  campaign test; its assertions were left intact. The refinement environment
+  blocked Chromium startup at a Unix socket and could not obtain the Playwright
+  headless download. Run the supplied browser smoke test on the integration machine.
+
+## Previous QA round
+
+
 Updated 15 November 2026, branch `mission-forge`. This round's work is committed as
 **`5b7d29919df4b712becb5c1febaab5340ae12edc`** (96 files) on top of the audited baseline
 `2e92cb49a6be256d32128d2433697fa79eaa5bd2`, and that commit is pushed: `git ls-remote origin
@@ -89,9 +119,7 @@ Both correlate with this host's memory state during the runs: about 7.4 GiB free
 1. Review the checkpoint (`git diff 2e92cb4..5b7d299 --stat`, then the gate table in
    [the QA dossier](qa-goal-dossier.md)). It is a reviewable delivery candidate: nothing is
    published, submitted, PR'd or merged.
-2. The redesigned wildfire checkpoint is now shipped independently, so the next authorized work is
-   urban-heat integration, following [the expansion supplement](scenario-expansion.md) and keeping the
-   audited wildfire mechanics untouched.
+2. All four listed Earth-orbit scenarios are shipped. Follow the integration handoff above for the combined build.
 3. Re-run the checks from a clean copy of the pushed SHA before building on top of it, and add new
    evidence to the dossier rather than rewriting the record above.
 
@@ -115,8 +143,7 @@ Both correlate with this host's memory state during the runs: about 7.4 GiB free
 
 `AGENTS.md`, [technical rules](game-rules-technical.md), [player guide](game-rules-player.md) and
 [workflow](agent-workflow.md) still govern. `docs/01-analysis-and-plan.md` and `docs/research/*.md`
-are committed Step 1 / research supporting context, not engineering rules. Only `Return the Heat Map`
-missions are playable gameplay; do not revive full-region active-fire, flood or methane gameplay.
+are committed Step 1 / research supporting context, not engineering rules. The four Earth-orbit training missions are playable. Full-region active-fire, flood and methane remain outside their scope.
 Escalate a rules contradiction instead of changing a threshold. Stage explicit paths only — private
 `opencode.jsonc` and the local `public/` and `src/assets/` inputs stay untracked and were
 deliberately not committed.

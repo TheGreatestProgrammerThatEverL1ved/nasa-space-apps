@@ -38,6 +38,7 @@ import LiveHangar, { SceneMenu, type GameScreen } from './game/GameScreens'
 import { useOrbitalMotion } from './game/motion'
 import MissionGallery from './game/MissionGallery'
 import LaunchSequence from './game/LaunchSequence'
+import DataHandoff from './game/DataHandoff'
 import { completeDraft, draftView, emptyDraft, missingSlots, removeSlot, sanitizeDraft, type MissionDraft } from '../engine/draft'
 
 export interface MissionAppProps {
@@ -52,6 +53,8 @@ export interface MissionAppProps {
   readonly focusMissionPicker?: boolean
   readonly campaignPanel?: ReactNode
   readonly researchPanel?: ReactNode
+  readonly expeditionPanel?: ReactNode
+  readonly expeditionNavigation?: () => void
   readonly onReport?: (report: EvaluationReport) => void
   readonly onDraftChange?: (config: MissionDraft) => void
   readonly ref?: Ref<MissionHandle>
@@ -485,6 +488,8 @@ export default function MissionApp({
   focusMissionPicker = false,
   campaignPanel,
   researchPanel,
+  expeditionPanel,
+  expeditionNavigation,
   onReport,
   onDraftChange,
   ref,
@@ -543,7 +548,7 @@ export default function MissionApp({
   }, [focusMissionPicker])
   useEffect(() => {
     if (!gameScreen) return
-    const id = gameScreen === 'menu' ? 'menu-title' : gameScreen === 'hangar' ? 'hangar-title' : gameScreen === 'debrief' ? 'result-heading' : gameScreen === 'launch' ? 'launch-title' : gameScreen === 'research' ? 'research-title' : 'missions-title'
+    const id = gameScreen === 'menu' ? 'menu-title' : gameScreen === 'hangar' ? 'hangar-title' : gameScreen === 'debrief' ? 'result-heading' : gameScreen === 'launch' ? 'launch-title' : gameScreen === 'research' ? 'research-title' : gameScreen === 'expedition' ? 'expedition-title' : 'missions-title'
     document.getElementById(id)?.focus()
   }, [gameScreen])
 
@@ -728,10 +733,13 @@ export default function MissionApp({
     }}>
       {game && <>
         <header className="game-topbar">
-          <span className="game-brand">MISSION FORGE <span aria-hidden="true">/</span> {game.campaignActive ? (locale === 'en' ? 'CAMPAIGN' : 'КАМПАНІЯ') : (locale === 'en' ? 'SANDBOX' : 'ПІСОЧНИЦЯ')}</span>
+          <span className="game-brand">MISSION FORGE <span aria-hidden="true">/</span> {expeditionNavigation || game.screen === 'expedition'
+            ? (locale === 'en' ? 'EXPEDITION' : 'ЕКСПЕДИЦІЯ')
+            : game.campaignActive ? (locale === 'en' ? 'CAMPAIGN' : 'КАМПАНІЯ') : (locale === 'en' ? 'SANDBOX' : 'ПІСОЧНИЦЯ')}</span>
           {game.screen === 'menu' && <a className="engineering-entry" href="?view=engineering">{locale === 'en' ? 'Engineering console' : 'Інженерна консоль'}</a>}
           {game.screen !== 'menu' && <button onClick={() => navigate('menu')}>{locale === 'en' ? '← Main menu' : '← Головне меню'}</button>}
-          {game.campaignActive && game.screen !== 'menu' && game.screen !== 'research' && <button onClick={() => navigate('research')}>{locale === 'en' ? 'Research' : 'Дослідження'}</button>}
+          {expeditionPanel && game.screen === 'menu' && <button onClick={() => navigate('expedition')}>{locale === 'en' ? 'Expedition' : 'Експедиція'}</button>}
+          {game.campaignActive && !expeditionNavigation && !['menu', 'research', 'expedition'].includes(game.screen) && <button onClick={() => navigate('research')}>{locale === 'en' ? 'Research' : 'Дослідження'}</button>}
           {report && ['menu', 'hangar'].includes(game.screen) && <button onClick={() => navigate('debrief')}>{locale === 'en' ? 'Last debrief' : 'Останній підсумок'}</button>}
           <Academy locale={locale} onLocaleChange={setLocale} replaySignal={tutorialSignal} compact autoStart onFirstRunExit={() => navigate('menu')} onOpenChange={setAcademyOpen} />
           <div className="locale-switch" role="group" aria-label={t('app.language')}>
@@ -759,6 +767,7 @@ export default function MissionApp({
             onChoose={onMissionChange} contracts={game.campaignActive ? game.contracts : undefined} />
         </>}
         {game.screen === 'research' && researchPanel}
+        {game.screen === 'expedition' && expeditionPanel}
         {game.screen === 'launch' && frozenRun && report && <LaunchSequence config={frozenRun} report={report} locale={locale}
           missionName={missionName} onFinish={finishLaunch} />}
       </>}
@@ -1096,10 +1105,12 @@ export default function MissionApp({
             <p data-testid="important-number">{importantMetric ? formatMetric(importantMetric,locale) : t('metric.absent')}</p>
             {importantCheck && <p>{translateOptional(locale,`check.${importantCheck.checkId}`,t('check.generic'))}</p>}
             {isStale && <p role="status">{t('results.staleNotice')}</p>}
-            <button className="game-primary" onClick={()=>inspectPart(repairDestination(report.diagnostics[0]))}>
-              {report.outcome==='MODEL_PASS_PROVISIONAL' ? (locale==='en'?'Continue designing':'Продовжити проєктування') : t('results.backToConfig')}
+            <button className="game-primary" onClick={expeditionNavigation ?? (()=>inspectPart(repairDestination(report.diagnostics[0])))}>
+              {expeditionNavigation ? (locale === 'en' ? 'Return to expedition' : 'Повернутися до експедиції')
+                : report.outcome==='MODEL_PASS_PROVISIONAL' ? (locale==='en'?'Continue designing':'Продовжити проєктування') : t('results.backToConfig')}
             </button>
           </div>}
+          {game && report && !isStale && <DataHandoff report={report} locale={locale} />}
           <ReportDetails className="full-report">
           {game && <summary>{locale==='en'?'Full report & next contracts':'Повний звіт і наступні контракти'}</summary>}
 

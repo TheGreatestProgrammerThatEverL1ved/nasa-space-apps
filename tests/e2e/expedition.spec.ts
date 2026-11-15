@@ -47,6 +47,7 @@ for (const locale of ['en', 'ua'] as const) {
       await back()
     }
     await expect(page.locator('.expedition-status dd').nth(0)).toHaveText('3/3')
+    await expect(page.locator('.expedition-status dd').nth(1)).toHaveText('3')
     await expect(page.locator('.expedition-status dd').nth(2)).toHaveText('3')
     await expect(page.getByRole('button', { name: en ? 'Start new expedition' : 'Почати нову експедицію' })).toBeVisible()
     expect(await page.evaluate(() => localStorage.getItem('mission-forge.campaign.v1'))).toBeNull()

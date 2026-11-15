@@ -28,13 +28,24 @@ export function createExpedition(seed: number): ExpeditionRun {
 }
 
 export function expeditionSummary(run: ExpeditionRun) {
-  const clears = run.attempts.filter(a => a.passed)
-  const supplies = STARTING_SUPPLIES - (run.attempts.length - clears.length)
+  let stage = 0
+  let supplies = STARTING_SUPPLIES
+  let points = 0
+  for (const attempt of run.attempts) {
+    if (!attempt.passed) {
+      supplies -= 1
+    } else {
+      stage += 1
+      const priority = attempt.legId.endsWith(':priority')
+      points += priority ? 2 : 1
+      if (!priority) supplies = Math.min(STARTING_SUPPLIES, supplies + 1)
+    }
+  }
   return {
-    stage: clears.length,
+    stage,
     supplies,
-    points: clears.reduce((sum, entry) => sum + (entry.legId.endsWith(':priority') ? 2 : 1), 0),
-    complete: clears.length === EXPEDITION_STAGES,
+    points,
+    complete: stage === EXPEDITION_STAGES,
     exhausted: supplies === 0,
   }
 }
@@ -99,7 +110,7 @@ export function readExpedition(raw: string | null): ExpeditionRun | null {
   try {
     const saved = JSON.parse(raw ?? 'null')
     if (saved?.version !== 1 || !Number.isInteger(saved.seed) || saved.seed < 0 || saved.seed > 0xffff_ffff ||
-      !Array.isArray(saved.attempts) || saved.attempts.length > EXPEDITION_STAGES + STARTING_SUPPLIES - 1) return null
+      !Array.isArray(saved.attempts) || saved.attempts.length > STARTING_SUPPLIES + 2 * (EXPEDITION_STAGES - 1)) return null
     let run = createExpedition(saved.seed)
     for (const attempt of saved.attempts) {
       const leg = expeditionOffers(run).find(offer => offer.id === attempt?.legId)

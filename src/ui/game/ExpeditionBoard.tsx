@@ -21,8 +21,8 @@ export default function ExpeditionBoard({ run, locale, storageError, onStart, on
       <div><dt>{en ? 'Retry supplies' : 'Запас спроб'}</dt><dd>{status.supplies}</dd></div>
       <div><dt>{en ? 'Points' : 'Бали'}</dt><dd>{status.points}</dd></div>
     </dl>}
-    <p>{en ? 'Clear three contracts. A failed launch uses one supply. Use any available hardware in this run.'
-      : 'Виконайте три контракти. Невдалий запуск витрачає одну спробу. Можна вибирати з усього доступного обладнання.'}</p>
+    <p>{en ? 'Clear three contracts. A failed launch uses one supply.'
+      : 'Виконайте три контракти. Невдалий запуск витрачає одну спробу.'}</p>
     {status?.complete && <h2>{en ? 'Expedition complete' : 'Експедицію завершено'}</h2>}
     {status?.exhausted && <h2>{en ? 'Supplies exhausted' : 'Запас спроб вичерпано'}</h2>}
     {(!run || status?.complete || status?.exhausted) ?
@@ -34,11 +34,24 @@ export default function ExpeditionBoard({ run, locale, storageError, onStart, on
           <dl>
             <div><dt>{en ? 'Cap' : 'Бюджет'}</dt><dd>{formatNumber(leg.budgetUsd, locale)} USD</dd></div>
             <div><dt>{en ? 'Schedule' : 'Строк підготовки'}</dt><dd>{leg.months} {en ? 'months' : 'міс.'}</dd></div>
-            <div><dt>{en ? 'Reward' : 'Нагорода'}</dt><dd>+{leg.points} {en ? 'points' : 'б.'}</dd></div>
+            <div><dt>{en ? 'Reward' : 'Нагорода'}</dt><dd>{leg.profile === 'economy'
+              ? (en ? '+1 point and +1 supply (up to 3)' : '+1 бал і +1 спроба (до 3)')
+              : (en ? '+2 points' : '+2 бали')}</dd></div>
           </dl>
           <button className="game-primary" onClick={() => onChoose(leg.id)}>{run.legId === leg.id
             ? (en ? 'Resume build' : 'Продовжити збирання') : (en ? 'Accept contract' : 'Прийняти контракт')}</button>
         </article>)}
       </div>}
+    {run && run.attempts.length > 0 && <details className="expedition-history">
+      <summary>{en ? 'Run history' : 'Історія експедиції'}</summary>
+      <small>{en ? 'Seed' : 'Зерно'} {run.seed}</small>
+      <ol>{run.attempts.map(({ legId, passed }, index) => {
+        const [, missionId, profile] = legId.split(':')
+        const mission = PLAYER_MISSIONS.find(candidate => candidate.id === missionId)
+        return <li key={index}>{mission?.title[locale]} · {profile === 'priority'
+          ? (en ? 'Priority' : 'Пріоритетний') : (en ? 'Economy' : 'Економний')} · {passed
+          ? (en ? 'Cleared' : 'Виконано') : (en ? 'Failed' : 'Невдало')}</li>
+      })}</ol>
+    </details>}
   </main>
 }

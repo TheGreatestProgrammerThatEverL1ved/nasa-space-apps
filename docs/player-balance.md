@@ -129,4 +129,6 @@ ground services cover imaging only until explicit relay windows exist. A rigid
 
 Expedition derives a revisioned scenario context from the player balance. Economy
 cuts the cap by 50,000 USD and leaves the preparation limit unchanged. Priority
-keeps the base cap and limits preparation to 27 months. These are game rules.
+keeps the base cap and limits preparation to 27 months. An economy clear earns
+one point and restores one retry supply up to three. A priority clear earns two
+points. These are game rules.

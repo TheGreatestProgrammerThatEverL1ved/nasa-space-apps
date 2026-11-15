@@ -12,8 +12,10 @@ features, campaign rules and tests. The refinement follows baseline `1a63a23727b
   appear in imaging missions; the relay uses its existing explicit window fixtures.
 - **Expedition.** Three mission legs in a seeded order, economy and priority offers,
   three retry supplies and a persistent score. Priority requires a shorter preparation
-  schedule and awards two points. Economy cuts the mission's USD cap by 50,000 and
-  awards one point. Permanent campaign unlocks and credits are independent.
+  schedule and awards two points. Economy cuts the mission's USD cap by 50,000,
+  awards one point and restores one retry supply up to three. Run history shows
+  the seed, chosen offers and outcomes. Permanent campaign unlocks and credits
+  are independent.
 - **Data handoff.** All four debriefs identify the recipient, product, applicability
   and modeled timing status where evidence exists. The foldout preserves the compact
   default UI.
@@ -21,7 +23,7 @@ features, campaign rules and tests. The refinement follows baseline `1a63a23727b
   `npm run test:ui`, `npm run build` and `npm audit --audit-level=moderate`.
   Browser smoke test: `MISSION_FORGE_PREVIEW=1 npm run test:e2e -- tests/e2e/expedition.spec.ts --workers=1`.
   Use `MISSION_FORGE_CHROMIUM=/usr/bin/chromium` to select an installed Chromium on Linux.
-  Build, typecheck, lint, 161 engine tests and 41 UI tests passed; npm audit found
+  Build, typecheck, lint, 162 engine tests and 41 UI tests passed; npm audit found
   zero vulnerabilities. A parallel UI run timed out in the existing English
   campaign test; its assertions were left intact. The refinement environment
   blocked Chromium startup at a Unix socket and could not obtain the Playwright

@@ -58,7 +58,7 @@ it.each(['en', 'ua'] as const)('plays an expedition through failure, repair, and
     launch()
     back()
   }
-  expect(progress()).toMatchObject({ supplies: 2, stage: 3, complete: true, points: 3 })
+  expect(progress()).toMatchObject({ supplies: 3, stage: 3, complete: true, points: 3 })
   expect(localStorage.getItem('mission-forge.campaign.v1')).toBeNull()
   unmount()
   render(<App />)

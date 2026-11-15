@@ -28,6 +28,8 @@
   padding-block: .3rem;
 }
 .expedition-return { margin-block-start: 1rem; }
+.expedition-history { margin-block-start: 1rem; }
+.expedition-history summary { cursor: pointer; }
 .data-handoff { margin-block: 1rem; padding: .75rem; border: 1px solid #42617a; overflow-wrap: anywhere; }
 .data-handoff summary { cursor: pointer; }
 .data-handoff dt { color: #bdccda; }

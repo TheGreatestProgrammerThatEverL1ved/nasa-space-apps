@@ -45,5 +45,6 @@ Baseline on our branch: `1a63a23727b80cd27a77eddc4802185c8d9f1ba0`. The earlier 
 - Empty role-appropriate draft; no evaluate-on-undefined and no save migration that silently loads a preset.
 - Two real launches with one changed choice and an explainable outcome, preserving the existing numerical test fixtures for each engine.
 - Expedition replay with the same seed offers the same route. One evaluable failed attempt spends one supply; duplicate or stale completion grants nothing. All offers have a passing build. A completed, failed or reloaded run resumes in the correct state.
+- An economy clear restores one spent supply and grants one point. A priority clear grants two points. Preserve the cap of three and show both consequences before launch. Run history can be derived by replaying recorded attempts, so the save needs no separate balance field.
 - Research debit/refund needs one intended activation, preserves payment history, and never auto-equips. A locked or owned card cannot charge again.
 - End-to-end delivery and report links work on the final judge-facing build. Test how the destination behaves when its backend is unreachable.

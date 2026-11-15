@@ -57,6 +57,28 @@ it('has a passing loadout for both offers for every mission', () => {
   }
 })
 
+it('awards either a supply refill or the higher score after a failed attempt', () => {
+  const run = createExpedition(38)
+  const [economy, priority] = expeditionOffers(run)
+  const mission = findMission('wildfire')
+  const first = chooseExpeditionLeg(run, economy!.id)
+  const failed = evaluateMission(reject(mission.id), expeditionContext(mission.context, first, economy!))
+  const retry = settleExpeditionLeg(first, failed, mission.context)
+  expect(expeditionSummary(retry)).toMatchObject({ supplies: 2, points: 0 })
+  for (const leg of [economy!, priority!]) {
+    const accepted = chooseExpeditionLeg(retry, leg.id)
+    const context = expeditionContext(mission.context, accepted, leg)
+    const config = { ...witness(mission.id), launcherId: leg.profile === 'economy' ? 'lv-shared-24' : 'lv-express-30' }
+    const report = evaluateMission(config, context)
+    expect(report.outcome).toBe('MODEL_PASS_PROVISIONAL')
+    const result = settleExpeditionLeg(accepted, report, mission.context)
+    expect(expeditionSummary(result)).toMatchObject({
+      stage: 1, supplies: leg.profile === 'economy' ? 3 : 2, points: leg.points,
+    })
+    expect(readExpedition(JSON.stringify(result))).toEqual(result)
+  }
+})
+
 it('advances only on an accepted evaluated leg, rejects duplicates and round-trips saves', () => {
   let run = createExpedition(7)
   while (!expeditionSummary(run).complete) {

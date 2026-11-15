@@ -2,8 +2,9 @@
 
 ## Current status
 
-Read [the status handoff](docs/STATUS.md) first: what is implemented, what is verified, the one
-gate still open, and what cost time last round.
+Read [the status handoff](docs/STATUS.md) first: what is implemented, what is verified, the two
+known environment flakes, what to do next, and what cost time last round. Current pushed
+checkpoint: `5b7d29919df4b712becb5c1febaab5340ae12edc` on `mission-forge`.
 
 ## Post-M4 authorization
 

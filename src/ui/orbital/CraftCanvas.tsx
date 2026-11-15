@@ -30,6 +30,11 @@ const CAMERA_TARGET: Readonly<Record<CraftMode, readonly [number, number, number
 }
 const CAMERA_RADIUS = 10.6
 const CAMERA_ELEVATION = 0.16
+const CAMERA_FOV = 38
+const TAN_HALF_FOV = Math.tan((CAMERA_FOV * Math.PI) / 360)
+/** Hangar framing bounds: keep the widest (XL wing) and tallest (dish) views inside. */
+const HANGAR_MIN_RADIUS = 4.7
+const HANGAR_MAX_RADIUS = 32
 const EARTH_RADIUS = 7.6
 const EARTH_POSITION: readonly [number, number, number] = [-6.5, -6.3, -7.6]
 /**
@@ -51,7 +56,7 @@ export default function CraftCanvas(props: CraftCanvasProps) {
   }), [])
   const cameraOptions = useMemo(() => ({
     position: [7.4, 2.4, 8.6] as [number, number, number],
-    fov: 38,
+    fov: CAMERA_FOV,
     near: 0.1,
     far: 220,
   }), [])
@@ -83,6 +88,7 @@ interface SceneProps extends CraftCanvasProps {
 function Scene({ config, locale, mode, selectedField, motion, angle, onInspect, onReady }: SceneProps) {
   const invalidate = useThree(state => state.invalidate)
   const [earthSettled, setEarthSettled] = useState(false)
+  const hangar = mode === 'hangar'
   const configKey = `${config.busId}|${config.arrayId}|${config.batteryId}|${config.radioId}|${config.payloadId}`
 
   useEffect(() => {
@@ -90,13 +96,22 @@ function Scene({ config, locale, mode, selectedField, motion, angle, onInspect, 
   }, [configKey, mode, selectedField, angle, motion, invalidate])
 
   return <>
-    <ambientLight intensity={0.34} />
-    <directionalLight position={[7, 9, 8]} intensity={2.5} color="#fff3df" />
-    <directionalLight position={[-9, -4, 5]} intensity={0.85} color="#5f9cc9" />
-    <directionalLight position={[0, 5, -10]} intensity={1.6} color="#a9d9ff" />
-    <pointLight position={[1.5, -1.6, 2.4]} intensity={9} distance={9} decay={2} color="#4f9ecf" />
-    <StarField />
-    <EarthLimb motion={motion} onSettled={() => setEarthSettled(true)} />
+    {hangar
+      ? <AssemblyBayLighting />
+      : <>
+        <ambientLight intensity={0.34} />
+        <directionalLight position={[7, 9, 8]} intensity={2.5} color="#fff3df" />
+        <directionalLight position={[-9, -4, 5]} intensity={0.85} color="#5f9cc9" />
+        <directionalLight position={[0, 5, -10]} intensity={1.6} color="#a9d9ff" />
+        <pointLight position={[1.5, -1.6, 2.4]} intensity={9} distance={9} decay={2} color="#4f9ecf" />
+      </>}
+    {hangar
+      ? <AssemblyBay motion={motion} />
+      : <>
+        <StarField />
+        <EarthLimb motion={motion} onSettled={() => setEarthSettled(true)} />
+      </>}
+    {hangar && <fog attach="fog" args={['#0b1116', 13, 46]} />}
     <CraftModel
       config={config}
       locale={locale}
@@ -105,26 +120,35 @@ function Scene({ config, locale, mode, selectedField, motion, angle, onInspect, 
       motion={motion}
       onInspect={onInspect}
     />
-    <CameraRig angle={angle} motion={motion} mode={mode} selectedField={selectedField} />
-    <ReadySignal earthSettled={earthSettled} onReady={onReady} />
+    <CameraRig
+      angle={angle}
+      motion={motion}
+      mode={mode}
+      config={config}
+      selectedField={selectedField}
+    />
+    {/* The bay never waits on the Earth surface request, so a removed or
+        blocked texture can not strand the hangar stage. */}
+    <ReadySignal settled={hangar || earthSettled} onReady={onReady} />
   </>
 }
 
 /**
  * Accepts the WebGL path only after real frames have been drawn. `onCreated`
  * merely proves a context exists; this waits for two rendered frames and the
- * Earth surface request, then reports on the next animation frame so the
- * schematic overlay is removed only once the canvas holds the final image.
+ * environment request that the active mode actually needs, then reports on the
+ * next animation frame so the schematic overlay is removed only once the canvas
+ * holds the final image.
  */
-function ReadySignal({ earthSettled, onReady }: { earthSettled: boolean; onReady: () => void }) {
+function ReadySignal({ settled, onReady }: { settled: boolean; onReady: () => void }) {
   const frames = useRef(0)
   const reported = useRef(false)
   const rafRef = useRef<number | null>(null)
-  const settledRef = useRef(earthSettled)
+  const settledRef = useRef(settled)
   const readyRef = useRef(onReady)
   const invalidate = useThree(state => state.invalidate)
 
-  useEffect(() => { settledRef.current = earthSettled }, [earthSettled])
+  useEffect(() => { settledRef.current = settled }, [settled])
   useEffect(() => { readyRef.current = onReady }, [onReady])
 
   const report = useCallback(() => {
@@ -153,8 +177,8 @@ function ReadySignal({ earthSettled, onReady }: { earthSettled: boolean; onReady
   })
 
   useEffect(() => {
-    if (earthSettled) invalidate()
-  }, [earthSettled, invalidate])
+    if (settled) invalidate()
+  }, [settled, invalidate])
 
   useEffect(() => {
     // A slow or blocked texture must not strand the stage; one real frame is
@@ -168,11 +192,72 @@ function ReadySignal({ earthSettled, onReady }: { earthSettled: boolean; onReady
   return null
 }
 
-function placeCamera(camera: THREE.Camera, angleDeg: number, mode: CraftMode, selectedField?: PartField) {
+interface HangarFrame {
+  readonly halfW: number
+  readonly halfH: number
+  readonly target: readonly [number, number, number]
+}
+
+/**
+ * Bounds of the visible hardware in the hangar, in scene units. Derived from
+ * the same appearance transforms the model uses, so a wing swap or a bigger
+ * dish re-fits the camera instead of clipping at the frame edge.
+ */
+function hangarFrame(config: MissionConfiguration, selectedField?: PartField): HangarFrame {
+  const bus = busTransform(config.busId)
+  const array = arrayTransform(config.arrayId, config.busId)
+  const payload = payloadTransform(config.payloadId, config.busId)
+  const payloadLook = getPayloadAppearance(config.payloadId)
+  const radio = getRadioAppearance(config.radioId)
+  const [w, h] = bus.size
+
+  if (selectedField === 'batteryId') {
+    const battery = batteryTransform(config.batteryId, config.busId)
+    const right = battery.explodeX + battery.pack[0] / 2 + 0.24
+    const left = -w / 2 - 0.1
+    return {
+      halfW: (right - left) / 2,
+      halfH: h / 2 + 0.26,
+      target: [(right + left) / 2, 0.03, 0.06],
+    }
+  }
+
+  const top = Math.max(
+    h / 2 + radio.mast + (radio.antenna === 'whip' ? 0.22 : radio.dishRadius * 1.35),
+    payload.baseY + (payloadLook.optics === 'relay' ? 0.52 : payload.barrelLength + 0.22),
+  )
+  const halfW = array.mount === 'deploy'
+    ? Math.max(w / 2, w / 2 + array.yoke + array.span + 0.1)
+    : w / 2 + 0.08
+  return { halfW, halfH: Math.max(top, h / 2 + 0.08), target: CAMERA_TARGET.hangar }
+}
+
+/** Pull the camera back along its 28° azimuth until the frame fits with margin. */
+function fitRadius(frame: HangarFrame, aspect: number): number {
+  const safeAspect = Math.max(0.4, aspect)
+  return Math.max(
+    (frame.halfW * 1.1) / (TAN_HALF_FOV * safeAspect),
+    (frame.halfH * 1.3) / TAN_HALF_FOV,
+  )
+}
+
+function placeCamera(
+  camera: THREE.Camera,
+  angleDeg: number,
+  mode: CraftMode,
+  config: MissionConfiguration,
+  selectedField?: PartField,
+) {
   const cutaway = mode === 'hangar' && selectedField === 'batteryId'
-  const target = cutaway ? [0.35, 0.05, 0.1] : CAMERA_TARGET[mode]
   const aspect = camera instanceof THREE.PerspectiveCamera ? camera.aspect : 1.8
-  const radius = cutaway ? 3.5 : mode === 'hangar' ? 5.8 * Math.max(1, 1.9 / aspect) : CAMERA_RADIUS
+  let target: readonly [number, number, number] = CAMERA_TARGET[mode]
+  let radius = CAMERA_RADIUS
+  if (mode === 'hangar') {
+    const frame = hangarFrame(config, selectedField)
+    target = frame.target
+    const fitted = fitRadius(frame, aspect)
+    radius = Math.min(HANGAR_MAX_RADIUS, Math.max(cutaway ? 3.1 : HANGAR_MIN_RADIUS, fitted))
+  }
   const azimuth = THREE.MathUtils.degToRad(angleDeg)
   const horizontal = radius * Math.cos(CAMERA_ELEVATION)
   camera.position.set(
@@ -183,7 +268,13 @@ function placeCamera(camera: THREE.Camera, angleDeg: number, mode: CraftMode, se
   camera.lookAt(target[0], target[1], target[2])
 }
 
-function CameraRig({ angle, motion, mode, selectedField }: { angle: number; motion: boolean; mode: CraftMode; selectedField?: PartField }) {
+function CameraRig({ angle, motion, mode, config, selectedField }: {
+  angle: number
+  motion: boolean
+  mode: CraftMode
+  config: MissionConfiguration
+  selectedField?: PartField
+}) {
   const camera = useThree(state => state.camera)
   const invalidate = useThree(state => state.invalidate)
   const azimuth = useRef(THREE.MathUtils.degToRad(angle))
@@ -191,10 +282,10 @@ function CameraRig({ angle, motion, mode, selectedField }: { angle: number; moti
   useEffect(() => {
     if (!motion) {
       azimuth.current = THREE.MathUtils.degToRad(angle)
-      placeCamera(camera, angle, mode, selectedField)
+      placeCamera(camera, angle, mode, config, selectedField)
       invalidate()
     }
-  }, [angle, motion, mode, selectedField, camera, invalidate])
+  }, [angle, motion, mode, config, selectedField, camera, invalidate])
 
   useFrame((state) => {
     if (typeof document !== 'undefined' && document.hidden) return
@@ -204,7 +295,7 @@ function CameraRig({ angle, motion, mode, selectedField }: { angle: number; moti
       // the menu's negative space intact instead of orbiting behind its text.
       azimuth.current = THREE.MathUtils.degToRad(angle) + Math.sin(t * 0.12) * 0.22
     }
-    placeCamera(camera, THREE.MathUtils.radToDeg(azimuth.current), mode, selectedField)
+    placeCamera(camera, THREE.MathUtils.radToDeg(azimuth.current), mode, config, selectedField)
   })
   return null
 }
@@ -232,6 +323,417 @@ function StarField() {
   return <points geometry={geometry}>
     <pointsMaterial size={0.13} sizeAttenuation color="#e4eeff" transparent opacity={0.85} depthWrite={false} />
   </points>
+}
+
+/* ---------------------------------------------------------------------------
+ * Assembly bay — original procedural environment for `mode=hangar`.
+ * Steel portal ribs recede into depth, a low work stand holds the vehicle, and
+ * warm practicals sit apart from a cool ambient fill. No external art: the two
+ * plate textures below are drawn on a canvas at runtime.
+ * ------------------------------------------------------------------------- */
+
+const BAY = {
+  steel: '#39434c',
+  steelMid: '#2c353d',
+  steelDark: '#222a31',
+  edge: '#4b5761',
+  floor: '#242d34',
+  wall: '#1a2229',
+  amber: '#ffc684',
+} as const
+
+const BAY_RIBS: readonly { z: number; depth: number }[] = [
+  { z: -2.9, depth: 0 },
+  { z: -6.7, depth: 1 },
+  { z: -10.5, depth: 2 },
+  { z: -14.3, depth: 3 },
+]
+
+function createBayFloorTexture(): THREE.CanvasTexture | null {
+  if (typeof document === 'undefined') return null
+  try {
+    const size = 512
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.fillStyle = BAY.floor
+    ctx.fillRect(0, 0, size, size)
+
+    const cell = size / 4
+    for (let row = 0; row < 4; row += 1) {
+      for (let col = 0; col < 4; col += 1) {
+        // Slight plate-to-plate tone shift keeps the deck from reading flat.
+        const shade = 6 - ((row * 3 + col * 5) % 4)
+        ctx.fillStyle = `rgba(255, 255, 255, ${shade / 700})`
+        ctx.fillRect(col * cell + 1, row * cell + 1, cell - 2, cell - 2)
+        ctx.strokeStyle = '#161d23'
+        ctx.lineWidth = 3
+        ctx.strokeRect(col * cell + 1.5, row * cell + 1.5, cell - 3, cell - 3)
+        ctx.strokeStyle = 'rgba(96, 112, 124, 0.16)'
+        ctx.lineWidth = 1
+        ctx.strokeRect(col * cell + 4, row * cell + 4, cell - 8, cell - 8)
+      }
+    }
+    // Panel bolts at the plate corners.
+    ctx.fillStyle = 'rgba(24, 31, 37, 0.85)'
+    for (let row = 0; row <= 4; row += 1) {
+      for (let col = 0; col <= 4; col += 1) {
+        ctx.beginPath()
+        ctx.arc(col * cell, row * cell, 3, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+    // Deterministic scuffs and tyre-ish streaks.
+    const random = createRandom(7311)
+    ctx.lineCap = 'round'
+    for (let i = 0; i < 90; i += 1) {
+      const x = random() * size
+      const y = random() * size
+      const length = 8 + random() * 46
+      ctx.strokeStyle = random() > 0.5
+        ? `rgba(12, 17, 21, ${0.06 + random() * 0.1})`
+        : `rgba(120, 136, 148, ${0.03 + random() * 0.05})`
+      ctx.lineWidth = 0.8 + random() * 2.6
+      ctx.beginPath()
+      ctx.moveTo(x, y)
+      ctx.lineTo(x + length, y + (random() - 0.5) * 14)
+      ctx.stroke()
+    }
+    // Faded walkway edge lines down the deck.
+    ctx.strokeStyle = 'rgba(196, 172, 118, 0.16)'
+    ctx.lineWidth = 5
+    ctx.beginPath()
+    ctx.moveTo(cell * 0.5, 0)
+    ctx.lineTo(cell * 0.5, size)
+    ctx.moveTo(cell * 3.5, 0)
+    ctx.lineTo(cell * 3.5, size)
+    ctx.stroke()
+
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.colorSpace = THREE.SRGBColorSpace
+    texture.wrapS = THREE.RepeatWrapping
+    texture.wrapT = THREE.RepeatWrapping
+    texture.repeat.set(6, 12)
+    texture.anisotropy = 4
+    return texture
+  } catch {
+    return null
+  }
+}
+
+function createBayWallTexture(): THREE.CanvasTexture | null {
+  if (typeof document === 'undefined') return null
+  try {
+    const width = 256
+    const height = 256
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.fillStyle = BAY.wall
+    ctx.fillRect(0, 0, width, height)
+
+    for (let col = 0; col < 4; col += 1) {
+      ctx.strokeStyle = '#121a20'
+      ctx.lineWidth = 3
+      ctx.beginPath()
+      ctx.moveTo(col * 64 + 0.5, 0)
+      ctx.lineTo(col * 64 + 0.5, height)
+      ctx.stroke()
+      ctx.strokeStyle = 'rgba(92, 108, 120, 0.12)'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(col * 64 + 3, 0)
+      ctx.lineTo(col * 64 + 3, height)
+      ctx.stroke()
+    }
+    ctx.strokeStyle = '#121a20'
+    ctx.lineWidth = 3
+    ctx.beginPath()
+    ctx.moveTo(0, 128)
+    ctx.lineTo(width, 128)
+    ctx.stroke()
+
+    // Access hatches in two of the bays, drawn dark and low contrast.
+    const random = createRandom(4712)
+    for (const [x, y, w, h] of [[16, 24, 44, 78], [146, 150, 58, 46]] as const) {
+      ctx.fillStyle = 'rgba(10, 15, 19, 0.55)'
+      ctx.fillRect(x, y, w, h)
+      ctx.strokeStyle = 'rgba(112, 128, 140, 0.18)'
+      ctx.lineWidth = 1.5
+      ctx.strokeRect(x + 0.5, y + 0.5, w, h)
+    }
+    // Grime gradients near the deck line.
+    const grime = ctx.createLinearGradient(0, height * 0.6, 0, height)
+    grime.addColorStop(0, 'rgba(8, 12, 16, 0)')
+    grime.addColorStop(1, 'rgba(8, 12, 16, 0.5)')
+    ctx.fillStyle = grime
+    ctx.fillRect(0, height * 0.6, width, height * 0.4)
+    ctx.globalAlpha = 0.06
+    for (let i = 0; i < 20; i += 1) {
+      ctx.fillStyle = random() > 0.5 ? '#dfe8ee' : '#000000'
+      ctx.fillRect(random() * width, random() * height, 2 + random() * 22, 1 + random() * 2)
+    }
+    ctx.globalAlpha = 1
+
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.colorSpace = THREE.SRGBColorSpace
+    texture.wrapS = THREE.RepeatWrapping
+    texture.wrapT = THREE.RepeatWrapping
+    texture.repeat.set(6, 2)
+    texture.anisotropy = 4
+    return texture
+  } catch {
+    return null
+  }
+}
+
+/** Warm practicals overhead, cool ambient fill, one soft front bounce. */
+function AssemblyBayLighting() {
+  return <>
+    <ambientLight intensity={0.4} color="#a9bdcc" />
+    <directionalLight position={[5, 9, 7]} intensity={2.3} color="#fff0d8" />
+    <directionalLight position={[-8, 3.5, 2]} intensity={0.85} color="#9cc2e2" />
+    <directionalLight position={[0, 2.5, -9]} intensity={0.9} color="#cfe3ff" />
+    <pointLight position={[1.2, 1.4, 5.2]} intensity={14} distance={16} decay={2} color="#dfeaf2" />
+  </>
+}
+
+function BayPractical({ z, intensity, motion }: { z: number; intensity: number; motion: boolean }) {
+  const light = useRef<THREE.PointLight | null>(null)
+  const panel = useRef<THREE.MeshStandardMaterial | null>(null)
+  useFrame(state => {
+    if (!motion) return
+    const warmth = 1 + Math.sin(state.clock.elapsedTime * 1.6 + z) * 0.03
+    if (light.current) light.current.intensity = intensity * warmth
+    if (panel.current) panel.current.emissiveIntensity = 2.1 * warmth
+  })
+  return <group position={[0, 3.5, z]}>
+    <mesh>
+      <boxGeometry args={[1.9, 0.26, 0.74]} />
+      <meshStandardMaterial color={BAY.steelMid} metalness={0.6} roughness={0.5} />
+    </mesh>
+    <mesh position={[0, -0.16, 0]}>
+      <boxGeometry args={[1.6, 0.06, 0.52]} />
+      <meshStandardMaterial ref={panel} color="#ffe1b4" emissive={BAY.amber} emissiveIntensity={2.1} roughness={0.42} />
+    </mesh>
+    <mesh position={[0, -0.25, 0]}>
+      <boxGeometry args={[0.12, 0.16, 0.12]} />
+      <meshStandardMaterial color={BAY.edge} metalness={0.7} roughness={0.42} />
+    </mesh>
+    <pointLight ref={light} position={[0, -0.55, 0]} intensity={intensity} distance={22} decay={2} color="#ffd2a0" />
+  </group>
+}
+
+function BayRib({ z, depth }: { z: number; depth: number }) {
+  const tone = [BAY.steel, BAY.steelMid, '#28313a', BAY.steelDark][Math.min(3, depth)] ?? BAY.steel
+  const strip = Math.max(0.12, 0.4 - depth * 0.08)
+  return <group position={[0, 0, z]}>
+    {([-1, 1] as const).map(side => (
+      <group key={side}>
+        <mesh position={[side * 6.4, 0.75, 0]}>
+          <boxGeometry args={[0.58, 6.2, 0.74]} />
+          <meshStandardMaterial color={tone} metalness={0.45} roughness={0.62} />
+        </mesh>
+        <mesh position={[side * 6.06, 0.75, 0]}>
+          <boxGeometry args={[0.1, 5.8, 0.52]} />
+          <meshStandardMaterial color={BAY.edge} metalness={0.55} roughness={0.5} />
+        </mesh>
+        <mesh position={[side * 6.01, 2.4, 0.28]}>
+          <boxGeometry args={[0.06, 3.4, 0.07]} />
+          <meshStandardMaterial color="#ffcf95" emissive={BAY.amber} emissiveIntensity={strip} roughness={0.5} />
+        </mesh>
+        <mesh position={[side * 6.4, -2.05, 0]}>
+          <boxGeometry args={[0.92, 0.34, 0.92]} />
+          <meshStandardMaterial color={BAY.steelDark} metalness={0.5} roughness={0.6} />
+        </mesh>
+      </group>
+    ))}
+    <mesh position={[0, 3.85, 0]}>
+      <boxGeometry args={[13.4, 0.62, 0.74]} />
+      <meshStandardMaterial color={tone} metalness={0.45} roughness={0.62} />
+    </mesh>
+    <mesh position={[0, 3.48, 0]}>
+      <boxGeometry args={[12.4, 0.16, 0.52]} />
+      <meshStandardMaterial color={BAY.edge} metalness={0.5} roughness={0.55} />
+    </mesh>
+    {/* Understated cross bracing on the two nearest portals. */}
+    {depth < 2 && ([-1, 1] as const).map(side => (
+      <mesh
+        key={`brace${side}`}
+        position={[side * 5.2, 2.6, 0]}
+        rotation={[0, 0, side * 0.62]}
+      >
+        <boxGeometry args={[3.1, 0.14, 0.28]} />
+        <meshStandardMaterial color={BAY.steelMid} metalness={0.5} roughness={0.58} />
+      </mesh>
+    ))}
+  </group>
+}
+
+function WorkStand() {
+  return <group>
+    <mesh position={[0, -0.95, 0]}>
+      <boxGeometry args={[4.2, 0.18, 2.4]} />
+      <meshStandardMaterial color="#333d45" metalness={0.5} roughness={0.55} />
+    </mesh>
+    <mesh position={[0, -0.84, 0]}>
+      <boxGeometry args={[3.5, 0.05, 1.9]} />
+      <meshStandardMaterial color="#46525c" metalness={0.62} roughness={0.45} />
+    </mesh>
+    {([[-1.65, -0.8], [1.65, -0.8], [-1.65, 0.8], [1.65, 0.8]] as const).map(([x, z], index) => (
+      <mesh key={`leg${index}`} position={[x, -1.68, z]}>
+        <boxGeometry args={[0.22, 1.4, 0.22]} />
+        <meshStandardMaterial color={BAY.steelMid} metalness={0.5} roughness={0.58} />
+      </mesh>
+    ))}
+    {([-0.62, 0.62] as const).map(x => (
+      <mesh key={`cradle${x}`} position={[x, -0.68, -0.1]}>
+        <boxGeometry args={[0.52, 0.16, 1.0]} />
+        <meshStandardMaterial color="#4d5860" metalness={0.55} roughness={0.5} />
+      </mesh>
+    ))}
+    <mesh position={[0, -0.84, 1.21]}>
+      <boxGeometry args={[3.4, 0.03, 0.05]} />
+      <meshStandardMaterial color={BAY.amber} emissive={BAY.amber} emissiveIntensity={1.1} roughness={0.5} />
+    </mesh>
+    <mesh position={[0, -0.84, -1.21]}>
+      <boxGeometry args={[3.4, 0.03, 0.05]} />
+      <meshStandardMaterial color="#7fd2b8" emissive="#7fd2b8" emissiveIntensity={0.6} roughness={0.5} />
+    </mesh>
+  </group>
+}
+
+function BayGantry() {
+  return <group position={[-3.7, 0, -3.3]}>
+    <mesh position={[0, -2.18, 0]}>
+      <boxGeometry args={[1.3, 0.34, 1.3]} />
+      <meshStandardMaterial color="#333d45" metalness={0.45} roughness={0.6} />
+    </mesh>
+    <mesh position={[0, 1.15, 0]}>
+      <boxGeometry args={[0.32, 7.0, 0.32]} />
+      <meshStandardMaterial color={BAY.steel} metalness={0.5} roughness={0.55} />
+    </mesh>
+    <mesh position={[2.5, 4.7, 0]}>
+      <boxGeometry args={[5.2, 0.26, 0.3]} />
+      <meshStandardMaterial color={BAY.steel} metalness={0.5} roughness={0.55} />
+    </mesh>
+    <mesh position={[1.35, 3.55, 0]} rotation={[0, 0, -0.62]}>
+      <boxGeometry args={[3.0, 0.14, 0.16]} />
+      <meshStandardMaterial color={BAY.steelMid} metalness={0.5} roughness={0.58} />
+    </mesh>
+    <mesh position={[3.35, 4.44, 0]}>
+      <boxGeometry args={[0.44, 0.24, 0.42]} />
+      <meshStandardMaterial color="#4a5560" metalness={0.6} roughness={0.45} />
+    </mesh>
+    <mesh position={[3.35, 3.5, 0]}>
+      <cylinderGeometry args={[0.018, 0.018, 1.95, 8]} />
+      <meshStandardMaterial color="#8b98a2" metalness={0.8} roughness={0.4} />
+    </mesh>
+    <mesh position={[3.35, 2.5, 0]}>
+      <boxGeometry args={[0.16, 0.14, 0.16]} />
+      <meshStandardMaterial color="#6d7a84" metalness={0.7} roughness={0.4} />
+    </mesh>
+    <mesh position={[0, 2.6, 0.19]}>
+      <boxGeometry args={[0.16, 0.1, 0.06]} />
+      <meshStandardMaterial color={BAY.amber} emissive={BAY.amber} emissiveIntensity={1.2} roughness={0.5} />
+    </mesh>
+  </group>
+}
+
+/** A generous but quiet bay: shell, receding portals, stand, gantry, clutter. */
+function AssemblyBay({ motion }: { motion: boolean }) {
+  const floorMap = useMemo(() => createBayFloorTexture(), [])
+  const wallMap = useMemo(() => createBayWallTexture(), [])
+  useEffect(() => () => { floorMap?.dispose() }, [floorMap])
+  useEffect(() => () => { wallMap?.dispose() }, [wallMap])
+
+  return <group>
+    <mesh position={[0, -2.35, -6]} rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[28, 62]} />
+      <meshStandardMaterial
+        {...(floorMap ? { map: floorMap } : { color: BAY.floor })}
+        metalness={0.24}
+        roughness={0.72}
+      />
+    </mesh>
+    <mesh position={[0, 2.4, -19.6]}>
+      <planeGeometry args={[54, 24]} />
+      <meshStandardMaterial
+        {...(wallMap ? { map: wallMap } : { color: BAY.wall })}
+        metalness={0.1}
+        roughness={0.92}
+      />
+    </mesh>
+    {([-1, 1] as const).map(side => (
+      <mesh key={side} position={[side * 13.4, 2.4, -6]} rotation={[0, -side * Math.PI / 2, 0]}>
+        <planeGeometry args={[54, 24]} />
+        <meshStandardMaterial color={BAY.steelDark} metalness={0.14} roughness={0.92} />
+      </mesh>
+    ))}
+    <mesh position={[0, 7.4, -6]} rotation={[Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[28, 62]} />
+      <meshStandardMaterial color="#161d24" metalness={0.2} roughness={0.9} />
+    </mesh>
+
+    {BAY_RIBS.map(rib => <BayRib key={rib.z} z={rib.z} depth={rib.depth} />)}
+    <BayPractical z={-3.4} intensity={30} motion={motion} />
+    <BayPractical z={-9.6} intensity={20} motion={motion} />
+
+    {/* Warm wall washes separate the portals without lighting the whole wall. */}
+    {([-1, 1] as const).map(side => (
+      <mesh key={`wash${side}`} position={[side * 8.6, 1.6, -19.45]}>
+        <boxGeometry args={[0.5, 5.2, 0.06]} />
+        <meshStandardMaterial color="#f4c793" emissive={BAY.amber} emissiveIntensity={0.5} roughness={0.6} />
+      </mesh>
+    ))}
+
+    <WorkStand />
+    <BayGantry />
+
+    {/* Floor markings under the stand and two low equipment silhouettes. */}
+    <mesh position={[0, -2.32, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[3.55, 3.68, 72]} />
+      <meshStandardMaterial color="#4d5a64" metalness={0.3} roughness={0.75} />
+    </mesh>
+    <mesh position={[0, -2.31, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[2.24, 2.3, 64]} />
+      <meshStandardMaterial color={BAY.amber} emissive={BAY.amber} emissiveIntensity={0.16} metalness={0.2} roughness={0.8} />
+    </mesh>
+    {([-1, 1] as const).map(side => (
+      <mesh key={`rail${side}`} position={[side * 2.72, -2.29, -0.6]}>
+        <boxGeometry args={[0.18, 0.1, 9.2]} />
+        <meshStandardMaterial color="#3a444d" metalness={0.55} roughness={0.5} />
+      </mesh>
+    ))}
+    <group position={[5.5, 0, -1.4]}>
+      <mesh position={[0, -1.86, 0]}>
+        <boxGeometry args={[1.25, 0.98, 1.05]} />
+        <meshStandardMaterial color="#2f3941" metalness={0.35} roughness={0.7} />
+      </mesh>
+      <mesh position={[0, -1.36, 0]}>
+        <boxGeometry args={[1.29, 0.03, 1.09]} />
+        <meshStandardMaterial color="#46525c" metalness={0.5} roughness={0.55} />
+      </mesh>
+      <mesh position={[0, -1.66, 0.54]}>
+        <boxGeometry args={[0.42, 0.12, 0.02]} />
+        <meshStandardMaterial color={BAY.amber} emissive={BAY.amber} emissiveIntensity={0.8} roughness={0.55} />
+      </mesh>
+    </group>
+    <group position={[-5.3, 0, 1.2]}>
+      <mesh position={[0, -1.85, 0]}>
+        <cylinderGeometry args={[0.3, 0.3, 1.0, 18]} />
+        <meshStandardMaterial color="#3b464e" metalness={0.5} roughness={0.55} />
+      </mesh>
+      <mesh position={[0, -1.34, 0]}>
+        <cylinderGeometry args={[0.31, 0.31, 0.04, 18]} />
+        <meshStandardMaterial color="#4d5860" metalness={0.6} roughness={0.45} />
+      </mesh>
+    </group>
+  </group>
 }
 
 function createEarthTexture(): THREE.CanvasTexture | null {

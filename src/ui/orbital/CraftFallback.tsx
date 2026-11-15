@@ -20,7 +20,23 @@ const VIEW_W = 1000
 const VIEW_H = 470
 const SCALE = 96
 
-/** Shared dynamic schematic used as the lazy/WebGL failure path. No interaction. */
+const BAY_TONES = {
+  wallTop: '#131b22',
+  wallLow: '#1d262e',
+  floorNear: '#20272d',
+  floorFar: '#151c22',
+  ribNear: '#3c4852',
+  ribMid: '#333d46',
+  ribFar: '#2a333b',
+  amber: '#ffc684',
+  cool: '#8fb6d6',
+} as const
+
+/**
+ * Shared dynamic schematic used as the lazy/WebGL failure path. No interaction.
+ * In hangar mode the backdrop is an original assembly bay; menu/launch keep the
+ * orbital backdrop. Equipment swaps, the 28° angle and the cut-away all stay.
+ */
 export default function CraftFallback({ config, locale, mode, selectedField, reason, angle = 28 }: CraftFallbackProps) {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '')
   const craft = resolveCraftAppearance(config)
@@ -33,6 +49,7 @@ export default function CraftFallback({ config, locale, mode, selectedField, rea
   const payloadT = payloadTransform(config.payloadId, config.busId)
   const batteryT = batteryTransform(config.batteryId, config.busId)
   const cutaway = selectedField === 'batteryId'
+  const hangar = mode === 'hangar'
 
   const w = busT.size[0] * SCALE
   const h = busT.size[1] * SCALE
@@ -61,9 +78,49 @@ export default function CraftFallback({ config, locale, mode, selectedField, rea
   const packX = frontX + w + dx * 0.45 + 24
   const packY = frontY + h / 2 - packH / 2
 
-  const description = locale === 'en'
-    ? `Schematic spacecraft: ${bus.label.en}, ${payload.label.en}, ${array.label.en}, ${radio.label.en}, ${craft.battery.nominalWh} Wh battery. Earth limb background. Not to scale.`
-    : `Схематичний апарат: ${bus.label.ua}, ${payload.label.ua}, ${array.label.ua}, ${radio.label.ua}, батарея ${craft.battery.nominalWh} Вт·год. Фон — край Землі. Не в масштабі.`
+  // ---- Hangar bay composition -------------------------------------------
+  const craftBottom = frontY + h
+  const contentLeft = hangar
+    ? (arrayT.mount === 'deploy'
+      ? frontX + dx * 0.15 - yokePx - spanPx - 26
+      : frontX - Math.abs(dy) * 0.25 - 16)
+    : 0
+  const contentRight = hangar
+    ? (arrayT.mount === 'deploy'
+      ? frontX + w + dx * 0.25 + yokePx + spanPx + 26
+      : frontX + w + dx + 16)
+    : VIEW_W
+  const antennaTop = frontY + dy * 0.3 - radio.mast * SCALE
+    - (radio.antenna === 'whip' ? 18 : radio.dishRadius * SCALE + 20)
+  const contentTop = Math.min(barrelTop - 34, antennaTop, frontY + dy - 20)
+  const floorY = craftBottom + 92
+  const standTop = craftBottom + 38
+  const bayW = Math.max(contentRight - contentLeft + 120, 420)
+  const bayH = Math.max((floorY + 122) - (contentTop - 72), bayW / 1.6)
+  const bayX = (contentLeft + contentRight) / 2 - bayW / 2
+  const bayY = contentTop - 72
+
+  const cutawayView = { x: frontX - 25, y: barrelTop - 35, w: 300, h: 280 }
+  const fleetView = { x: 180, y: 0, w: 720, h: 400 }
+  const hangarView = cutaway ? cutawayView : { x: bayX, y: bayY, w: bayW, h: bayH }
+  const view = hangar ? hangarView : (mode === 'menu' ? { x: 0, y: 0, w: VIEW_W, h: VIEW_H } : fleetView)
+  const viewBox = `${view.x} ${view.y} ${view.w} ${view.h}`
+
+  const bayLeft = view.x
+  const bayTop = view.y
+  const bayRight = view.x + view.w
+  const bayBottom = view.y + view.h
+  const bayCenter = (bayLeft + bayRight) / 2
+  const bayFloor = cutaway ? bayBottom : floorY
+  const ribCount = cutaway ? 1 : 3
+
+  const description = hangar
+    ? (locale === 'en'
+      ? `Schematic spacecraft in an assembly bay: ${bus.label.en}, ${payload.label.en}, ${array.label.en}, ${radio.label.en}, ${craft.battery.nominalWh} Wh battery. Work stand, gantry and steel ribs behind. Not to scale.`
+      : `Схематичний апарат у складальному боксі: ${bus.label.ua}, ${payload.label.ua}, ${array.label.ua}, ${radio.label.ua}, батарея ${craft.battery.nominalWh} Вт·год. Позаду — робоча підставка, ферма й сталеві ребра. Не в масштабі.`)
+    : (locale === 'en'
+      ? `Schematic spacecraft: ${bus.label.en}, ${payload.label.en}, ${array.label.en}, ${radio.label.en}, ${craft.battery.nominalWh} Wh battery. Earth limb background. Not to scale.`
+      : `Схематичний апарат: ${bus.label.ua}, ${payload.label.ua}, ${array.label.ua}, ${radio.label.ua}, батарея ${craft.battery.nominalWh} Вт·год. Фон — край Землі. Не в масштабі.`)
 
   const halo = (field: PartField) => selectedField === field ? bus.accent : null
 
@@ -110,8 +167,131 @@ export default function CraftFallback({ config, locale, mode, selectedField, rea
     </g>
   }
 
+  /** Original assembly-bay backdrop, composed from the viewBox bounds. */
+  const bay = () => {
+    const horizon = bayFloor
+    const floorDepth = bayBottom - horizon
+    const spines = Array.from({ length: ribCount }, (_, index) => {
+      const scale = 1 - index * 0.19
+      const baseY = horizon - index * bayFloor * 0.005
+      const topY = horizon - (horizon - bayTop) * (0.86 - index * 0.04) * scale
+      const halfW = (bayRight - bayLeft) * 0.47 * scale
+      const corner = 34 * scale
+      const stroke = [BAY_TONES.ribNear, BAY_TONES.ribMid, BAY_TONES.ribFar][index] ?? BAY_TONES.ribFar
+      const opacity = 0.92 - index * 0.16
+      return { index, baseY, topY, halfW, corner, stroke, opacity, scale }
+    })
+
+    return <g data-bay>
+      <rect x={bayLeft} y={bayTop} width={bayRight - bayLeft} height={bayBottom - bayTop} fill={`url(#${uid}-bayAir)`} />
+      <rect x={bayLeft} y={bayTop} width={bayRight - bayLeft} height={Math.max(0, horizon - bayTop)} fill={`url(#${uid}-bayWall)`} />
+
+      {/* Wall panel seams, very low contrast. */}
+      {Array.from({ length: 7 }, (_, index) => {
+        const x = bayLeft + ((bayRight - bayLeft) * (index + 1)) / 8
+        return <line key={`panel${index}`} x1={x} y1={bayTop + 12} x2={x} y2={horizon - 6} stroke="#0e161c" strokeWidth="3" opacity="0.55" />
+      })}
+      {[0.34, 0.62].map(fraction => (
+        <line key={fraction} x1={bayLeft} y1={bayTop + (horizon - bayTop) * fraction} x2={bayRight} y2={bayTop + (horizon - bayTop) * fraction} stroke="#0e161c" strokeWidth="2" opacity="0.4" />
+      ))}
+
+      {/* Warm wall washes well away from the craft, plus one cool fill. */}
+      {[0.12, 0.88].map(fraction => (
+        <rect
+          key={fraction}
+          x={bayLeft + (bayRight - bayLeft) * fraction - 5}
+          y={bayTop + (horizon - bayTop) * 0.2}
+          width="10"
+          height={(horizon - bayTop) * 0.58}
+          fill={BAY_TONES.amber}
+          opacity="0.13"
+        />
+      ))}
+      <ellipse
+        cx={bayLeft + (bayRight - bayLeft) * 0.38}
+        cy={bayTop + (horizon - bayTop) * 0.16}
+        rx={(bayRight - bayLeft) * 0.2}
+        ry={(horizon - bayTop) * 0.34}
+        fill={`url(#${uid}-cool)`}
+        opacity="0.5"
+      />
+
+      {/* Receding portals, far to near. */}
+      {spines.slice().reverse().map(spine => (
+        <g key={`rib${spine.index}`} opacity={spine.opacity}>
+          <path
+            d={`M ${bayCenter - spine.halfW} ${spine.baseY} L ${bayCenter - spine.halfW} ${spine.topY + spine.corner} L ${bayCenter - spine.halfW + spine.corner} ${spine.topY} L ${bayCenter + spine.halfW - spine.corner} ${spine.topY} L ${bayCenter + spine.halfW} ${spine.topY + spine.corner} L ${bayCenter + spine.halfW} ${spine.baseY}`}
+            fill="none"
+            stroke={spine.stroke}
+            strokeWidth={16 - spine.index * 3}
+            strokeLinejoin="round"
+          />
+          <path
+            d={`M ${bayCenter - spine.halfW + 13} ${spine.baseY} L ${bayCenter - spine.halfW + 13} ${spine.topY + spine.corner + 6} L ${bayCenter - spine.halfW + spine.corner + 8} ${spine.topY + 13} L ${bayCenter + spine.halfW - spine.corner - 8} ${spine.topY + 13} L ${bayCenter + spine.halfW - 13} ${spine.topY + spine.corner + 6} L ${bayCenter + spine.halfW - 13} ${spine.baseY}`}
+            fill="none"
+            stroke="#5a6771"
+            strokeWidth="2"
+            opacity="0.4"
+          />
+          {/* Practical fixture hung from each portal. */}
+          <ellipse cx={bayCenter} cy={spine.topY + 30} rx={58 * spine.scale} ry={16 * spine.scale} fill={`url(#${uid}-warm)`} opacity="0.7" />
+          <rect x={bayCenter - 26 * spine.scale} y={spine.topY + 24} width={52 * spine.scale} height="6" rx="2" fill="#ffe0b4" opacity="0.85" />
+          {/* Hairline rib strip light. */}
+          <line x1={bayCenter - spine.halfW + 5} y1={spine.baseY - 12} x2={bayCenter - spine.halfW + 5} y2={spine.topY + spine.corner + 30} stroke={BAY_TONES.amber} strokeWidth="2.5" opacity="0.28" />
+          <line x1={bayCenter + spine.halfW - 5} y1={spine.baseY - 12} x2={bayCenter + spine.halfW - 5} y2={spine.topY + spine.corner + 30} stroke={BAY_TONES.amber} strokeWidth="2.5" opacity="0.28" />
+          <rect x={bayCenter - spine.halfW - 12} y={spine.baseY - 10} width="24" height="12" fill={spine.stroke} opacity="0.9" />
+          <rect x={bayCenter + spine.halfW - 12} y={spine.baseY - 10} width="24" height="12" fill={spine.stroke} opacity="0.9" />
+        </g>
+      ))}
+
+      {!cutaway && <>
+        <polygon
+          points={`${bayLeft},${horizon} ${bayRight},${horizon} ${bayRight},${bayBottom} ${bayLeft},${bayBottom}`}
+          fill={`url(#${uid}-bayFloor)`}
+        />
+        <line x1={bayLeft} y1={horizon} x2={bayRight} y2={horizon} stroke="#0c1319" strokeWidth="4" opacity="0.9" />
+        {/* Floor seams converge toward the vanishing point, giving depth. */}
+        {Array.from({ length: 13 }, (_, index) => {
+          const spread = (index - 6) / 6
+          const xBottom = bayCenter + spread * (bayRight - bayLeft) * 0.5
+          const xHorizon = bayCenter + spread * (bayRight - bayLeft) * 0.045
+          return <line key={`seam${index}`} x1={xBottom} y1={bayBottom} x2={xHorizon} y2={horizon} stroke="#111920" strokeWidth="2" opacity="0.55" />
+        })}
+        {[10, 24, 46, 80, 126, 184].map((offset, index) => (
+          offset < floorDepth
+            ? <line key={`cross${index}`} x1={bayLeft} y1={horizon + offset} x2={bayRight} y2={horizon + offset} stroke="#111920" strokeWidth="1.6" opacity={0.36 - index * 0.04} />
+            : null
+        ))}
+        <ellipse cx={bayCenter} cy={horizon + 18} rx={(bayRight - bayLeft) * 0.28} ry="24" fill="none" stroke="#5b6872" strokeWidth="2" opacity="0.45" />
+        <ellipse cx={bayCenter} cy={horizon + 18} rx={(bayRight - bayLeft) * 0.17} ry="15" fill="none" stroke={BAY_TONES.amber} strokeWidth="1.6" opacity="0.22" />
+
+        {/* Understated work stand and gantry, sized to the craft above. */}
+        <g>
+          <rect x={bayCenter - 150} y={standTop} width="300" height="16" rx="3" fill="#3a444d" stroke="#5b6872" strokeWidth="1.5" />
+          <rect x={bayCenter - 126} y={standTop + 3} width="252" height="6" fill="#4b5761" />
+          <rect x={bayCenter - 120} y={standTop + 16} width="14" height={Math.max(0, horizon - standTop - 16)} fill="#2f3941" />
+          <rect x={bayCenter + 106} y={standTop + 16} width="14" height={Math.max(0, horizon - standTop - 16)} fill="#2f3941" />
+          <rect x={bayCenter - 130} y={standTop + 13} width="260" height="3" fill={BAY_TONES.amber} opacity="0.8" />
+          <rect x={bayCenter - 40} y={standTop - 9} width="36" height="9" rx="2" fill="#4d5860" />
+          <rect x={bayCenter + 4} y={standTop - 9} width="36" height="9" rx="2" fill="#4d5860" />
+          <rect x={bayCenter - 150} y={standTop - 2} width="8" height="18" fill="#586570" opacity="0.8" />
+          <rect x={bayCenter + 142} y={standTop - 2} width="8" height="18" fill="#586570" opacity="0.8" />
+        </g>
+        <g opacity="0.9">
+          <line x1={bayCenter - bayW * 0.36} y1={spines[0] ? spines[0].topY + 34 : bayTop + 120} x2={bayCenter - bayW * 0.36} y2={standTop - 30} stroke="#39434c" strokeWidth="7" />
+          <line x1={bayCenter - bayW * 0.36} y1={spines[0] ? spines[0].topY + 40 : bayTop + 120} x2={bayCenter - 80} y2={spines[0] ? spines[0].topY + 40 : bayTop + 120} stroke="#39434c" strokeWidth="6" />
+          <line x1={bayCenter - 80} y1={spines[0] ? spines[0].topY + 42 : bayTop + 120} x2={bayCenter - 80} y2={standTop - 46} stroke="#8b98a2" strokeWidth="2" opacity="0.75" />
+          <rect x={bayCenter - 88} y={standTop - 54} width="16" height="10" rx="2" fill="#6d7a84" />
+        </g>
+        <rect x={bayLeft} y={bayBottom - 92} width={bayRight - bayLeft} height="92" fill={`url(#${uid}-bayFore)`} />
+      </>}
+      {cutaway && <rect x={bayLeft} y={bayBottom - 60} width={bayRight - bayLeft} height="60" fill={`url(#${uid}-bayFore)`} />}
+      <rect x={bayLeft} y={bayTop} width={bayRight - bayLeft} height={bayBottom - bayTop} fill={`url(#${uid}-bayVignette)`} />
+    </g>
+  }
+
   return <div className="craft-fallback" data-renderer="svg" data-mode={mode} {...(reason ? { 'data-fallback-reason': reason } : {})}>
-    <svg viewBox={mode === 'hangar' ? (cutaway ? `${frontX - 25} ${barrelTop - 35} 300 280` : '180 0 720 400') : `0 0 ${VIEW_W} ${VIEW_H}`} role="img" aria-label={description}>
+    <svg viewBox={viewBox} role="img" aria-label={description}>
       <defs>
         <radialGradient id={`${uid}-sky`} cx="35%" cy="18%" r="90%">
           <stop offset="0%" stopColor="#173c58" />
@@ -151,34 +331,66 @@ export default function CraftFallback({ config, locale, mode, selectedField, rea
         <filter id={`${uid}-blur`} x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation="11" />
         </filter>
+
+        {/* Assembly bay: air, wall, floor, practical glow, vignette. */}
+        <linearGradient id={`${uid}-bayAir`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#0a1015" />
+          <stop offset="60%" stopColor="#111920" />
+          <stop offset="100%" stopColor="#090e13" />
+        </linearGradient>
+        <linearGradient id={`${uid}-bayWall`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={BAY_TONES.wallTop} />
+          <stop offset="58%" stopColor="#19222a" />
+          <stop offset="100%" stopColor={BAY_TONES.wallLow} />
+        </linearGradient>
+        <linearGradient id={`${uid}-bayFloor`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={BAY_TONES.floorFar} />
+          <stop offset="38%" stopColor="#1c242b" />
+          <stop offset="100%" stopColor={BAY_TONES.floorNear} />
+        </linearGradient>
+        <radialGradient id={`${uid}-warm`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffd9a6" stopOpacity="0.85" />
+          <stop offset="55%" stopColor="#e8a761" stopOpacity="0.28" />
+          <stop offset="100%" stopColor="#8c5b26" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id={`${uid}-bayVignette`} cx="50%" cy="46%" r="76%">
+          <stop offset="55%" stopColor="#04080c" stopOpacity="0" />
+          <stop offset="100%" stopColor="#04080c" stopOpacity="0.5" />
+        </radialGradient>
+        <linearGradient id={`${uid}-bayFore`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#060b10" stopOpacity="0" />
+          <stop offset="100%" stopColor="#060b10" stopOpacity="0.85" />
+        </linearGradient>
       </defs>
 
-      <rect width={VIEW_W} height={VIEW_H} fill={`url(#${uid}-sky)`} />
-      {STARFIELD.map((star, index) => (
-        <circle key={index} cx={star.x * VIEW_W} cy={star.y * VIEW_H * 0.92} r={star.r} fill="#e8f1ff" opacity={star.a} />
-      ))}
+      {hangar ? bay() : <>
+        <rect width={VIEW_W} height={VIEW_H} fill={`url(#${uid}-sky)`} />
+        {Array.from({ length: 1 }, () => null)}
+        {STARFIELD.map((star, index) => (
+          <circle key={index} cx={star.x * VIEW_W} cy={star.y * VIEW_H * 0.92} r={star.r} fill="#e8f1ff" opacity={star.a} />
+        ))}
 
-      <g clipPath={`url(#${uid}-earth)`}>
-        <circle cx="182" cy="428" r="338" fill={`url(#${uid}-ocean)`} />
-        <g transform={`translate(${182 - 500 * 0.7} ${428 - 250 * 0.7}) scale(0.7)`}>
-          {EARTH_SCHEMATIC.land.map((path, index) => (
-            <path key={`l${index}`} d={path} fill="#8ea67e" stroke="#e8e1c4" strokeWidth="2" opacity="0.94" />
-          ))}
-          {EARTH_SCHEMATIC.islands.map((path, index) => (
-            <path key={`i${index}`} d={path} fill="#8ea67e" stroke="#e8e1c4" strokeWidth="1.6" opacity="0.9" />
-          ))}
-          {[60, 125, 190, 255, 320, 385, 450].map(y => (
-            <line key={y} x1="0" y1={y} x2="1000" y2={y} stroke="#dff2ff" strokeWidth="1" opacity="0.07" />
-          ))}
-          {[125, 250, 375, 500, 625, 750, 875].map(x => (
-            <line key={x} x1={x} y1="0" x2={x} y2="500" stroke="#dff2ff" strokeWidth="1" opacity="0.06" />
-          ))}
+        <g clipPath={`url(#${uid}-earth)`}>
+          <circle cx="182" cy="428" r="338" fill={`url(#${uid}-ocean)`} />
+          <g transform={`translate(${182 - 500 * 0.7} ${428 - 250 * 0.7}) scale(0.7)`}>
+            {EARTH_SCHEMATIC.land.map((path, index) => (
+              <path key={`l${index}`} d={path} fill="#8ea67e" stroke="#e8e1c4" strokeWidth="2" opacity="0.94" />
+            ))}
+            {EARTH_SCHEMATIC.islands.map((path, index) => (
+              <path key={`i${index}`} d={path} fill="#8ea67e" stroke="#e8e1c4" strokeWidth="1.6" opacity="0.9" />
+            ))}
+            {[60, 125, 190, 255, 320, 385, 450].map(y => (
+              <line key={y} x1="0" y1={y} x2="1000" y2={y} stroke="#dff2ff" strokeWidth="1" opacity="0.07" />
+            ))}
+            {[125, 250, 375, 500, 625, 750, 875].map(x => (
+              <line key={x} x1={x} y1="0" x2={x} y2="500" stroke="#dff2ff" strokeWidth="1" opacity="0.06" />
+            ))}
+          </g>
+          <circle cx="182" cy="428" r="338" fill={`url(#${uid}-shade)`} />
         </g>
-        <circle cx="182" cy="428" r="338" fill={`url(#${uid}-shade)`} />
-      </g>
-      <circle cx="182" cy="428" r="346" fill="none" stroke="#5aa9e8" strokeWidth="26" opacity="0.4" filter={`url(#${uid}-blur)`} />
-      <circle cx="182" cy="428" r="340" fill="none" stroke="#8ed2ff" strokeWidth="2.5" opacity="0.5" />
-
+        <circle cx="182" cy="428" r="346" fill="none" stroke="#5aa9e8" strokeWidth="26" opacity="0.4" filter={`url(#${uid}-blur)`} />
+        <circle cx="182" cy="428" r="340" fill="none" stroke="#8ed2ff" strokeWidth="2.5" opacity="0.5" />
+      </>}
 
       <g data-craft transform={`translate(${cx} ${cy}) rotate(${(angle - 28) / 4}) translate(${-cx} ${-cy})`}>
       {wing(-1)}
@@ -240,12 +452,12 @@ export default function CraftFallback({ config, locale, mode, selectedField, rea
       {halo('arrayId') && <rect x={frontX - (arrayT.mount === 'deploy' ? yokePx + spanPx + 8 : 8)} y={arrayT.mount === 'deploy' ? wingY - skew - 10 : frontY + 6} width={w + (arrayT.mount === 'deploy' ? 2 * (yokePx + spanPx) + 16 + dx : -8)} height={arrayT.mount === 'deploy' ? chordPx + 26 : h * 0.66} rx="4" fill="none" stroke={array.accent} strokeWidth="1.8" strokeDasharray="6 5" />}
       {halo('payloadId') && <rect x={barrelX - 10} y={barrelTop - 22} width={barrelW + 20} height={barrelH + 38} rx="4" fill="none" stroke={payload.accent} strokeWidth="1.8" strokeDasharray="6 5" />}
       {halo('radioId') && <circle cx={frontX + w * 0.18 + dx * 0.3} cy={frontY + dy * 0.3 - radio.mast * SCALE} r={(radio.antenna === 'whip' ? 16 : radio.dishRadius * SCALE + 12)} fill="none" stroke={radio.accent} strokeWidth="1.8" strokeDasharray="6 5" />}
-      {selectedField && ['groundId', 'orbitId', 'launcherId'].includes(selectedField) && <text x="24" y={VIEW_H - 44} fill="#c7dbe6" fontSize="11" fontFamily="ui-monospace, monospace">{locale === 'en' ? 'EXTERNAL SELECTION · NOT ON CRAFT' : 'ЗОВНІШНІЙ ВИБІР · НЕ НА АПАРАТІ'}</text>}
+      {selectedField && ['groundId', 'orbitId', 'launcherId'].includes(selectedField) && <text x={view.x + 24} y={view.y + view.h - 44} fill="#c7dbe6" fontSize="11" fontFamily="ui-monospace, monospace">{locale === 'en' ? 'EXTERNAL SELECTION · NOT ON CRAFT' : 'ЗОВНІШНІЙ ВИБІР · НЕ НА АПАРАТІ'}</text>}
       </g>
 
       {mode === 'launch' && <text x="24" y="32" fill="#f8bc74" fontSize="13" letterSpacing="2" fontFamily="ui-monospace, monospace">{MODE_WORD[mode][locale]}</text>}
       {craft.unknownIds.length > 0 && <text x="24" y="66" fill="#f0a24b" fontSize="10" letterSpacing="1" fontFamily="ui-monospace, monospace">{locale === 'en' ? 'UNKNOWN ID FALLBACK' : 'НЕВІДОМИЙ ID'}</text>}
-      <text x={VIEW_W - 24} y={VIEW_H - 18} fill="#9fb6c4" fontSize="10" letterSpacing="1.6" textAnchor="end" fontFamily="ui-monospace, monospace">{locale === 'en' ? 'SCHEMATIC · NOT TO SCALE' : 'СХЕМА · НЕ В МАСШТАБІ'}</text>
+      <text x={view.x + view.w - 24} y={view.y + view.h - 18} fill="#9fb6c4" fontSize="10" letterSpacing="1.6" textAnchor="end" fontFamily="ui-monospace, monospace">{locale === 'en' ? 'SCHEMATIC · NOT TO SCALE' : 'СХЕМА · НЕ В МАСШТАБІ'}</text>
     </svg>
   </div>
 }

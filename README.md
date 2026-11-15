@@ -12,7 +12,7 @@ Also playable: **Trace the Shoreline**, a genuinely visible-light lens-selection
 - [Agent workflow and review gates](docs/agent-workflow.md)
 - [Agent entry point](AGENTS.md)
 
-**Current stage: night-03 playable review candidate.** Full-screen menu → live spacecraft customization → illustrated Earth mission selector → frozen launch → debrief/typed repair, plus a branching eight-node campaign tree. [Overnight handoff](docs/overnight-handoff.md) records exact checkpoints and clean-copy evidence. Human bilingual scientific/linguistic and assistive-technology review remains pending. Nothing has been deployed.
+**Current stage: hangar visual review candidate.** A spacecraft-first industrial assembly bay, compact illustrated equipment tray and one inspector refine the completed night-03 orbital flow and branching campaign. [Visual target, locked captures and play path](docs/hangar-visual-target.md). [Overnight handoff](docs/overnight-handoff.md) preserves the earlier checkpoints. Human bilingual scientific/linguistic and assistive-technology review remains pending. Nothing has been deployed.
 
 ## Run locally
 
@@ -66,6 +66,8 @@ The hangar's live draft telemetry is evaluated separately from frozen launch res
 
 ### Actual Chrome screenshots
 
+- Hangar-04: [baseline](docs/screenshots/hangar04-before-desktop-en.png) → [assembly bay](docs/screenshots/hangar04-after-desktop-en.png) · [phone](docs/screenshots/hangar04-after-phone-en.png) · [Ukrainian fallback](docs/screenshots/hangar04-fallback-phone-ua.png)
+- Actual mesh swaps: [wing before](docs/screenshots/hangar04-wing-before-en.png) / [after](docs/screenshots/hangar04-wing-en.png) · [antenna before](docs/screenshots/hangar04-antenna-before-en.png) / [after](docs/screenshots/hangar04-antenna-en.png) · [title treatment](docs/screenshots/hangar04-title-desktop-en.png)
 - Night-03: [orbital menu](docs/screenshots/night03-menu-en.png) · [before](docs/screenshots/night03-craft-before-en.png) / [after real array swap](docs/screenshots/night03-craft-after-en.png) · [battery inspection](docs/screenshots/night03-battery-en.png)
 - [Four illustrated missions](docs/screenshots/night03-missions-en.png) · [Ukrainian academy](docs/screenshots/night03-academy-ua.png) · [launch](docs/screenshots/night03-launch-en.png) · [failure/repair](docs/screenshots/night03-debrief-failure-en.png) · [provisional pass](docs/screenshots/night03-debrief-pass-ua.png)
 - [Branching upgrade tree](docs/screenshots/night03-tree-en.png) · [Ukrainian](docs/screenshots/night03-tree-ua.png) · [phone](docs/screenshots/night03-tree-phone-ua.png) · [completed tree](docs/screenshots/night03-tree-complete-en.png)
@@ -93,6 +95,8 @@ Open `/nasa-space-apps/` → automatic academy → accept contract → launch (7
 See [third-party notices](docs/third-party-notices.md) for software licenses and attribution.
 
 ## Verification
+
+Hangar-04 preserves evaluator, catalogs, fixtures, progression and save code unchanged. Typecheck, zero-warning lint, build, **147 engine /33 UI** tests pass. The focused six-test production-browser packet covers real mesh swaps, disclosures, both languages, phone/reflow, dynamic fallback and the complete launch/debrief path; the full suite is **42 tests**. [Verification record](docs/hangar-visual-target.md#verification-and-review) includes actual results, clean-install proof and two intermittent parallel-browser failures rather than claiming an entirely clean run history.
 
 The night-03 candidate passes typecheck, lint (zero warnings), build, **147 engine /33 UI /36 production-preview Chrome** tests and audit (zero vulnerabilities). Coverage includes actual WebGL/context-loss/fallback, both-language four-mission flows, automatic academy, immutable launch settlement, foundation fitting, v1/v2 migration with mixed historical/current accounting, **411/411-state solvency**, two branch orders, axe scans, keyboard and 320px/200% reflow. Independent connected Sol reviewed the progression policy and actual tree captures with no remaining blockers. See the handoff for exact checkpoint and clean-copy evidence.
 

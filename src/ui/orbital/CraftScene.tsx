@@ -74,12 +74,26 @@ class RenderBoundary extends Component<BoundaryProps, BoundaryState> {
   }
 }
 
-function sceneDescription(config: MissionConfiguration, locale: Locale): string {
+function sceneDescription(config: MissionConfiguration, locale: Locale, mode: CraftMode): string {
   const craft = resolveCraftAppearance(config)
+  const setting = {
+    hangar: {
+      en: 'Industrial assembly bay with a work stand, overhead gantry lights and receding steel ribs.',
+      ua: 'Промисловий складальний бокс із робочою підставкою, верхніми фермами та низкою сталевих ребер.',
+    },
+    menu: {
+      en: 'Earth limb behind.',
+      ua: 'Край Землі на тлі.',
+    },
+    launch: {
+      en: 'Launch plume below.',
+      ua: 'Струмінь носія внизу.',
+    },
+  }[mode]
   if (locale === 'ua') {
-    return `Перспективний вид апарата: ${craft.bus.label.ua}, ${craft.payload.label.ua}, ${craft.array.label.ua}, ${craft.radio.label.ua}, батарея ${craft.battery.nominalWh} Вт·год. Край Землі на тлі.`
+    return `Перспективний вид апарата: ${craft.bus.label.ua}, ${craft.payload.label.ua}, ${craft.array.label.ua}, ${craft.radio.label.ua}, батарея ${craft.battery.nominalWh} Вт·год. ${setting.ua}`
   }
-  return `Perspective spacecraft view: ${craft.bus.label.en}, ${craft.payload.label.en}, ${craft.array.label.en}, ${craft.radio.label.en}, ${craft.battery.nominalWh} Wh battery. Earth limb behind.`
+  return `Perspective spacecraft view: ${craft.bus.label.en}, ${craft.payload.label.en}, ${craft.array.label.en}, ${craft.radio.label.en}, ${craft.battery.nominalWh} Wh battery. ${setting.en}`
 }
 
 /**
@@ -105,7 +119,7 @@ export default function CraftScene({
   const sceneRef = useRef<HTMLDivElement>(null)
   const suspended = pageHidden || offscreen
   const renderer = state === 'webgl' ? 'webgl' : 'svg'
-  const description = useMemo(() => sceneDescription(config, locale), [config, locale])
+  const description = useMemo(() => sceneDescription(config, locale, mode), [config, locale, mode])
 
   useEffect(() => {
     if (typeof document === 'undefined') return

@@ -93,9 +93,13 @@
   width: min(100%, 78%);
 }
 
+/* Hangar: graphite and steel frame a warm practical wash, so the pale hull is
+   the brightest surface in the frame instead of the sky behind it. */
 .craft-scene[data-mode='hangar'] {
+  --craft-edge: #46525c;
+  --craft-ink: #e9eff2;
   background:
-    radial-gradient(ellipse at 50% 30%, #1a3d55 0%, #0b2032 48%, #040e18 100%);
+    radial-gradient(ellipse at 50% 24%, #2f3a45 0%, #1d262e 44%, #0a1015 100%);
 }
 
 .craft-scene[data-mode='launch'] {
@@ -119,6 +123,12 @@
 .craft-scene[data-renderer='svg'] {
   background:
     radial-gradient(ellipse at 18% 16%, #123247 0%, #081a2a 50%, #030a12 100%);
+}
+
+/* The SVG bay fills its viewBox, so letterboxing must read as bay shadow. */
+.craft-scene[data-mode='hangar'][data-renderer='svg'] {
+  background:
+    radial-gradient(ellipse at 50% 26%, #1b242c 0%, #101720 54%, #060a0e 100%);
 }
 
 @keyframes craft-fade-in {

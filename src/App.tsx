@@ -9,7 +9,7 @@ import { translate } from './i18n'
 import type { GameScreen } from './ui/game/GameScreens'
 import {
   awardCampaignPass, buyCampaignPart, campaignComplete, campaignContext, campaignContractAvailable,
-  campaignCredits, CAMPAIGN_CONTRACTS, CAMPAIGN_SHOP, CAMPAIGN_STORAGE_KEY,
+  campaignCredits, CAMPAIGN_CONTRACTS, CAMPAIGN_UPGRADES, campaignOwnsPart, CAMPAIGN_STORAGE_KEY,
   EMPTY_CAMPAIGN, parseCampaign, refundCampaignPart, type CampaignProgress,
 } from './campaign/progress'
 
@@ -47,8 +47,8 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
     setScreen('hangar')
   }
   const fit = (partId: string, refund = false, progress = campaign.progress) => {
-    const item = CAMPAIGN_SHOP.find(p => p.partId === partId)
-    if (!item || !refund && !progress.unlockedPartIds.includes(partId)) return
+    const item = CAMPAIGN_UPGRADES.find(p => p.partId === partId)
+    if (!item || !refund && !campaignOwnsPart(progress, partId)) return
     missionRef.current?.fitEquipment({ partId, field: item.field, refund }, campaignContext(mission.context, progress))
   }
   const buy = (partId: string) => {
@@ -62,7 +62,8 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
     if (next !== campaign.progress) fit(partId, true, next)
   }
   const campaignMissions = campaignActive ? MISSIONS.filter(m => m.id === mission.id || campaignContractAvailable(campaign.progress, m.id)) : MISSIONS
-  const nextContract = CAMPAIGN_CONTRACTS.find(c => !campaign.progress.completedMissionIds.includes(c.missionId))
+  const remaining = CAMPAIGN_CONTRACTS.filter(c => !campaign.progress.completedMissionIds.includes(c.missionId))
+  const nextContract = remaining.find(c => campaignContractAvailable(campaign.progress, c.missionId)) ?? remaining[0]
   const nextMission = MISSIONS.find(m => m.id === nextContract?.missionId)
   const nextAvailable = nextContract && campaignContractAvailable(campaign.progress, nextContract.missionId)
   const draftKey = `${campaignActive ? 'campaign' : 'direct'}:${mission.id}`
@@ -88,12 +89,14 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
         else if (!engineering) setScreen('missions')
         else { const target = document.getElementById('campaign-heading'); target?.focus(); target?.scrollIntoView?.({ block: 'start' }) }
       }}>{nextAvailable ? (locale === 'en' ? 'Choose next contract' : 'Вибрати наступний контракт') : (locale === 'en' ? 'Open contract board / hangar' : 'Відкрити дошку контрактів / ангар')}</button>
+      {!engineering && !campaignComplete(campaign.progress) && <button onClick={() => setScreen('missions')}>{locale === 'en' ? 'Choose a different branch / upgrades' : 'Інша гілка / вдосконалення'}</button>}
     </div> : <div className="debrief-next"><button onClick={() => {
       if (!engineering) setScreen('missions')
       else { const target = document.getElementById('mission-picker'); target?.focus(); target?.scrollIntoView?.({ block: 'center' }) }
     }}>{locale === 'en' ? 'Choose another mission' : 'Вибрати іншу місію'}</button></div>}
     campaignPanel={<CampaignPanel active={campaignActive} progress={campaign.progress} locale={locale}
       storageError={campaign.storageError} currentMissionId={missionId} creditDelta={creditDelta}
+      configuration={safeInitial}
       onChoose={chooseMission} onFit={id => fit(id)} onRefund={refund}
       compactBoard={!engineering}
       onToggle={() => { setCampaignActive(!campaignActive); setMissionId('wildfire'); setPickerWasUsed(true); setCreditDelta(null) }}
@@ -106,7 +109,7 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
       const missingParts = contract.requiredParts.filter(id => !campaign.progress.unlockedPartIds.includes(id))
       const all = MISSIONS.flatMap(m => Object.values(m.context.catalog).flat())
       return { missionId: contract.missionId, available: campaignContractAvailable(campaign.progress, contract.missionId),
-        completed: campaign.progress.completedMissionIds.includes(contract.missionId), reward: contract.reward,
+        completed: campaign.progress.completedMissionIds.includes(contract.missionId), reward: campaign.progress.awards[contract.missionId] ?? contract.reward,
         reason: [
           missingMissions.length ? `${locale === 'en' ? 'Complete first: ' : 'Спершу пройдіть: '}${missingMissions.map(id => MISSIONS.find(m => m.id === id)?.title[locale]).join(', ')}` : '',
           missingParts.length ? `${locale === 'en' ? 'Buy equipment below: ' : 'Купіть обладнання нижче: '}${missingParts.map(id => all.find(p => p.id === id)?.label[locale] ?? id).join(', ')}` : '',

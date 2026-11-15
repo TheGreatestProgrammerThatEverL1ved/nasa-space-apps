@@ -193,7 +193,7 @@ export function MissionGallery({ missions, locale, selectedMissionId, onChoose, 
               <div className="mission-gallery-goals"><h4>{en ? 'Goals and limits' : 'Цілі та межі'}</h4><p>{mission.goals[locale]}</p></div>
               <details className="mission-gallery-brief"><summary>{en ? 'Full mission brief' : 'Повний опис місії'}</summary><p>{mission.brief[locale]}</p></details>
               {contract?.reason && <p className="mission-gallery-contract">{contract.reason}</p>}
-              {contract && <p className="mission-gallery-reward"><span>{en ? 'First-clear reward' : 'Нагорода за перше проходження'}</span><strong>{`${contract.reward} ${en ? 'credits' : 'кредитів'}`}</strong></p>}
+              {contract && <p className="mission-gallery-reward"><span>{contract.completed ? (en ? 'Collected once · replay pays 0' : 'Уже отримано · повтор дає 0') : (en ? 'First-clear reward' : 'Нагорода за перше проходження')}</span><strong>{`${contract.reward} ${en ? 'credits' : 'кредитів'}`}</strong></p>}
               <button className={`mission-gallery-action${current ? ' is-current' : ''}`} type="button" disabled={locked} onClick={() => onChoose(mission.id)}>
                 {action}<span aria-hidden="true">↗</span>
               </button>

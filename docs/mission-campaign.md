@@ -1,50 +1,66 @@
-# Mission Campaign — four-contract game loop
+# Mission Campaign — branching contracts and upgrades
 
-Choose a contract → assemble → launch the real evaluator → collect a first-clear award → buy/fit equipment → pursue the next contract. Direct play retains immediate access to all four missions and their scenario catalogs. Campaign credits **never** replace engineering USD, budget, physical performance or science requirements.
+Choose a contract → assemble → launch the real evaluator → collect a first-clear award → buy/fit equipment → choose a branch. Sandbox retains immediate access to all four missions and their scenario catalogs. Campaign credits **never** replace engineering USD, budget, physical performance or science requirements. All progression numbers below are game policy **[P]**, not NASA requirements.
 
-## Explicit progression [P]
+## Smallest balance table
 
 | Contract | Previous clear | Equipment prerequisite | First-clear reward |
 |---|---|---|---:|
-| Return the Heat Map | None | Complete owned WF-A starter kit | 100 credits |
-| Urban Heat Map | Wildfire | Starter S-band/frequent-service is sufficient | 100 |
-| Trace the Shoreline | Urban | 35 mm visible analogue | 100 |
-| Carry the Signal | Visible mapping | Receive/store package **and X-band** | 100 |
+| Return the Heat Map | None | Complete owned WF-A starter kit | 120 credits |
+| Urban Heat Map | Wildfire | Starter S-band/frequent-service can pass | 140 |
+| Trace the Shoreline | Wildfire | 35 mm visible analogue | 180 |
+| Carry the Signal | Wildfire | Receive/store package **and X-band** | 200 |
 
-The contract board discloses every prerequisite, missing part and reward. Completion means all **four shipped contracts**, never backlog missions. Each real model pass remains provisional.
+Urban and shoreline are alternative next contracts after wildfire. Relay can precede shoreline or urban if its hardware is owned. All **four shipped clears** are required for the ending; optional order does not mean optional completion. Each real model pass remains provisional. The gallery shows prerequisites, missing equipment, current rewards and, for old clears, the actual historical amount already collected (replay pays zero).
 
-## Hangar and choices [P]
+| Upgrade | Credits | Tree prerequisite | Why buy |
+|---|---:|---|---|
+| `rf-x` X-band | 100 | Owned S-band foundation | Faster downlink; cheaper urban single-station route; required for relay |
+| `arr-deploy-xl` 135 W array | 120 | Owned 55 W foundation | Audited WF-C/urban S-band power alternative; tight mass and higher USD |
+| `pl-visible-35` visible camera | 100 | Owned thermal foundation | Unlocks shoreline mapping; real width/detail tradeoff |
+| `pl-relay` receive/store package | 140 | Own X-band before buying | Unlocks two-hop packet relay; no camera capability |
 
-All four shop items cost **100 credits**, separate from their unchanged engineering USD:
+The diagram has **eight actual catalog-ID nodes**, not eight paid unlocks:
 
-- **X-band:** faster return, higher radio power and engineering price; enables the cheaper urban single-station design and is required for the relay network fixture.
-- **135 W array:** materially more generation, but higher cost and tight spacecraft mass; supports the audited WF-C and urban S-band/frequent-service approach. Optional, not a hidden prerequisite.
-- **35 mm visible analogue:** unlocks the visible mapping contract and its width-versus-detail choice; cannot perform thermal or relay sensing.
-- **Receive/store package:** unlocks the relay mechanism when X-band is also owned; cannot replace a camera.
+```text
+                         bus-12u (owned)
+                  ┌──────────┼──────────────┐
+          arr-deploy-l     rf-s         pl-thermal     (owned)
+                ↓            ↓               ↓
+          arr-deploy-xl     rf-x        pl-visible-35
+                             ↓
+                          pl-relay
+```
 
-Buying fits a compatible part in the current design and returns focus to its control, preserving other draft edits. If the part belongs to another mission's catalog, focus goes to the mission picker; choose its newly unlocked contract and use **Fit on compatible design**. Owned parts remain visibly distinguishable from locked/unaffordable items. Session mission/mode drafts survive navigation; reload still starts unsaved direct wildfire play in English.
+The four foundations can be fitted from the tree; they are not new charges. All other formerly free catalog choices stay free, including batteries and alternate teaching parts. An arrow is a purchase prerequisite, **not** a claim that a camera is physically upgraded into another sensing technology. Power/comms/payload are separate choices fitted through the same live hangar.
 
-### No purchase-order soft locks
+## Fitting and recovery
 
-Every shop purchase is **fully refundable**, visibly offered beside Fit. Refunding removes availability and makes prior reports stale; an equipped refunded part is replaced with an available control choice, requiring a rerun. Previously earned clears remain recorded. There is no interest, resale profit, grinding or paid retry.
+Buy fits compatible equipment immediately, preserving other edits and returning keyboard focus to that subsystem. Equipment outside the current mission's catalog opens the illustrated mission selector; choose a compatible contract and fit it. The tree shows fitted/owned/locked/unaffordable state, exact credit cost, prerequisite, tradeoff and actual refundable amount. It stacks branches on phones; all operations remain native DOM buttons outside canvas.
 
-Two solvent routes:
+Every purchase refunds **exactly what that copy cost**, including historical prices. Refunding removes availability and makes affected reports stale; an equipped refunded part is replaced with an available control choice and focused for repair. Other in-session mission drafts are sanitized against current inventory on return. Refunding an unequipped part leaves the orbital tree open. Clears are never revoked. X-band may be refunded while relay remains owned; the contract discloses missing X-band and cannot pay until it is restored. This deliberate reversible state preserves historical entitlements and prevents purchase-order soft locks.
 
-1. Wildfire +100 → X-band −100 → urban +100 → visible camera −100 → visible +100 → relay package −100 → relay +100. Finish with 100.
-2. Wildfire +100 → optional array −100 → urban passes with WF-C-style S-band/frequent service +100 → refund array +100 → buy X-band −100 and visible camera −100 → visible +100 → relay package −100 → relay +100. Finish with 100.
+Two verified fresh routes (same final ownership and **300 credits**, without the optional array):
 
-The pure test explores **every reachable buy/refund/eligible-clear state** and proves a route to campaign completion from each, not just those two examples.
+1. **Mapping first:** wildfire +120 → camera −100 → shoreline +180 → refund camera +100 → X-band −100 → relay package −140 → relay +200 → urban +140 → rebuy camera −100 = **300**.
+2. **Comms first:** wildfire +120 → X-band −100 → urban +140 → relay package −140 → relay +200 → camera −100 → shoreline +180 = **300**.
+
+The 120-credit array can instead consume the first award. Urban is still passable using the audited WF-C-style S-band/frequent-service kit; refund the array when credits are needed elsewhere. No grinding, interest, resale profit or paid retry is required.
+
+The deterministic graph test explores every reachable buy/refund/eligible-real-clear state from a fresh profile **and all valid historical v1/v2 inventories**, including mixed old/new award and purchase bases. It keys states by settled ledger values, not just inventory IDs, and independently re-evaluates real passing configurations against each available inventory. **411/411 states have a route to completion** in the current table.
 
 ## Award integrity
 
-Only the fresh player Run callback can award. It requires valid evaluator origin, provisional pass, matching mission/prerequisites/inventory, and an exact configuration/revision key against the **current campaign catalog**. It independently re-evaluates the configuration. Failures, unverified/invalid/spoofed results, stale-inventory reports, guide/direct reports, repeats and reloads pay zero. The dedicated academy never invokes the campaign callback. Credit deltas and the next concrete objective appear in the debrief and contract board.
+Only the fresh player Run callback can award. It requires valid evaluator origin, provisional pass, matching mission/prerequisites/inventory, and an exact configuration/revision key against the **current campaign catalog**. It independently re-evaluates the configuration. Failures, unverified/invalid/spoofed results, stale-inventory reports, guide/direct reports, repeats and reloads pay zero. Academy never invokes the callback. Launch settlement is synchronous at preflight, never a timer/skip/animation callback; the frozen report and settled ledger survive presentation reentry and language changes.
 
-## Save migration and failure semantics
+## Historical migration and storage
 
-Storage remains **only** `mission-forge.campaign.v1`; unrelated keys are untouched. Valid old version-1 saves normalize in memory to version 2, preserving completed wildfire/urban missions, purchased X-band/array and the **exact derived balance** (100 per old first clear minus original purchase prices). The next progress mutation writes normalized version 2 to the same key. No account, cloud sync, credentials or tamper-proof accounting is implied.
+Storage remains **only** `mission-forge.campaign.v1`; unrelated keys are untouched. Valid v1/v2 saves normalize in memory to **version 3**, preserving exact completed IDs, entitlements and spendable balances. Historical saves are validated with their **old linear prerequisites**, not today's branches: v1 covers wildfire/urban and X-band/array; v2 includes all four missions and four purchases.
 
-Version 2 adds the shipped contract/part IDs. Credits are still derived, not independently trusted. Duplicate IDs normalize without minting rewards; malformed, future, unknown-ID, impossible-prerequisite or negative-balance saves are ignored, retaining the old invalid-save semantics. A fully spent old save can refund an optional purchase to fund the next payload. Storage read/write failures are disclosed; in-memory play continues without promising persistence.
+V3 retains `completedMissionIds` and `unlockedPartIds`, plus `awards` and `paidParts`: per-ID settled credit amounts. Every legacy clear and legacy purchased item migrates at **100**, regardless of today's table. Old clears never receive reward top-ups. Historical array/relay refunds return 100; rebuy costs today's 120/140 and records that new refund basis. New awards use today's per-contract amounts. Because every current legacy-purchasable price is at least 100 and refunds equal recorded payment, refund/rebuy cannot profit. A fully completed old campaign stays complete, including after refund.
+
+The next mutation writes v3 to the same key. Amounts are derived from validated ledgers, never a separately trusted balance. Duplicate IDs normalize without minting rewards; malformed/future/unknown-ID/impossible-prerequisite/negative-balance saves and unmatched or invalid per-ID amounts are ignored. V3 accepts only the known historical or current amount for each ID. This is local save validation, **not** tamper-proof accounting, an account or cloud sync. Read/write failures are disclosed; in-memory play continues without promising persistence. Session mode/mission drafts are not saved across reload.
 
 ## Verification boundary
 
-See [the handoff](overnight-handoff.md) for actual counts, independent connected Sol review and clean-copy proof. Tests cover all old valid inventory combinations, v1→v2→reload, unrelated storage, credits versus USD, stale/forged/direct reports, repeat prevention, refunds, all-state solvency, compatible fitting/focus/staleness, and full English/Ukrainian real-Chrome campaigns. Human bilingual scientific/linguistic and assistive-technology review remains pending.
+See [the handoff](overnight-handoff.md) for exact pushed checkpoints and clean-copy proof. Coverage includes all valid legacy inventories, partial/full/reload/no-extra-award migration, historical refunds/current-price rebuys, two contract orders, exhaustive mixed-ledger solvency, credits versus USD, stale/forged/direct/guide rejection, compatible fitting/focus/staleness and full English/Ukrainian real-Chrome campaigns. Actual tree screenshots include desktop, phone and 320px/200% keyboard refunds/rebuys. Engine/catalog/fixtures remain unchanged. Human bilingual scientific/linguistic and assistive-technology review remains pending.

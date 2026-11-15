@@ -12,7 +12,7 @@ Also playable: **Trace the Shoreline**, a genuinely visible-light lens-selection
 - [Agent workflow and review gates](docs/agent-workflow.md)
 - [Agent entry point](AGENTS.md)
 
-**Current stage: night-03 orbital visual/flow checkpoint.** Full-screen menu → live spacecraft customization → illustrated Earth mission selector → frozen launch → debrief/typed repair. The original campaign remains playable; the branching economy is the next authorized slice, not yet shipped. [Overnight handoff](docs/overnight-handoff.md) records exact checkpoints and recovery. Human bilingual scientific/linguistic and assistive-technology review remains pending. Nothing has been deployed.
+**Current stage: night-03 playable review candidate.** Full-screen menu → live spacecraft customization → illustrated Earth mission selector → frozen launch → debrief/typed repair, plus a branching eight-node campaign tree. [Overnight handoff](docs/overnight-handoff.md) records exact checkpoints and clean-copy evidence. Human bilingual scientific/linguistic and assistive-technology review remains pending. Nothing has been deployed.
 
 ## Run locally
 
@@ -33,7 +33,7 @@ Choose **Urban Heat Map** for a different challenge. Its starter S-band/network 
 
 ### Optional campaign
 
-Select **Campaign** from the menu for wildfire → urban → visible mapping → relay. Each first provisional pass earns **100 credits once**. Unlock X-band, the 35 mm visible camera and receive/store package for **100 each**. The optional audited 135 W array offers a materially different power/mass choice. Full refunds keep every purchase order solvable. Fit owned parts into compatible designs; retry for free. Engineering USD and all requirements remain separate. In campaign the menu offers **Sandbox** to return directly to unrestricted mission selection.
+Select **Campaign** from the menu. Clear wildfire, then choose urban or shoreline first; build X-band → receive/store hardware to reach relay. Clear all four to finish. First-clear rewards are **120 /140 /180 /200 credits** (wildfire/urban/shoreline/relay); X-band/visible35 cost100, optional 135 W array120, relay140. The eight-node tree includes four already-owned foundations. Fit owned hardware through the same hangar; refund actual paid amounts to change branches. Every reachable fresh/historical state has a completion route; retries are free. Engineering USD and evaluator requirements remain separate. The campaign menu offers **Sandbox** for immediate unrestricted play.
 
 [Campaign progress](docs/mission-campaign.md) is saved locally, separately from direct play. Re-enter campaign after reload to continue. Direct mission selection remains available; no account is needed.
 
@@ -56,7 +56,7 @@ npm run build
 MISSION_FORGE_PREVIEW=1 npm run test:e2e
 ```
 
-`npm run preview` serves the built app locally at `/nasa-space-apps/`. Tests own port 4173; stop another local server on that port first. Reload opens the menu in English (or automatic academy if unseen); campaign completions/unlocks survive separately in localStorage. Existing v1/v2 saves retain their entitlements and credit balance. Separate mode/mission drafts survive session navigation, not reload. Selecting a new mission clears the old report rather than relabelling it. `?renderer=svg` explicitly exercises the supported schematic fallback.
+`npm run preview` serves the built app locally at `/nasa-space-apps/`. Tests own port 4173; stop another local server on that port first. Reload opens the menu in English (or automatic academy if unseen); campaign completions/unlocks survive separately in localStorage. Existing v1/v2 saves migrate to v3 with exact balances, entitlements and historical refund/award bases, without retroactive reward top-ups. Separate mode/mission drafts survive session navigation, not reload. Selecting a new mission clears the old report rather than relabelling it. `?renderer=svg` explicitly exercises the supported schematic fallback.
 
 ## Delivery scope
 
@@ -68,6 +68,7 @@ The hangar's live draft telemetry is evaluated separately from frozen launch res
 
 - Night-03: [orbital menu](docs/screenshots/night03-menu-en.png) · [before](docs/screenshots/night03-craft-before-en.png) / [after real array swap](docs/screenshots/night03-craft-after-en.png) · [battery inspection](docs/screenshots/night03-battery-en.png)
 - [Four illustrated missions](docs/screenshots/night03-missions-en.png) · [Ukrainian academy](docs/screenshots/night03-academy-ua.png) · [launch](docs/screenshots/night03-launch-en.png) · [failure/repair](docs/screenshots/night03-debrief-failure-en.png) · [provisional pass](docs/screenshots/night03-debrief-pass-ua.png)
+- [Branching upgrade tree](docs/screenshots/night03-tree-en.png) · [Ukrainian](docs/screenshots/night03-tree-ua.png) · [phone](docs/screenshots/night03-tree-phone-ua.png) · [completed tree](docs/screenshots/night03-tree-complete-en.png)
 
 - Night-02: [first load](docs/screenshots/night02-first-load.png) · [spacecraft](docs/screenshots/night02-workbench.png) · [debrief](docs/screenshots/night02-debrief-en.png) · [Ukrainian academy](docs/screenshots/night02-academy-uk.png)
 - [Visible mapping](docs/screenshots/night02-visible-en.png) · [Ukrainian](docs/screenshots/night02-visible-uk.png)
@@ -93,7 +94,7 @@ See [third-party notices](docs/third-party-notices.md) for software licenses and
 
 ## Verification
 
-The night-03 visual/flow checkpoint passed typecheck, lint (zero warnings), build, **137 engine /32 UI /33 production-preview Chrome** tests and audit (zero vulnerabilities). This includes actual WebGL and context-loss replacement, fallback equipment and rotation, the complete four-mission bilingual game flow, fresh automatic academy, frozen launch/reward integrity, and completing the guide plus disclosed report reflow at 320px/200%. See the handoff for exact checkpoint and clean-copy status; branching progression remains pending.
+The night-03 candidate passes typecheck, lint (zero warnings), build, **147 engine /33 UI /36 production-preview Chrome** tests and audit (zero vulnerabilities). Coverage includes actual WebGL/context-loss/fallback, both-language four-mission flows, automatic academy, immutable launch settlement, foundation fitting, v1/v2 migration with mixed historical/current accounting, **411/411-state solvency**, two branch orders, axe scans, keyboard and 320px/200% reflow. Independent connected Sol reviewed the progression policy and actual tree captures with no remaining blockers. See the handoff for exact checkpoint and clean-copy evidence.
 
 The night-02 candidate passed typecheck, lint, build, **133 evaluator/progression**, **27 UI**, and **21 production-preview Chrome tests**. Coverage preserves WF-A/B/C/all 15 audited cases and urban checks, and adds actual bilingual guide/mission/campaign repairs, visible↔thermal capability, exact FIFO relay/boundaries/malformed evidence, all v1 inventories, storage isolation, stale/spoofed reward rejection, fitting/refunds and **48/48-state campaign solvency**. Keyboard focus, axe, 320px/200% text, opened disclosures and reduced motion remain covered. See the handoff for checkpoint and clean-copy evidence.
 

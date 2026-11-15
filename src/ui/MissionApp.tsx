@@ -624,6 +624,9 @@ export default function MissionApp({
         else pickerRef.current?.focus()
         return
       }
+      // Refunds of inventory not fitted to this draft should not pull the
+      // player away from the tree. Equipped refunds still repair/focus a slot.
+      if (game && request.refund && draft[field.key] !== request.partId) return
       if (!request.refund || draft[field.key] === request.partId) {
         const next = { ...draft, [field.key]: request.refund ? field.options[0]?.id ?? '' : request.partId }
         setDraft(next); onDraftChange?.(next)

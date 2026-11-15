@@ -1,17 +1,18 @@
-# QA goal dossier — in progress, NOT delivery
+# QA goal dossier — committed checkpoint, reviewable delivery candidate
 
-Baseline: `2e92cb49a6be256d32128d2433697fa79eaa5bd2` (local and origin).
-Implementation checkpoint is being prepared; clean committed-copy acceptance
-is still open, so this remains **partial**. The goal spec `mission-forge-qa-goal.md` is committed
-for the next agent, and [the status handoff](STATUS.md) is the short entry point. Existing unrelated
-drafts, private config, untracked public assets and historic screenshots are excluded from staging.
+Baseline: `2e92cb49a6be256d32128d2433697fa79eaa5bd2` (local and origin at entry).
+Checkpoint **`5b7d29919df4b712becb5c1febaab5340ae12edc`** is committed and pushed to
+`origin mission-forge`, and the clean committed-copy gate is closed by the run recorded at the
+end of this file. The goal spec `mission-forge-qa-goal.md` is committed for the next agent, and
+[the status handoff](STATUS.md) is the short entry point. Existing unrelated drafts, private
+config, untracked public assets and historic screenshots remain excluded from staging.
 
 | Gate | Current evidence | Status / checkpoint |
 | --- | --- | --- |
-| Fresh drafts | `qa-goal.test.tsx`, `player.test.ts`, Academy and both Campaign browser orders: eight actual-control selections; 0/8 on every new draft | Focused pass; clean-copy gate open |
-| Parts / balance | 35 distinct IDs, 12 additions; all 12 in eight passing witnesses, four budget-only and four under-budget failures; real Campaign inventory witnesses; both-renderer visual swaps | 157 engine / new visual browser checks pass; clean-copy gate open |
-| Text | Structural and paragraph assertions on every specified screen, EN/UA × 1440/390/320-200%; actual before/after captures | Focused pass; final capture/color rerun and clean-copy gate open |
-| Research | 12 nodes / eight real purchases; price, states, separate equip, touch re-tap, genuine earn/buy and historical reload/refund browser checks | Focused pass; color specificity correction and clean-copy gate open |
+| Fresh drafts | `qa-goal.test.tsx`, `player.test.ts`, Academy and both Campaign browser orders: eight actual-control selections; 0/8 on every new draft | Pass; clean-copy verified |
+| Parts / balance | 35 distinct IDs, 12 additions; all 12 in eight passing witnesses, four budget-only and four under-budget failures; real Campaign inventory witnesses; both-renderer visual swaps | 157 engine / visual browser checks pass; clean-copy verified |
+| Text | Structural and paragraph assertions on every specified screen, EN/UA × 1440/390/320-200%; actual before/after captures | Pass with captures; clean-copy verified |
+| Research | 12 nodes / eight real purchases; price, states, separate equip, touch re-tap, genuine earn/buy and historical reload/refund browser checks | Pass after color-specificity correction; clean-copy verified |
 
 Manifest, provisional provenance, caps and solvency invariant:
 [player balance](player-balance.md). Exact loadouts:
@@ -68,7 +69,7 @@ Manifest, provisional provenance, caps and solvency invariant:
 | Connected Sol High | Draft semantics, catalog/balance, integration and fallback | Root edits and actual checks above | No paid routes |
 | Connected Sol review alias (not Codex) | Source-boundary review | Blocked before reads by documentation-only controlling scope | No independent source-review claim; root manually reviewed boundaries |
 
-## Captures and remaining clean-copy gate
+## Captures and local acceptance
 
 Focused production Chrome: 9/10 passed initially. UA Research at 320px/200%
 overflowed its long title; explicit title wrapping added. Screenshot inspection
@@ -82,9 +83,9 @@ Hangar **1**, Missions **4** (one objective/card), debrief **2**
 (verdict qualifier and important number), Research **1** (inspector status).
 The matched failed-debrief comparison is **9 → 3** paragraphs; the additional
 paragraph names the failed requirement. The pass is separately captured at 2.
-Before: **4 / 9 / 17 / 9 / 61**, respectively. Baseline recapture is from
-an untouched exact-archive production build and awaits settled WebGL,
-including scrolling the 320px canvas into view before resetting the page.
+Before: **4 / 9 / 17 / 9 / 61**, respectively. Baseline recapture is taken from
+an untouched exact-archive production build only after WebGL settles, which
+includes scrolling the 320px canvas into view before resetting the page.
 `scripts/qa-baseline.mjs` and `qa-goal.spec.ts` use the same definition:
 all rendered `<p>` in the screen (including scrollable content), excluding
 screen-reader-only text and closed disclosures. The initial scoped `main p`
@@ -110,8 +111,51 @@ Research, phone/reflow and both hardware renderers. The installed-parts
 stress capture deliberately includes an over-budget / wrong-role design;
 its visible blocker is not represented as a pass.
 
-**Next command after scoped push:** extract that exact committed SHA into a
-new isolated directory, `npm ci`, then typecheck, lint, engine, UI, build,
-`MISSION_FORGE_PREVIEW=1 npm run test:e2e`, and audit. No private or untracked
-inputs, branch/worktree, deployment, PR or merge. Final acceptance requires
-the clean-copy results and remote SHA verification, not this checkpoint.
+## Committed checkpoint and clean-copy acceptance
+
+Scoped commit **`5b7d29919df4b712becb5c1febaab5340ae12edc`** (96 files, `2e92cb4..5b7d299`)
+was pushed to `origin mission-forge`; `git ls-remote origin refs/heads/mission-forge`
+returns the same SHA as local `HEAD`. Staged scope was checked: no `opencode.jsonc`,
+`public/`, `src/assets/`, `dist/`, `node_modules/` or `test-results/` path is committed,
+the staged diff contains no credential-pattern match, every relative Markdown link in
+the 11 staged `.md` files resolves, and all **81** pre-existing tracked screenshots are
+byte-for-byte identical to `HEAD`. `git diff --cached --check` is clean (the research
+draft's trailing blank lines were trimmed, which changed no draft content).
+
+The exact pushed SHA was extracted with `git archive` into a fresh isolated directory
+(`/tmp/mission-forge-clean-f169dc46`) and run in order:
+
+| Step | Result |
+| --- | --- |
+| `npm ci` | success, `found 0 vulnerabilities` |
+| `npm run typecheck` | exit 0 |
+| `npm run lint` | exit 0, no diagnostics |
+| `npm test` (engine) | **157/157**, 9 files, exit 0 |
+| `npm run test:ui` | **39/39**; see worker flake below |
+| `npm run build` | success in 3.17 s (chunk-size warnings only) |
+| `npx playwright test --grep "QA density\|touch Research" --workers=1` | **7/7**; printed counts match `after-counts.json` exactly in both locales and all three viewports |
+| `MISSION_FORGE_PREVIEW=1 npm run test:e2e` (configured 2 workers) | first run **49 passed / 2 failed**; second run **51/51** |
+| `npx playwright test --workers=1` | **51/51** |
+| `npm audit --audit-level=moderate` | exit 0, 0 vulnerabilities |
+
+The two first-run browser failures are recorded, not erased: `campaign.spec.ts` *campaign
+earn → unlock → redesign survives reload without duplicate rewards (en)* and
+`visible.spec.ts` *visible lens tradeoff and capability repair (en)*, which timed out on
+`requirement-VM-GSD` reaching `Not met`. Both are EN concurrency/timing flakes, not
+assertion or balance changes: they passed 5/5 when those two files were rerun alone at one
+worker, and both passed in each later full run. No threshold, physics or assertion was
+weakened for any rerun. This host had only ~7.4 GiB free RAM with 14.2/16.4 GiB swap in
+use during these runs, which is the observed cause of both this flake and the worker crash
+below; renderer concurrency stays capped at 2.
+
+Intermittent UI-worker crash: in 2 of 11 clean-copy `npm run test:ui` runs vitest reported
+`Worker exited unexpectedly with signal SIGSEGV during started state while running test file
+tests/ui/parity.test.tsx` (`[vitest-pool]: Worker forks emitted error`, 27 tests executed,
+**no failed assertion**). The other 9 runs, and six consecutive reruns taken afterwards,
+reported 9 files / 39 tests passed. It is an environment crash under memory pressure, not a
+code failure; it is unresolved and anyone who hits it should rerun rather than edit
+`parity.test.tsx`.
+
+Status: implementation, local acceptance and committed clean-copy acceptance are complete;
+delivery is a **reviewable candidate** on `mission-forge`. No deployment, submission, PR,
+merge, extra branch or worktree, force push, reset or destructive cleanup was performed.

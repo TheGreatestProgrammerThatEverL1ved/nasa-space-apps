@@ -1,9 +1,11 @@
 # MISSION FORGE — status handoff
 
-Updated 15 November 2026, branch `mission-forge`. Entry HEAD and `origin/mission-forge` were
-both **`2e92cb49a6be256d32128d2433697fa79eaa5bd2`**; this round's work is committed on top of
-it. The four-goal specification that drove this round is committed as `mission-forge-qa-goal.md`,
-and the full evidence record is [the QA dossier](qa-goal-dossier.md).
+Updated 15 November 2026, branch `mission-forge`. This round's work is committed as
+**`5b7d29919df4b712becb5c1febaab5340ae12edc`** (96 files) on top of the audited baseline
+`2e92cb49a6be256d32128d2433697fa79eaa5bd2`, and that commit is pushed: `git ls-remote origin
+refs/heads/mission-forge` returns the same SHA as local `HEAD`. The four-goal specification that
+drove this round is committed as `mission-forge-qa-goal.md`, and the full evidence record is
+[the QA dossier](qa-goal-dossier.md). A friend or another agent can take over from this commit.
 
 ## What is implemented
 
@@ -30,7 +32,7 @@ and the full evidence record is [the QA dossier](qa-goal-dossier.md).
    deliberate touch preview-then-purchase, keyboard state handling, and refunds at historical paid
    bases. Purchases never auto-equip.
 
-## Verified in the working copy at handoff
+## Verified locally before committing
 
 - Typecheck, lint and production build clean; `npm audit --audit-level=moderate` → 0 vulnerabilities.
 - Engine conformance **157/157**, UI **39/39**, production Chrome **51/51**, matched
@@ -43,23 +45,55 @@ and the full evidence record is [the QA dossier](qa-goal-dossier.md).
 - All 81 previously tracked screenshots are byte-for-byte unchanged; historical saves and credit
   ledgers are untouched.
 
-## The one gate still open
+## Clean-copy gate: closed
 
-Committed clean-copy proof. Extract the pushed checkpoint SHA into a new isolated directory
-(`git archive` is enough), then run, in order:
+The pushed SHA was extracted with `git archive` into a fresh directory and checked there, in order:
+`npm ci` (0 vulnerabilities) → typecheck (exit 0) → lint (exit 0) → `npm test` **157/157** →
+`npm run test:ui` **39/39** → `npm run build` → density-focused Playwright run **7/7** with counts
+matching `after-counts.json` → full production-preview Playwright suite **51/51** →
+`npm audit --audit-level=moderate` (exit 0). Exact command list:
 
 ```bash
+git archive 5b7d29919df4b712becb5c1febaab5340ae12edc | tar -x -C /tmp/mf-check && cd /tmp/mf-check
 npm ci
 npm run typecheck && npm run lint
 npm test && npm run test:ui
 npm run build
-MISSION_FORGE_PREVIEW=1 npx playwright test tests/e2e/qa-goal.spec.ts --workers=1 --grep "@density"
+MISSION_FORGE_PREVIEW=1 npx playwright test --grep "QA density|touch Research" --workers=1
 MISSION_FORGE_PREVIEW=1 npm run test:e2e
 npm audit --audit-level=moderate
 ```
 
-Then record results in `docs/qa-goal-dossier.md` and confirm `git ls-remote origin refs/heads/mission-forge`
-equals `HEAD`. No deployment, PR, merge, extra branch, worktree, or force push.
+Staged scope was verified too: no `opencode.jsonc`, `public/`, `src/assets/`, `dist/`,
+`node_modules/` or `test-results/` is committed, no credential-looking text in the diff, every
+relative Markdown link resolves, `git diff --cached --check` is clean, and all 81 previously
+tracked screenshots are byte-for-byte identical to the baseline.
+
+## Two known flakes, not code bugs
+
+- **Playwright EN concurrency:** the first full clean-copy run at the configured two workers failed
+  2 of 51 (`campaign.spec.ts` *campaign earn → unlock → redesign … (en)* and `visible.spec.ts`
+  *visible lens tradeoff and capability repair (en)*, which timed out waiting for `requirement-VM-GSD`
+  to read `Not met`). Both passed when rerun alone at one worker, and both passed in the next two
+  full runs (51/51 at one worker, 51/51 at two). No assertion or threshold was changed.
+- **Vitest UI worker SIGSEGV:** 2 of 11 `npm run test:ui` runs crashed a fork worker on
+  `tests/ui/parity.test.tsx` (`Worker exited unexpectedly with signal SIGSEGV`, 27 tests executed,
+  no failed assertion); the other 9 and six later consecutive reruns reported 39/39. Rerun rather
+  than editing `parity.test.tsx`.
+
+Both correlate with this host's memory state during the runs: about 7.4 GiB free RAM with
+14.2/16.4 GiB swap in use. If you hit either, free memory first and rerun at `--workers=1`.
+
+## What to do next
+
+1. Review the checkpoint (`git diff 2e92cb4..5b7d299 --stat`, then the gate table in
+   [the QA dossier](qa-goal-dossier.md)). It is a reviewable delivery candidate: nothing is
+   published, submitted, PR'd or merged.
+2. The redesigned wildfire checkpoint is now shipped independently, so the next authorized work is
+   urban-heat integration, following [the expansion supplement](scenario-expansion.md) and keeping the
+   audited wildfire mechanics untouched.
+3. Re-run the checks from a clean copy of the pushed SHA before building on top of it, and add new
+   evidence to the dossier rather than rewriting the record above.
 
 ## Things that cost time last round
 

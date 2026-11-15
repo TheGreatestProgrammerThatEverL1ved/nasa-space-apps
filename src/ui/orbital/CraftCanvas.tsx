@@ -1028,28 +1028,28 @@ function CraftModel(props: ModelProps) {
 
   return <group position={[MODE_POSITION[mode][0], MODE_POSITION[mode][1], MODE_POSITION[mode][2]]}>
     <group ref={bob}>
-      <group onClick={inspect('busId')}>
+      {config.busId && <group name={`hardware:${config.busId}`} onClick={inspect('busId')}>
         <BusShell id={config.busId} selected={selectedField === 'busId'} />
-      </group>
-      <SolarArrays
+      </group>}
+      {config.arrayId && <SolarArrays
         arrayId={config.arrayId}
         busId={config.busId}
         selected={selectedField === 'arrayId'}
         onClick={inspect('arrayId')}
-      />
-      <group onClick={inspect('payloadId')}>
+      />}
+      {config.payloadId && <group name={`hardware:${config.payloadId}`} onClick={inspect('payloadId')}>
         <PayloadMount payloadId={config.payloadId} busId={config.busId} selected={selectedField === 'payloadId'} />
-      </group>
-      <group onClick={inspect('radioId')}>
+      </group>}
+      {config.radioId && <group name={`hardware:${config.radioId}`} onClick={inspect('radioId')}>
         <RadioAntenna radioId={config.radioId} busId={config.busId} selected={selectedField === 'radioId'} />
-      </group>
-      {selectedField === 'batteryId' && <BatteryCutaway
+      </group>}
+      {config.batteryId && (selectedField === 'batteryId' || !config.busId) && <BatteryCutaway
         batteryId={config.batteryId}
         busId={config.busId}
         onClick={inspect('batteryId')}
       />}
     </group>
-    {selectedField === 'busId' && <Halo
+    {config.busId && selectedField === 'busId' && <Halo
       radius={Math.hypot(busT.half[0], busT.half[1]) + 0.22}
       tube={0.012}
       color={craft.bus.accent}
@@ -1057,14 +1057,14 @@ function CraftModel(props: ModelProps) {
       scale={[1, busT.size[2] / (2 * (Math.hypot(busT.half[0], busT.half[1]) + 0.22)), 1]}
       motion={motion}
     />}
-    {selectedField === 'payloadId' && <Halo
+    {config.payloadId && selectedField === 'payloadId' && <Halo
       radius={payloadT.barrelRadius + 0.16}
       tube={0.01}
       color={craft.payload.accent}
       position={[0, busT.payloadBaseY + payloadT.barrelLength * 0.7, 0.08]}
       motion={motion}
     />}
-    {selectedField === 'radioId' && <Halo
+    {config.radioId && selectedField === 'radioId' && <Halo
       radius={(craft.radio.antenna === 'whip' ? 0.2 : craft.radio.dishRadius + 0.14)}
       tube={0.01}
       color={craft.radio.accent}
@@ -1072,7 +1072,7 @@ function CraftModel(props: ModelProps) {
       rotation={[Math.PI / 2, 0, 0]}
       motion={motion}
     />}
-    {selectedField === 'batteryId' && <Halo
+    {config.batteryId && selectedField === 'batteryId' && <Halo
       radius={Math.hypot(batteryT.half[0], batteryT.half[1], batteryT.half[2]) + 0.12}
       tube={0.01}
       color={craft.battery.accent}

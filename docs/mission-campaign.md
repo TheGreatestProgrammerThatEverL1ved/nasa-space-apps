@@ -6,12 +6,12 @@ Choose a contract → assemble → launch the real evaluator → collect a first
 
 | Contract | Previous clear | Equipment prerequisite | First-clear reward |
 |---|---|---|---:|
-| Return the Heat Map | None | Complete owned WF-A starter kit | 120 credits |
+| Return the Heat Map | None | Explicitly assemble complete owned hardware from 0/8 | 120 credits |
 | Urban Heat Map | Wildfire | Starter S-band/frequent-service can pass | 140 |
 | Trace the Shoreline | Wildfire | 35 mm visible analogue | 180 |
 | Carry the Signal | Wildfire | Receive/store package **and X-band** | 200 |
 
-Urban and shoreline are alternative next contracts after wildfire. Relay can precede shoreline or urban if its hardware is owned. All **four shipped clears** are required for the ending; optional order does not mean optional completion. Each real model pass remains provisional. The gallery shows prerequisites, missing equipment, current rewards and, for old clears, the actual historical amount already collected (replay pays zero).
+Urban and shoreline are alternative next contracts after wildfire. Relay can precede shoreline or urban if its hardware is owned. All **four shipped clears** are required for the ending. Each model pass remains provisional. The gallery shows actionable prerequisites and first-clear/replay status; historical collected amounts remain in the settled award ledger. Engineering USD caps and [player balance](player-balance.md) are separate from credits.
 
 | Upgrade | Credits | Tree prerequisite | Why buy |
 |---|---:|---|---|
@@ -19,26 +19,35 @@ Urban and shoreline are alternative next contracts after wildfire. Relay can pre
 | `arr-deploy-xl` 135 W array | 120 | Owned 55 W foundation | Audited WF-C/urban S-band power alternative; tight mass and higher USD |
 | `pl-visible-35` visible camera | 100 | Owned thermal foundation | Unlocks shoreline mapping; real width/detail tradeoff |
 | `pl-relay` receive/store package | 140 | Own X-band before buying | Unlocks two-hop packet relay; no camera capability |
+| `arr-fold-75` accordion wings | 60 | Owned 55 W foundation | Compact 75 W generation / mass alternative |
+| `bat-pack-80` twin pack | 40 | Owned 12U foundation | Lower mass/cost; less eclipse reserve than 120 Wh |
+| `rf-x-eco` compact X-band | 80 | Owned S-band foundation | Lower DC/USD; slower serialization than 100 Mbps |
+| `pl-thermal-survey` wide LWIR | 80 | Owned thermal foundation | Wider/finer thermal plan; higher data/load/USD |
 
-The diagram has **eight actual catalog-ID nodes**, not eight paid unlocks:
+The map has **twelve actual catalog-ID nodes: four foundations and eight purchases**:
 
 ```text
-                         bus-12u (owned)
-                  ┌──────────┼──────────────┐
-          arr-deploy-l     rf-s         pl-thermal     (owned)
-                ↓            ↓               ↓
-          arr-deploy-xl     rf-x        pl-visible-35
-                             ↓
-                          pl-relay
+bus-12u (owned)
+├─ arr-deploy-l (owned)
+│  ├─ arr-deploy-xl
+│  └─ arr-fold-75
+├─ rf-s (owned)
+│  ├─ rf-x
+│  │  └─ pl-relay
+│  └─ rf-x-eco
+├─ pl-thermal (owned)
+│  ├─ pl-visible-35
+│  └─ pl-thermal-survey
+└─ bat-pack-80
 ```
 
-The four foundations can be fitted from the tree; they are not new charges. All other formerly free catalog choices stay free, including batteries and alternate teaching parts. An arrow is a purchase prerequisite, **not** a claim that a camera is physically upgraded into another sensing technology. Power/comms/payload are separate choices fitted through the same live hangar.
+Foundations are not charges. Formerly free catalog choices remain free. An arrow is a purchase prerequisite, **not** a physical conversion between sensing technologies. Power/comms/payload/battery are independent choices installed through Customize.
 
 ## Fitting and recovery
 
-Buy fits compatible equipment immediately, preserving other edits and returning keyboard focus to that subsystem. Equipment outside the current mission's catalog opens the illustrated mission selector; choose a compatible contract and fit it. The tree shows fitted/owned/locked/unaffordable state, exact credit cost, prerequisite, tradeoff and actual refundable amount. It stacks branches on phones; all operations remain native DOM buttons outside canvas.
+Open **Research** in one selection from the menu, or directly from Campaign navigation. Sandbox has a read-only preview and an explicit Enter Campaign action. Buy never fits hardware: deliberately select it in Customize. Yellow outlines mean buyable, red unavailable, green owned; glyph/text cues supplement color. Hover/focus shows price, effect and lock reason in the shared inspector. Click or Enter/Space buys an available node once. Touch requires a first tap exposing the price, then a re-tap. Locked/owned nodes stay inspectable without debit. Refund belongs in the inspector. The map stacks on phones; native DOM controls stay outside canvas.
 
-Every purchase refunds **exactly what that copy cost**, including historical prices. Refunding removes availability and makes affected reports stale; an equipped refunded part is replaced with an available control choice and focused for repair. Other in-session mission drafts are sanitized against current inventory on return. Refunding an unequipped part leaves the orbital tree open. Clears are never revoked. X-band may be refunded while relay remains owned; the contract discloses missing X-band and cannot pay until it is restored. This deliberate reversible state preserves historical entitlements and prevents purchase-order soft locks.
+Every purchase refunds **exactly what that copy cost**, including historical prices. Refunding clears that ID from every Campaign draft and makes affected reports stale; it **never substitutes another part**. The player receives an explanation and chooses a replacement. Unequipped refunds leave Research open. Clears are never revoked. X-band may be refunded while relay remains owned; the contract discloses missing X-band and cannot pay until restored. This reversible state preserves historical entitlements and prevents purchase-order soft locks.
 
 Two verified fresh routes (same final ownership and **300 credits**, without the optional array):
 
@@ -47,7 +56,7 @@ Two verified fresh routes (same final ownership and **300 credits**, without the
 
 The 120-credit array can instead consume the first award. Urban is still passable using the audited WF-C-style S-band/frequent-service kit; refund the array when credits are needed elsewhere. No grinding, interest, resale profit or paid retry is required.
 
-The deterministic graph test explores every reachable buy/refund/eligible-real-clear state from a fresh profile **and all valid historical v1/v2 inventories**, including mixed old/new award and purchase bases. It keys states by settled ledger values, not just inventory IDs, and independently re-evaluates real passing configurations against each available inventory. **411/411 states have a route to completion** in the current table.
+The original four-purchase deterministic graph test retains exhaustive mixed-ledger coverage from fresh and all valid historical v1/v2 inventories (historical checkpoint: **411/411** solvable states). The expanded optional tree uses the stronger documented **refund-capital invariant** plus automated fresh/historical minimum-capital completion and real-inventory budget witnesses. Every purchase is fully refundable at its paid basis; no new item is mandatory. See [player balance](player-balance.md#research-and-ledger-invariant).
 
 ## Award integrity
 
@@ -63,4 +72,4 @@ The next mutation writes v3 to the same key. Amounts are derived from validated 
 
 ## Verification boundary
 
-See [the handoff](overnight-handoff.md) for exact pushed checkpoints and clean-copy proof. Coverage includes all valid legacy inventories, partial/full/reload/no-extra-award migration, historical refunds/current-price rebuys, two contract orders, exhaustive mixed-ledger solvency, credits versus USD, stale/forged/direct/guide rejection, compatible fitting/focus/staleness and full English/Ukrainian real-Chrome campaigns. Actual tree screenshots include desktop, phone and 320px/200% keyboard refunds/rebuys. Engine/catalog/fixtures remain unchanged. Human bilingual scientific/linguistic and assistive-technology review remains pending.
+See the [QA dossier](qa-goal-dossier.md) for current checkpoints and clean-copy proof; [the handoff](overnight-handoff.md) preserves older milestones. Coverage includes all valid legacy inventories, exact historical refunds/current-price rebuys, two genuine Campaign orders, empty drafts, separate purchase/equip, credits versus USD, stale/forged/direct/guide rejection and EN/UA real-Chrome flows. The audited engine/catalog/fixtures remain unchanged; the new player layer is explicitly revisioned. Human bilingual scientific/linguistic and assistive-technology review remains pending.

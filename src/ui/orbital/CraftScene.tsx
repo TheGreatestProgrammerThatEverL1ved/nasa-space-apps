@@ -76,6 +76,8 @@ class RenderBoundary extends Component<BoundaryProps, BoundaryState> {
 
 function sceneDescription(config: MissionConfiguration, locale: Locale, mode: CraftMode): string {
   const craft = resolveCraftAppearance(config)
+  const installed = (['bus','payload','array','radio','battery'] as const).filter(key => config[`${key}Id`])
+    .map(key => craft[key].label[locale]).join(', ')
   const setting = {
     hangar: {
       en: 'Industrial assembly bay with a work stand, overhead gantry lights and receding steel ribs.',
@@ -91,9 +93,9 @@ function sceneDescription(config: MissionConfiguration, locale: Locale, mode: Cr
     },
   }[mode]
   if (locale === 'ua') {
-    return `Перспективний вид апарата: ${craft.bus.label.ua}, ${craft.payload.label.ua}, ${craft.array.label.ua}, ${craft.radio.label.ua}, батарея ${craft.battery.nominalWh} Вт·год. ${setting.ua}`
+    return `${installed || 'Обладнання не встановлено'}. ${setting.ua}`
   }
-  return `Perspective spacecraft view: ${craft.bus.label.en}, ${craft.payload.label.en}, ${craft.array.label.en}, ${craft.radio.label.en}, ${craft.battery.nominalWh} Wh battery. ${setting.en}`
+  return `${installed || 'No installed hardware'}. ${setting.en}`
 }
 
 /**
@@ -185,6 +187,7 @@ export default function CraftScene({
     data-battery-id={config.batteryId}
     data-radio-id={config.radioId}
     data-payload-id={config.payloadId}
+    data-installed-count={[config.busId,config.arrayId,config.batteryId,config.radioId,config.payloadId].filter(Boolean).length}
     {...(failureReason ? { 'data-fallback-reason': failureReason } : {})}
   >
     <div

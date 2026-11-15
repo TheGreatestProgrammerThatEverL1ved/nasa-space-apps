@@ -1,10 +1,12 @@
 import MissionApp, { type MissionHandle } from './ui/MissionApp'
 import { useRef, useState } from 'react'
-import { MISSIONS } from './data/scenarios'
+import { PLAYER_MISSIONS } from './data/player/missions'
+import { MISSIONS as REFERENCE_MISSIONS } from './data/scenarios'
 import { evaluateMission } from './engine/evaluate'
-import { WF_A } from './fixtures/builds'
-import type { EvaluationReport, Locale, MissionConfiguration } from './engine/types'
+import type { EvaluationReport, Locale } from './engine/types'
+import { emptyDraft, sanitizeDraft, draftView, type MissionDraft } from './engine/draft'
 import CampaignPanel from './ui/CampaignPanel'
+import ResearchScreen from './ui/research/ResearchScreen'
 import { translate } from './i18n'
 import type { GameScreen } from './ui/game/GameScreens'
 import {
@@ -19,6 +21,8 @@ function readCampaign(): { progress: CampaignProgress; storageError: boolean } {
 }
 export default function App({ presentation }: { presentation?: 'orbital' | 'engineering' } = {}) {
   const engineering = presentation === 'engineering' || new URLSearchParams(window.location.search).get('view') === 'engineering'
+  const reference = engineering && new URLSearchParams(window.location.search).get('catalog')==='reference'
+  const MISSIONS=reference ? REFERENCE_MISSIONS : PLAYER_MISSIONS
   const [missionId, setMissionId] = useState('wildfire')
   const [screen, setScreen] = useState<GameScreen>('menu')
   const [locale, setLocale] = useState<Locale>('en')
@@ -26,7 +30,8 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
   const [campaignActive, setCampaignActive] = useState(false)
   const [campaign, setCampaign] = useState(readCampaign)
   const [creditDelta, setCreditDelta] = useState<number | null>(null)
-  const [drafts, setDrafts] = useState<Record<string, MissionConfiguration>>({})
+  const [refundedDrafts, setRefundedDrafts] = useState(false)
+  const [drafts, setDrafts] = useState<Record<string, MissionDraft>>({})
   const missionRef = useRef<MissionHandle>(null)
   const mission = MISSIONS.find(m => m.id === missionId) ?? MISSIONS[0]!
   const context = campaignActive ? campaignContext(mission.context, campaign.progress) : mission.context
@@ -39,7 +44,7 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
     setCampaign({ progress, storageError })
   }
   const onReport = (report: EvaluationReport) => {
-    if (campaignActive) saveProgress(awardCampaignPass(campaign.progress, report, mission.id))
+    if (campaignActive && !reference) saveProgress(awardCampaignPass(campaign.progress, report, mission.id))
   }
   const chooseMission = (id: string) => {
     if (campaignActive && !campaignContractAvailable(campaign.progress, id)) return
@@ -52,14 +57,19 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
     missionRef.current?.fitEquipment({ partId, field: item.field, refund }, campaignContext(mission.context, progress))
   }
   const buy = (partId: string) => {
+    setRefundedDrafts(false)
     const next = buyCampaignPart(campaign.progress, partId)
     saveProgress(next)
-    if (next !== campaign.progress) fit(partId, false, next)
   }
   const refund = (partId: string) => {
     const next = refundCampaignPart(campaign.progress, partId)
     saveProgress(next)
-    if (next !== campaign.progress) fit(partId, true, next)
+    if (next !== campaign.progress) {
+      setRefundedDrafts(true)
+      setDrafts(previous => Object.fromEntries(Object.entries(previous).map(([key,draft]) => [key,
+        key.startsWith('campaign:') ? Object.fromEntries(Object.entries(draft).filter(([,value]) => value !== partId)) as MissionDraft : draft])))
+      fit(partId, true, next)
+    }
   }
   const campaignMissions = campaignActive ? MISSIONS.filter(m => m.id === mission.id || campaignContractAvailable(campaign.progress, m.id)) : MISSIONS
   const remaining = CAMPAIGN_CONTRACTS.filter(c => !campaign.progress.completedMissionIds.includes(c.missionId))
@@ -67,18 +77,20 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
   const nextMission = MISSIONS.find(m => m.id === nextContract?.missionId)
   const nextAvailable = nextContract && campaignContractAvailable(campaign.progress, nextContract.missionId)
   const draftKey = `${campaignActive ? 'campaign' : 'direct'}:${mission.id}`
-  const initialConfiguration = drafts[draftKey] ?? (campaignActive && mission.id === 'wildfire' ? WF_A : mission.initialConfiguration)
+  const initialConfiguration = drafts[draftKey] ?? emptyDraft(mission.id)
   // A refunded part is not silently kept selected when returning to a saved draft.
-  const safeInitial = { ...initialConfiguration }
-  const defaults = { payloadId: [...context.catalog.payloads, ...(context.catalog.relayPayloads ?? [])], busId: context.catalog.buses, arrayId: context.catalog.arrays, batteryId: context.catalog.batteries, radioId: context.catalog.radios, groundId: context.catalog.grounds, orbitId: context.catalog.orbits, launcherId: context.catalog.launchers }
-  const availableIds = new Set(Object.values(defaults).flatMap(parts => parts.map(p => p.id)))
-  for (const field of Object.keys(defaults) as (keyof typeof defaults)[]) if (!availableIds.has(safeInitial[field])) safeInitial[field] = defaults[field][0]?.id ?? ''
-  return <MissionApp ref={missionRef} key={`${mission.id}:${campaignActive ? 'campaign' : 'direct'}`}
+  const safeInitial = sanitizeDraft(initialConfiguration, context)
+  return <>{reference && <p role="status">Internal audited reference tooling · not player balance / Внутрішні аудитовані еталони · не ігровий баланс</p>}
+    <MissionApp ref={missionRef} key={`${mission.id}:${campaignActive ? 'campaign' : 'direct'}`}
     context={context} initialConfiguration={safeInitial}
     evaluate={request => evaluateMission(request, context)}
     mission={mission} missions={engineering ? campaignMissions : MISSIONS} onMissionChange={chooseMission}
     focusMissionPicker={pickerWasUsed} onReport={onReport}
     onDraftChange={config => { setDrafts(previous => ({ ...previous, [draftKey]: config })) }}
+    researchPanel={<ResearchScreen active={campaignActive} progress={campaign.progress} locale={locale}
+      storageError={campaign.storageError} refundedDrafts={refundedDrafts}
+      onBuy={buy} onRefund={refund} onBack={() => setScreen('menu')}
+      onCampaign={() => { setCampaignActive(true); setMissionId('wildfire'); setCreditDelta(null) }} />}
     debriefAction={campaignActive ? <div className="debrief-next">
       <p>{creditDelta !== null && creditDelta > 0 ? `+${creditDelta} ${locale === 'en' ? 'credits • First clear collected.' : 'кредитів • Перший прохід зараховано.'}`
         : (locale === 'en' ? 'No additional reward. First-clear awards are collected once.' : 'Без додаткової нагороди. Перший прохід оплачується один раз.')}</p>
@@ -94,9 +106,9 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
       if (!engineering) setScreen('missions')
       else { const target = document.getElementById('mission-picker'); target?.focus(); target?.scrollIntoView?.({ block: 'center' }) }
     }}>{locale === 'en' ? 'Choose another mission' : 'Вибрати іншу місію'}</button></div>}
-    campaignPanel={<CampaignPanel active={campaignActive} progress={campaign.progress} locale={locale}
+    campaignPanel={reference ? undefined : <CampaignPanel active={campaignActive} progress={campaign.progress} locale={locale}
       storageError={campaign.storageError} currentMissionId={missionId} creditDelta={creditDelta}
-      configuration={safeInitial}
+      configuration={draftView(safeInitial)}
       onChoose={chooseMission} onFit={id => fit(id)} onRefund={refund}
       compactBoard={!engineering}
       onToggle={() => { setCampaignActive(!campaignActive); setMissionId('wildfire'); setPickerWasUsed(true); setCreditDelta(null) }}
@@ -115,5 +127,5 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
           missingParts.length ? `${locale === 'en' ? 'Buy equipment below: ' : 'Купіть обладнання нижче: '}${missingParts.map(id => all.find(p => p.id === id)?.label[locale] ?? id).join(', ')}` : '',
         ].filter(Boolean).join('. ') }
     }) }}
-    locale={locale} onLocaleChange={setLocale} />
+    locale={locale} onLocaleChange={setLocale} /></>
 }

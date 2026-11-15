@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { assembleHangar } from './assembly'
 
 test.use({ deviceScaleFactor: 1 })
 
@@ -35,6 +36,8 @@ for (const locale of ['en', 'ua'] as const) {
     await page.getByRole('button', { name: en ? /Customize/ : /Налаштувати/ }).focus()
     await page.keyboard.press('Enter')
     await expect(page.locator('#hangar-title')).toBeFocused()
+    await assembleHangar(page)
+    await page.locator('[data-slot="arrayId"]').click()
     await expect(page.locator('.viewport-slots')).toHaveCount(0)
     const scene = page.locator('.craft-scene')
     await expect(scene).toHaveAttribute('data-renderer', 'webgl')
@@ -130,6 +133,8 @@ test('menu to hangar swaps through animated launch and debrief', async ({ page }
   await page.setViewportSize({ width: 1440, height: 960 })
   await page.goto('./')
   await page.getByRole('button', { name: /Customize/ }).click()
+  await assembleHangar(page)
+  await page.locator('[data-slot="arrayId"]').click()
   const slots = page.getByRole('navigation', { name: 'Subsystems and mission choices' })
   await page.locator('[data-part-id="arr-deploy-m"]').click()
   await page.locator('[data-part-id="arr-deploy-l"]').click()

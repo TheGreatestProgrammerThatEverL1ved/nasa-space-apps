@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { assembleEngineering, FIRST_PLAYER } from './assembly'
 
 for (const locale of ['en', 'ua'] as const) {
   test(`urban mission: volume repair, cheaper station and honest latency (${locale})`, async ({ page }, testInfo) => {
@@ -18,6 +19,7 @@ for (const locale of ['en', 'ua'] as const) {
     await expect(page.locator('html')).toHaveAttribute('lang', locale === 'en' ? 'en' : 'uk')
     await expect(page.getByTestId('latency-value')).toHaveCount(0)
     const run = page.getByRole('button', { name: locale === 'en' ? 'Run mission' : 'Запустити місію', exact: true })
+    await assembleEngineering(page,{...FIRST_PLAYER,scenarioId:'urban-heat',radioId:'rf-s',groundId:'gs-network'})
     await run.click()
     await expect(page.getByTestId('verdict')).toBeFocused()
     await expect(page.getByTestId('verdict')).toContainText(locale === 'en' ? /repair/i : /ремонт|виправ|невда|не відповідає/i)
@@ -28,7 +30,7 @@ for (const locale of ['en', 'ua'] as const) {
     await expect(page.getByTestId('requirement-UH-DELIVERY')).toContainText(/1[.,]134/)
     await page.locator('.repair-cta').click()
     await expect(page.locator('#radioId')).toBeFocused()
-    await page.locator('#radioId').selectOption('rf-x')
+    await page.locator('#radioId').selectOption('rf-x-eco')
     await expect(page.getByTestId('stale-notice')).toBeVisible()
     await run.click()
     await expect(page.getByTestId('verdict')).toContainText(locale === 'en' ? /provisional/i : /попередн|умовн/i)
@@ -59,6 +61,7 @@ for (const locale of ['en', 'ua'] as const) {
     await expect(picker).toHaveValue('wildfire')
     await expect(picker).toBeFocused()
     await expect(page.getByTestId('latency-value')).toHaveCount(0)
+    await assembleEngineering(page)
     await run.click()
     await expect(page.getByTestId('latency-value')).toContainText(/7[.,]1/)
     await expect(page.getByTestId('verdict')).toContainText(locale === 'en' ? /repair/i : /ремонт|виправ|невда|не відповідає/i)

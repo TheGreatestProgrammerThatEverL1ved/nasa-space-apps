@@ -48,7 +48,7 @@ export default function CraftFallback({ config, locale, mode, selectedField, rea
   const arrayT = arrayTransform(config.arrayId, config.busId)
   const payloadT = payloadTransform(config.payloadId, config.busId)
   const batteryT = batteryTransform(config.batteryId, config.busId)
-  const cutaway = selectedField === 'batteryId'
+  const cutaway = !!config.batteryId && selectedField === 'batteryId'
   const hangar = mode === 'hangar'
 
   const w = busT.size[0] * SCALE
@@ -114,18 +114,12 @@ export default function CraftFallback({ config, locale, mode, selectedField, rea
   const bayFloor = cutaway ? bayBottom : floorY
   const ribCount = cutaway ? 1 : 3
 
-  const description = hangar
-    ? (locale === 'en'
-      ? `Schematic spacecraft in an assembly bay: ${bus.label.en}, ${payload.label.en}, ${array.label.en}, ${radio.label.en}, ${craft.battery.nominalWh} Wh battery. Work stand, gantry and steel ribs behind. Not to scale.`
-      : `Схематичний апарат у складальному боксі: ${bus.label.ua}, ${payload.label.ua}, ${array.label.ua}, ${radio.label.ua}, батарея ${craft.battery.nominalWh} Вт·год. Позаду — робоча підставка, ферма й сталеві ребра. Не в масштабі.`)
-    : (locale === 'en'
-      ? `Schematic spacecraft: ${bus.label.en}, ${payload.label.en}, ${array.label.en}, ${radio.label.en}, ${craft.battery.nominalWh} Wh battery. Earth limb background. Not to scale.`
-      : `Схематичний апарат: ${bus.label.ua}, ${payload.label.ua}, ${array.label.ua}, ${radio.label.ua}, батарея ${craft.battery.nominalWh} Вт·год. Фон — край Землі. Не в масштабі.`)
+  const installedDescription = (['bus','payload','array','radio','battery'] as const).filter(key => config[`${key}Id`]).map(key => craft[key].label[locale]).join(', ')
 
-  const halo = (field: PartField) => selectedField === field ? bus.accent : null
+  const halo = (field: PartField) => config[field] && selectedField === field ? bus.accent : null
 
   const wing = (side: 1 | -1) => {
-    if (arrayT.mount !== 'deploy') return null
+    if (!config.arrayId || arrayT.mount !== 'deploy') return null
     const x0 = side === 1
       ? frontX + w + dx * 0.25 + yokePx
       : frontX + dx * 0.15 - yokePx - spanPx
@@ -291,7 +285,7 @@ export default function CraftFallback({ config, locale, mode, selectedField, rea
   }
 
   return <div className="craft-fallback" data-renderer="svg" data-mode={mode} {...(reason ? { 'data-fallback-reason': reason } : {})}>
-    <svg viewBox={viewBox} role="img" aria-label={description}>
+    <svg viewBox={viewBox} role="img" aria-label={`${installedDescription || (locale === 'en' ? 'No installed hardware' : 'Обладнання не встановлено')}. ${locale === 'en' ? 'Illustrative assembly view' : 'Ілюстративний вигляд складання'}`}>
       <defs>
         <radialGradient id={`${uid}-sky`} cx="35%" cy="18%" r="90%">
           <stop offset="0%" stopColor="#173c58" />
@@ -396,7 +390,7 @@ export default function CraftFallback({ config, locale, mode, selectedField, rea
       {wing(-1)}
       {wing(1)}
 
-      <g opacity={cutaway ? 0.26 : 1}>
+      {config.busId && <g data-hardware={config.busId} opacity={cutaway ? 0.26 : 1}>
         <polygon points={`${frontX},${frontY} ${frontX + dx},${frontY + dy} ${frontX + dx + w},${frontY + dy} ${frontX + w},${frontY}`} fill="#d9e1e5" stroke="#7e919c" strokeWidth="1.5" />
         <polygon points={`${frontX + w},${frontY} ${frontX + w + dx},${frontY + dy} ${frontX + w + dx},${frontY + dy + h} ${frontX + w},${frontY + h}`} fill="#5d6d78" stroke="#7e919c" strokeWidth="1.5" />
         <rect x={frontX} y={frontY} width={w} height={h} fill={`url(#${uid}-metal)`} stroke="#6d7f89" strokeWidth="2" />
@@ -407,21 +401,22 @@ export default function CraftFallback({ config, locale, mode, selectedField, rea
         {Array.from({ length: bus.bands }, (_, index) => (
           <line key={index} x1={frontX + 2} y1={frontY + (h / (bus.bands + 1)) * (index + 1)} x2={frontX + w - 2} y2={frontY + (h / (bus.bands + 1)) * (index + 1)} stroke="#475862" strokeWidth="1.6" opacity="0.65" />
         ))}
-        {arrayT.mount === 'body' && <g>
+        {config.arrayId && arrayT.mount === 'body' && <g>
           <rect x={frontX + 6} y={frontY + 8} width={w * 0.42} height={h * 0.6} fill={`url(#${uid}-cells)`} stroke={array.accent} strokeWidth="1.5" />
           <rect x={frontX + w * 0.55} y={frontY + 8} width={w * 0.37} height={h * 0.6} fill={`url(#${uid}-cells)`} stroke={array.accent} strokeWidth="1.5" />
         </g>}
         <circle cx={frontX + w - 9} cy={frontY + 10} r="3.2" fill={bus.accent} />
-      </g>
+      </g>}
+      {config.arrayId && !config.busId && arrayT.mount === 'body' && <rect data-hardware={config.arrayId} x={frontX} y={frontY} width={w} height={h} fill={`url(#${uid}-cells)`} />}
 
-      {payload.optics === 'relay'
+      {config.payloadId && (payload.optics === 'relay'
         ? <g>
           <rect x={topCenterX - (payload.buffer?.[0] ?? 0.4) * SCALE / 2} y={barrelTop + 6} width={(payload.buffer?.[0] ?? 0.4) * SCALE} height={(payload.buffer?.[1] ?? 0.3) * SCALE} rx="3" fill="#26343e" stroke={payload.accent} strokeWidth="2" />
           <rect x={topCenterX - 8} y={barrelTop + 12} width="16" height="6" rx="1" fill={`url(#${uid}-gold)`} />
           <circle cx={topCenterX + 12} cy={barrelTop + 20} r="2.4" fill={payload.accent} />
           <circle cx={topCenterX + 12} cy={barrelTop + 28} r="2.4" fill="#7fd2b8" />
         </g>
-        : <g>
+        : <g data-hardware={config.payloadId}>
           <rect x={barrelX - 4} y={frontY + dy / 2 - 5} width={barrelW + 8} height="9" rx="2" fill="#8f9ba3" />
           <rect x={barrelX} y={barrelTop} width={barrelW} height={barrelH + 8} rx={barrelW * 0.18} fill="#333f48" stroke="#a4b2ba" strokeWidth="1.6" />
           <ellipse cx={topCenterX} cy={barrelTop} rx={barrelW / 2} ry={barrelW * 0.16} fill={payload.lensTone} stroke="#dbe6ea" strokeWidth="1.4" />
@@ -432,11 +427,11 @@ export default function CraftFallback({ config, locale, mode, selectedField, rea
             <line key={index} x1={barrelX - 10} y1={barrelTop + 12 + index * 9} x2={barrelX - 2} y2={barrelTop + 12 + index * 9} stroke="#d9e2e6" strokeWidth="2" />
           ))}
           <text x={topCenterX} y={barrelTop - 10} fill={payload.accent} fontSize="11" textAnchor="middle" fontFamily="ui-monospace, monospace">{payload.short}</text>
-        </g>}
+        </g>)}
 
-      {antenna()}
+      {config.radioId && <g data-hardware={config.radioId}>{antenna()}</g>}
 
-      {cutaway && <g>
+      {config.batteryId && (cutaway || !config.busId) && <g data-hardware={config.batteryId}>
         <rect x={packX - 5} y={packY - 5} width={packW + 10} height={packH + packD * 0.2 + 10} rx="3" fill="none" stroke={bus.accent} strokeWidth="1.5" strokeDasharray="7 5" />
         <line x1={frontX + w + 4} y1={packY + packH / 2} x2={packX} y2={packY + packH / 2} stroke={bus.accent} strokeWidth="2" strokeDasharray="5 4" />
         <polygon points={`${packX},${packY} ${packX + packD * 0.22},${packY - packD * 0.14} ${packX + packW + packD * 0.22},${packY - packD * 0.14} ${packX + packW},${packY}`} fill="#7f8f99" stroke="#c6d2d8" strokeWidth="1" />

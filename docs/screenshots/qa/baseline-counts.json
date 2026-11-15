@@ -1,0 +1,86 @@
+[
+  {
+    "sha": "2e92cb49a6be256d32128d2433697fa79eaa5bd2",
+    "locale": "en",
+    "viewport": "desktop",
+    "width": 1440,
+    "text": 100,
+    "counts": {
+      "menu": 4,
+      "hangar": 9,
+      "debrief": 9,
+      "missions": 17,
+      "research": 61
+    }
+  },
+  {
+    "sha": "2e92cb49a6be256d32128d2433697fa79eaa5bd2",
+    "locale": "en",
+    "viewport": "phone",
+    "width": 390,
+    "text": 100,
+    "counts": {
+      "menu": 4,
+      "hangar": 9,
+      "debrief": 9,
+      "missions": 17,
+      "research": 61
+    }
+  },
+  {
+    "sha": "2e92cb49a6be256d32128d2433697fa79eaa5bd2",
+    "locale": "en",
+    "viewport": "reflow",
+    "width": 320,
+    "text": 200,
+    "counts": {
+      "menu": 4,
+      "hangar": 9,
+      "debrief": 9,
+      "missions": 17,
+      "research": 61
+    }
+  },
+  {
+    "sha": "2e92cb49a6be256d32128d2433697fa79eaa5bd2",
+    "locale": "ua",
+    "viewport": "desktop",
+    "width": 1440,
+    "text": 100,
+    "counts": {
+      "menu": 4,
+      "hangar": 9,
+      "debrief": 9,
+      "missions": 17,
+      "research": 61
+    }
+  },
+  {
+    "sha": "2e92cb49a6be256d32128d2433697fa79eaa5bd2",
+    "locale": "ua",
+    "viewport": "phone",
+    "width": 390,
+    "text": 100,
+    "counts": {
+      "menu": 4,
+      "hangar": 9,
+      "debrief": 9,
+      "missions": 17,
+      "research": 61
+    }
+  },
+  {
+    "sha": "2e92cb49a6be256d32128d2433697fa79eaa5bd2",
+    "locale": "ua",
+    "viewport": "reflow",
+    "width": 320,
+    "text": 200,
+    "counts": {
+      "menu": 4,
+      "hangar": 9,
+      "debrief": 9,
+      "missions": 17,
+      "research": 61
+    }
+  }
+]

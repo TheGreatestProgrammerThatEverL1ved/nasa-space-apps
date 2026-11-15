@@ -1,6 +1,8 @@
 /** Local progression only. Credits never alter engineering USD or evaluator gates. */
 import type { EvaluationContext, EvaluationReport, Labels, MissionConfiguration } from '../engine/types'
 import { MISSIONS } from '../data/scenarios'
+import { PLAYER_MISSIONS } from '../data/player/missions'
+import { PLAYER_TRADEOFFS } from '../data/player/catalog'
 import { configurationKey, evaluateMission } from '../engine/evaluate'
 
 /** Retain the old key; migrate in memory, write v3 on the next progress change. */
@@ -32,6 +34,10 @@ export const CAMPAIGN_SHOP: readonly ShopItem[] = [
     en: 'Receive/store package for Carry the Signal. Needs owned X-band as well; no camera or optical geometry. Refund an optional purchase if necessary.',
     ua: 'Пакет приймання/зберігання для «Доставте сигнал». Також потрібен власний X-діапазон; без камери й оптичної геометрії. За потреби поверніть необов’язкову покупку.',
   } },
+  { partId:'arr-fold-75',field:'arrayId',prerequisiteId:'arr-deploy-l',credits:60,tradeoff:PLAYER_TRADEOFFS['arr-fold-75']! },
+  { partId:'bat-pack-80',field:'batteryId',prerequisiteId:'bus-12u',credits:40,tradeoff:PLAYER_TRADEOFFS['bat-pack-80']! },
+  { partId:'rf-x-eco',field:'radioId',prerequisiteId:'rf-s',credits:80,tradeoff:PLAYER_TRADEOFFS['rf-x-eco']! },
+  { partId:'pl-thermal-survey',field:'payloadId',prerequisiteId:'pl-thermal',credits:80,tradeoff:PLAYER_TRADEOFFS['pl-thermal-survey']! },
 ]
 export const CAMPAIGN_FOUNDATIONS = [
   { partId: 'bus-12u', field: 'busId', prerequisiteId: null, tradeoff: {
@@ -96,7 +102,8 @@ export function parseCampaign(raw: string | null): CampaignProgress {
     const data = value as Record<string, unknown>
     if (![1, 2, 3].includes(data.version as number) || !Array.isArray(data.completedMissionIds) || !Array.isArray(data.unlockedPartIds)) return EMPTY_CAMPAIGN
     const missionIds: readonly string[] = data.version === 1 ? ['wildfire', 'urban-heat'] : CAMPAIGN_CONTRACTS.map(c => c.missionId)
-    const partIds: readonly string[] = data.version === 1 ? ['rf-x', 'arr-deploy-xl'] : CAMPAIGN_SHOP.map(p => p.partId)
+    const partIds: readonly string[] = data.version === 1 ? ['rf-x', 'arr-deploy-xl']
+      : (data.version === 2 ? CAMPAIGN_SHOP.slice(0,4) : CAMPAIGN_SHOP).map(p => p.partId)
     if (!data.completedMissionIds.every(id => typeof id === 'string' && missionIds.includes(id))
       || !data.unlockedPartIds.every(id => typeof id === 'string' && partIds.includes(id))) return EMPTY_CAMPAIGN
     const completed = [...new Set(data.completedMissionIds)] as string[]
@@ -132,8 +139,11 @@ export function awardCampaignPass(progress: CampaignProgress, report: Evaluation
     || !campaignOwnsConfiguration(progress, report.config)) return progress
   const mission = MISSIONS.find(m => m.id === missionId)
   if (!mission) return progress
-  const context = campaignContext(mission.context, progress)
-  if (report.configurationKey !== configurationKey(report.config, context)) return progress
+   // Reference-tool reports retain their old revision; player reports bind to the
+   // explicit balance revision. Neither can be relabelled into the other.
+   const contexts = [mission, PLAYER_MISSIONS.find(m=>m.id===missionId)!].map(m=>campaignContext(m.context,progress))
+   const context = contexts.find(c=>report.configurationKey===configurationKey(report.config!,c))
+   if (!context) return progress
   const current = evaluateMission(report.config, context)
   if (current.outcome !== 'MODEL_PASS_PROVISIONAL' || current.validation.kind !== 'valid') return progress
   const reward = CAMPAIGN_CONTRACTS.find(c => c.missionId === missionId)!.reward
@@ -154,6 +164,7 @@ export function campaignContext(context: EvaluationContext, progress: CampaignPr
   const available = (id: string) => !CAMPAIGN_SHOP.some(p => p.partId === id) || progress.unlockedPartIds.includes(id)
   return { ...context, catalogRevision: `${context.catalogRevision}:campaign:${[...progress.unlockedPartIds].sort().join(',') || 'starter'}`,
     catalog: { ...context.catalog, arrays: context.catalog.arrays.filter(p => available(p.id)), radios: context.catalog.radios.filter(p => available(p.id)),
+      batteries: context.catalog.batteries.filter(p=>available(p.id)),
       payloads: context.catalog.payloads.filter(p => available(p.id)),
       ...(context.catalog.relayPayloads ? { relayPayloads: context.catalog.relayPayloads.filter(p => available(p.id)) } : {}),
     } }

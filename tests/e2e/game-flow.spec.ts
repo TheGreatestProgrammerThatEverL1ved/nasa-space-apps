@@ -1,9 +1,11 @@
 import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { assembleHangar, assembleTraining, discloseReport, FIRST_PLAYER, STARTER_PASS } from './assembly'
 
 for (const locale of ['en', 'ua'] as const) {
   const en = locale === 'en'
   test(`new game flow: auto academy, illustrated Earth selector and four actual repair paths (${locale})`, async ({ page }) => {
+    test.setTimeout(60000) // Eight explicit assemblies / launches, no pre-fitted starts.
     const errors: string[] = []
     page.on('pageerror', e => errors.push(e.message))
     page.on('console', m => { if (m.type() === 'error') errors.push(m.text()) })
@@ -14,6 +16,9 @@ for (const locale of ['en', 'ua'] as const) {
     await expect(academy).toBeVisible()
     if (!en) await academy.getByRole('button', { name: 'Українська', exact: true }).click()
     await academy.locator('[data-guide-mission="wildfire"]').click()
+    await expect(page.getByTestId('guide-progress')).toHaveText('0/8')
+    await expect(academy.getByRole('button', { name: en ? 'Launch guided simulation' : 'Запустити навчальну симуляцію', exact: true })).toBeDisabled()
+    await assembleTraining(page)
     await academy.getByRole('button', { name: en ? 'Launch guided simulation' : 'Запустити навчальну симуляцію', exact: true }).click()
     await expect(page.getByTestId('guide-latency')).toContainText(/7[.,]1/)
     await academy.locator('[data-guide-part="gs-network"]').click()
@@ -37,6 +42,7 @@ for (const locale of ['en', 'ua'] as const) {
     const launch = async () => {
       await page.getByRole('button', { name: en ? 'Launch' : 'Запуск', exact: true }).click()
       await expect(page.getByTestId('verdict')).toBeFocused()
+      await discloseReport(page)
     }
     const repair = async () => { await page.locator('.repair-cta').click() }
     const gallery = async () => {
@@ -44,6 +50,7 @@ for (const locale of ['en', 'ua'] as const) {
       await page.getByRole('button', { name: en ? /Missions/ : /Місії/ }).click()
     }
     await choose('wildfire')
+    await assembleHangar(page)
     await launch()
     await expect(page.getByTestId('latency-value')).toContainText(/7[.,]1/)
     await page.screenshot({ path: `docs/screenshots/night03-debrief-failure-${locale}.png`, fullPage: true })
@@ -55,6 +62,7 @@ for (const locale of ['en', 'ua'] as const) {
     await page.screenshot({ path: `docs/screenshots/night03-debrief-pass-${locale}.png`, fullPage: true })
     await gallery()
     await choose('urban-heat')
+    await assembleHangar(page,{...FIRST_PLAYER,scenarioId:'urban-heat',radioId:'rf-s',groundId:'gs-network'})
     await launch()
     await repair()
     await equip(en ? 'Radio package' : 'Радіопакет', 'rf-x')
@@ -63,11 +71,13 @@ for (const locale of ['en', 'ua'] as const) {
     await expect(page.getByTestId('verdict')).toContainText(en ? /provisional/i : /попередн|умовн/i)
     await gallery()
     await choose('visible-mapping')
+    await assembleHangar(page,{...FIRST_PLAYER,scenarioId:'visible-mapping',payloadId:'pl-visible-8',radioId:'rf-s',groundId:'gs-network'})
     await equip(en ? 'Payload' : 'Корисне навантаження', 'pl-visible-35')
     await launch()
     await expect(page.getByTestId('verdict')).toContainText(en ? /provisional/i : /попередн|умовн/i)
     await gallery()
     await choose('packet-relay')
+    await assembleHangar(page,{...FIRST_PLAYER,scenarioId:'packet-relay',payloadId:'pl-relay'})
     await launch()
     await repair()
     await page.locator('[data-part-id="gs-network"]').click()
@@ -98,15 +108,18 @@ test('fresh keyboard skip/replay persists and Help preserves live draft and froz
   await page.getByRole('button', { name: /Customize/ }).focus()
   await page.keyboard.press('Enter')
   await expect(page.locator('#hangar-title')).toBeFocused()
+  await assembleHangar(page)
   await page.getByRole('button', { name: 'Launch', exact: true }).focus()
   await page.keyboard.press('Enter')
   await expect(page.getByTestId('verdict')).toBeFocused()
+  await discloseReport(page)
   await page.locator('.repair-cta').focus()
   await page.keyboard.press('Enter')
   await expect(page.locator('[data-part-id="gs-single"]')).toBeFocused()
   await page.locator('[data-part-id="gs-network"]').focus()
   await page.keyboard.press('Enter')
   await page.getByRole('button', { name: 'Last debrief' }).click()
+  await discloseReport(page)
   await expect(page.getByTestId('stale-notice')).toBeVisible()
   await expect(page.getByTestId('latency-value')).toContainText('7.1')
   await page.keyboard.press('?')
@@ -130,6 +143,7 @@ test('animated launch freezes and settles once across skip, locale, menu return 
   await expect(page.locator('.craft-scene')).toHaveAttribute('data-renderer', 'webgl')
   await page.getByRole('button', { name: /Campaign/ }).click()
   await page.locator('[data-mission-id="wildfire"]').getByRole('button').last().click()
+  await assembleHangar(page,STARTER_PASS)
   await page.getByRole('button', { name: 'Launch', exact: true }).dblclick()
   await expect(page.locator('.launch-sequence')).toBeVisible()
   await expect(page.locator('.launch-sequence .craft-scene')).toHaveAttribute('data-renderer', 'webgl')
@@ -170,6 +184,7 @@ test('animated launch freezes and settles once across skip, locale, menu return 
   const academy = page.getByRole('dialog')
   await academy.getByRole('button', { name: 'Почати / повторити навчальну місію' }).click()
   await academy.locator('[data-guide-mission="wildfire"]').click()
+  await assembleTraining(page)
   await academy.getByRole('button', { name: 'Запустити навчальну симуляцію' }).click()
   await academy.locator('[data-guide-part="gs-network"]').click()
   await academy.getByRole('button', { name: 'Перевірити виправлений проєкт' }).click()
@@ -180,6 +195,8 @@ test('failed preflight visibly holds instead of announcing flight', async ({ pag
   await page.addInitScript(() => localStorage.setItem('mission-forge.academy.v1', 'seen'))
   await page.goto('./')
   await page.getByRole('button', { name: /Customize/ }).click()
+  await assembleHangar(page)
+  await page.locator('[data-slot="arrayId"]').click()
   await page.locator('[data-part-id="arr-body"]').click()
   await page.getByRole('button', { name: 'Launch', exact: true }).click()
   await expect(page.locator('.launch-hold')).toBeVisible()
@@ -204,6 +221,7 @@ for (const locale of ['en', 'ua'] as const) {
     expect(guideScan.violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) }))).toEqual([])
     await page.screenshot({ path: `docs/screenshots/night03-academy-reflow-${locale}.png` })
     await academy.locator('[data-guide-mission="wildfire"]').click()
+    await assembleTraining(page)
     await academy.getByRole('button', { name: en ? 'Launch guided simulation' : 'Запустити навчальну симуляцію', exact: true }).click()
     await academy.locator('[data-guide-part="gs-network"]').click()
     await academy.getByRole('button', { name: en ? 'Run repaired design' : 'Перевірити виправлений проєкт', exact: true }).click()
@@ -216,7 +234,9 @@ for (const locale of ['en', 'ua'] as const) {
     expect(galleryScan.violations.map(v => v.id)).toEqual([])
     await page.screenshot({ path: `docs/screenshots/night03-gallery-reflow-${locale}.png` })
     await page.locator('[data-mission-id="wildfire"]').getByRole('button').last().click()
+    await assembleHangar(page)
     await page.getByRole('button', { name: en ? 'Launch' : 'Запуск', exact: true }).click()
+    await discloseReport(page)
     await page.locator('.drawer').first().locator(':scope > summary').click()
     const overflowing = await page.evaluate(() => [...document.querySelectorAll('body *')].filter(el => el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().right > innerWidth + 1)
       .map(el => ({ tag: el.tagName, cls: el.className, text: el.textContent?.slice(0, 60), right: el.getBoundingClientRect().right })).slice(0, 20))

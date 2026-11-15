@@ -2,6 +2,14 @@
 
 This guide covers the audited wildfire mission. The current game also offers [urban heat training](scenario-expansion.md) and an [optional local campaign](mission-campaign.md), with the direct mission picker always available.
 
+**Player catalog r1:** fresh Sandbox, Campaign and Academy builds begin empty.
+Select all eight slots, including orbit and launch booking; Research buys
+equipment but never installs it. Clear Build and Remove only clear your
+selections. The [revisioned player layer](player-balance.md) adds provisional
+fictional packages and mission-specific USD caps shown in the hangar. The
+$3M values and original 12U compatibility below describe the preserved
+audited reference context, also used by Academy, not the expanded player caps.
+
 ## Your objective
 
 Design a scheduled **wildfire thermal-anomaly training mission** for a land-management science team. Return useful thermal imagery for follow-up while balancing a complete spacecraft, ground service, orbit, and launch booking.

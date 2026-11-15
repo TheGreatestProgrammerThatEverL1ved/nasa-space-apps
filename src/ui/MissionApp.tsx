@@ -38,10 +38,11 @@ import LiveHangar, { SceneMenu, type GameScreen } from './game/GameScreens'
 import { useOrbitalMotion } from './game/motion'
 import MissionGallery from './game/MissionGallery'
 import LaunchSequence from './game/LaunchSequence'
+import { completeDraft, draftView, emptyDraft, missingSlots, removeSlot, sanitizeDraft, type MissionDraft } from '../engine/draft'
 
 export interface MissionAppProps {
   readonly context: EvaluationContext
-  readonly initialConfiguration: MissionConfiguration
+  readonly initialConfiguration: MissionDraft
   readonly evaluate: ReportProvider
   readonly mission?: MissionDefinition
   readonly missions?: readonly MissionDefinition[]
@@ -50,8 +51,9 @@ export interface MissionAppProps {
   readonly onLocaleChange?: (locale: Locale) => void
   readonly focusMissionPicker?: boolean
   readonly campaignPanel?: ReactNode
+  readonly researchPanel?: ReactNode
   readonly onReport?: (report: EvaluationReport) => void
-  readonly onDraftChange?: (config: MissionConfiguration) => void
+  readonly onDraftChange?: (config: MissionDraft) => void
   readonly ref?: Ref<MissionHandle>
   readonly debriefAction?: ReactNode
   readonly game?: {
@@ -482,6 +484,7 @@ export default function MissionApp({
   onLocaleChange,
   focusMissionPicker = false,
   campaignPanel,
+  researchPanel,
   onReport,
   onDraftChange,
   ref,
@@ -491,7 +494,13 @@ export default function MissionApp({
   const [localLocale, setLocalLocale] = useState<Locale>('en')
   const locale = controlledLocale ?? localLocale
   const setLocale = onLocaleChange ?? setLocalLocale
-  const [draft, setDraft] = useState<MissionConfiguration>(() => ({ ...initialConfiguration }))
+  const [draft, setDraft] = useState<MissionDraft>(() => sanitizeDraft(initialConfiguration, context))
+  const [buildNotice, setBuildNotice] = useState('')
+  const view = draftView(sanitizeDraft(draft, context))
+  const missing = missingSlots(draft, context)
+  const changeDraft = (next: MissionDraft) => {
+    setBuildNotice('');setDraft(next); onDraftChange?.(next); if (report) setStale(true)
+  }
   const [report, setReport] = useState<EvaluationReport | null>(null)
   const [snapshot, setSnapshot] = useState<ReportSnapshot | null>(null)
   const [stale, setStale] = useState(false)
@@ -534,7 +543,7 @@ export default function MissionApp({
   }, [focusMissionPicker])
   useEffect(() => {
     if (!gameScreen) return
-    const id = gameScreen === 'menu' ? 'menu-title' : gameScreen === 'hangar' ? 'hangar-title' : gameScreen === 'debrief' ? 'result-heading' : gameScreen === 'launch' ? 'launch-title' : 'missions-title'
+    const id = gameScreen === 'menu' ? 'menu-title' : gameScreen === 'hangar' ? 'hangar-title' : gameScreen === 'debrief' ? 'result-heading' : gameScreen === 'launch' ? 'launch-title' : gameScreen === 'research' ? 'research-title' : 'missions-title'
     document.getElementById(id)?.focus()
   }, [gameScreen])
 
@@ -555,12 +564,18 @@ export default function MissionApp({
     const value = event.currentTarget.value
     if (draft[field] === value) return
     const next = { ...draft, [field]: value }
+    setBuildNotice('')
     setDraft(next)
     onDraftChange?.(next)
     if (report) setStale(true)
   }
 
   const handleRun = () => {
+    if (!completeDraft(draft, context)) {
+      setBuildNotice(locale === 'en' ? `Select every slot (${8-missing.length}/8).` : `Виберіть усі складові (${8-missing.length}/8).`)
+      if (game) { setSelectedField(missing[0] ?? 'busId'); navigate('hangar') }
+      return
+    }
     if (game && launchLock.current) return
     if (game) launchLock.current = true
     setPhase('debrief')
@@ -628,8 +643,9 @@ export default function MissionApp({
       // player away from the tree. Equipped refunds still repair/focus a slot.
       if (game && request.refund && draft[field.key] !== request.partId) return
       if (!request.refund || draft[field.key] === request.partId) {
-        const next = { ...draft, [field.key]: request.refund ? field.options[0]?.id ?? '' : request.partId }
+        const next = request.refund ? removeSlot(draft, field.key) : { ...draft, [field.key]: request.partId }
         setDraft(next); onDraftChange?.(next)
+        if (request.refund) setBuildNotice(locale === 'en' ? 'Refunded equipment removed. Select a replacement.' : 'Повернуте обладнання знято. Виберіть заміну.')
         if (report) setStale(true)
       }
       inspectPart(field.key)
@@ -643,6 +659,9 @@ export default function MissionApp({
     report?.assumptions.filter((assumption) => !KNOWN_ASSUMPTION_CODES.has(assumption)) ?? []
   // Field provenance comes only from the report's Run-time snapshot.
   const provenanceParts = snapshot?.parts ?? []
+  const ReportDetails = game ? 'details' : 'div'
+  const importantCheck = report?.checks.find(c=>c.status!=='MET')
+  const importantMetric = importantCheck?.actual ?? report?.metrics.latencyHours
 
   const renderCheck = (check: CheckResult) => (
     <li
@@ -703,7 +722,7 @@ export default function MissionApp({
     <div className={game ? 'game-frame' : 'mission-shell'} onClickCapture={event => {
       // A double-click must not retarget its second click to the language/menu
       // controls after the Launch button is replaced by the new screen.
-      if (game && event.detail > 1 && (event.target as HTMLElement).closest('button, a, summary')) {
+      if (game && event.detail > 1 && !(event.target as HTMLElement).closest('.research-screen') && (event.target as HTMLElement).closest('button, a, summary')) {
         event.preventDefault(); event.stopPropagation()
       }
     }}>
@@ -712,6 +731,7 @@ export default function MissionApp({
           <span className="game-brand">MISSION FORGE <span aria-hidden="true">/</span> {game.campaignActive ? (locale === 'en' ? 'CAMPAIGN' : 'КАМПАНІЯ') : (locale === 'en' ? 'SANDBOX' : 'ПІСОЧНИЦЯ')}</span>
           {game.screen === 'menu' && <a className="engineering-entry" href="?view=engineering">{locale === 'en' ? 'Engineering console' : 'Інженерна консоль'}</a>}
           {game.screen !== 'menu' && <button onClick={() => navigate('menu')}>{locale === 'en' ? '← Main menu' : '← Головне меню'}</button>}
+          {game.campaignActive && game.screen !== 'menu' && game.screen !== 'research' && <button onClick={() => navigate('research')}>{locale === 'en' ? 'Research' : 'Дослідження'}</button>}
           {report && ['menu', 'hangar'].includes(game.screen) && <button onClick={() => navigate('debrief')}>{locale === 'en' ? 'Last debrief' : 'Останній підсумок'}</button>}
           <Academy locale={locale} onLocaleChange={setLocale} replaySignal={tutorialSignal} compact autoStart onFirstRunExit={() => navigate('menu')} onOpenChange={setAcademyOpen} />
           <div className="locale-switch" role="group" aria-label={t('app.language')}>
@@ -719,22 +739,26 @@ export default function MissionApp({
             <button aria-pressed={locale === 'ua'} onClick={() => setLocale('ua')}>Українська</button>
           </div>
         </header>
-        {game.screen === 'menu' && <SceneMenu config={draft} locale={locale} missionName={missionName}
+        {game.screen === 'menu' && <SceneMenu config={view} locale={locale} missionName={missionName}
           campaignActive={game.campaignActive} motion={motion && !academyOpen} onMotion={() => setMotion(!motion)}
           onNavigate={navigate} onCampaign={game.onCampaign}
           onTutorial={() => setTutorialSignal(n => n + 1)} />}
-        {game.screen === 'hangar' && <LiveHangar config={draft} context={context} locale={locale}
-          selectedField={selectedField} onInspect={setSelectedField} motion={motion} onLaunch={handleRun}
+        {game.screen === 'hangar' && <LiveHangar config={view} context={context} locale={locale}
+           selectedField={selectedField} onInspect={setSelectedField} motion={motion} onLaunch={handleRun}
+           onClear={() => { changeDraft(emptyDraft(draft.scenarioId)); setBuildNotice('') }}
+           onRemove={field => changeDraft(removeSlot(draft,field))}
+           notice={buildNotice}
           onEquip={(field, id) => {
             if (draft[field] === id) return
-            const next = { ...draft, [field]: id }
+             const next = { ...draft, [field]: id }
+             setBuildNotice('')
             setDraft(next); onDraftChange?.(next); if (report) setStale(true)
           }} />}
         {game.screen === 'missions' && mission && missions && onMissionChange && <>
           <MissionGallery missions={missions} locale={locale} selectedMissionId={mission.id}
             onChoose={onMissionChange} contracts={game.campaignActive ? game.contracts : undefined} />
-          {game.campaignActive && campaignPanel}
         </>}
+        {game.screen === 'research' && researchPanel}
         {game.screen === 'launch' && frozenRun && report && <LaunchSequence config={frozenRun} report={report} locale={locale}
           missionName={missionName} onFinish={finishLaunch} />}
       </>}
@@ -854,8 +878,8 @@ export default function MissionApp({
       {!game && <Academy locale={locale} onLocaleChange={setLocale} />}
 
       <main className={game ? 'game-debrief' : 'command-grid'}>
-        {game && <header className="debrief-mission"><p className="game-eyebrow">{locale === 'en' ? 'FROZEN MISSION REPORT' : 'ЗАФІКСОВАНИЙ ЗВІТ МІСІЇ'}</p>
-          <h1>{missionName}</h1><p>{mission?.brief[locale] ?? t('app.brief')}</p>
+        {game && <header className="debrief-mission">
+          <h1>{missionName}</h1>
           <details><summary>{locale === 'en' ? 'Objective & requirements' : 'Мета й вимоги'}</summary><p>{mission?.goals[locale]}</p></details>
         </header>}
         {!game && campaignPanel}
@@ -928,7 +952,9 @@ export default function MissionApp({
           <p className="section-kicker">{tc('control.stepBuild', 'Build')}</p>
           <h2 id="config-heading" tabIndex={-1}>{t('config.title')}</h2>
           <p>{t('config.intro')}</p>
-          <Spacecraft config={draft} context={context} locale={locale} onInspect={inspectPart} />
+           <p role="status">{8-missing.length}/8 · {buildNotice || (missing.length ? (locale === 'en' ? 'Select all eight slots.' : 'Виберіть усі вісім складових.') : '')}</p>
+           <button onClick={() => changeDraft(emptyDraft(draft.scenarioId))}>{locale === 'en' ? 'Clear Build' : 'Очистити проєкт'}</button>
+           <Spacecraft config={view} context={context} locale={locale} onInspect={inspectPart} />
           <div
             className="select-grid"
             role="group"
@@ -940,18 +966,20 @@ export default function MissionApp({
                 <select
                   id={field.key}
                   ref={element => { controlRefs.current[field.key] = element }}
-                  value={draft[field.key]}
+                  value={draft[field.key] ?? ''}
                   aria-describedby={
                     field.key === 'groundId' ? 'ground-hint contact-lesson' : undefined
                   }
                   onChange={(event) => handleSelect(field.key, event)}
                 >
+                  <option value="">{locale === 'en' ? 'Select…' : 'Виберіть…'}</option>
                   {field.options.map((option) => (
                     <option key={option.id} value={option.id}>
                       {option.label[locale]}
                     </option>
                   ))}
                 </select>
+                <button onClick={() => changeDraft(removeSlot(draft,field.key))}>{locale === 'en' ? 'Remove' : 'Зняти'}</button>
                 {field.key === 'groundId' && (
                   <p id="ground-hint" className="field-hint">
                     {groundHint}
@@ -964,6 +992,7 @@ export default function MissionApp({
             <button
               type="button"
               className="run-button"
+              disabled={missing.length > 0}
               aria-describedby="run-note"
               onClick={handleRun}
             >
@@ -1062,6 +1091,17 @@ export default function MissionApp({
           >
             {report ? t(OUTCOME_MESSAGE[report.outcome]) : t('results.placeholderTitle')}
           </h2>
+          {game && report && <div className="compact-debrief" data-testid="compact-debrief">
+            <span>{locale === 'en' ? 'Provisional model · not flight qualification' : 'Попередня модель · не льотна кваліфікація'}</span>
+            <p data-testid="important-number">{importantMetric ? formatMetric(importantMetric,locale) : t('metric.absent')}</p>
+            {importantCheck && <p>{translateOptional(locale,`check.${importantCheck.checkId}`,t('check.generic'))}</p>}
+            {isStale && <p role="status">{t('results.staleNotice')}</p>}
+            <button className="game-primary" onClick={()=>inspectPart(repairDestination(report.diagnostics[0]))}>
+              {report.outcome==='MODEL_PASS_PROVISIONAL' ? (locale==='en'?'Continue designing':'Продовжити проєктування') : t('results.backToConfig')}
+            </button>
+          </div>}
+          <ReportDetails className="full-report">
+          {game && <summary>{locale==='en'?'Full report & next contracts':'Повний звіт і наступні контракти'}</summary>}
 
           {isStale && report && (
             <p className="stale-notice" data-testid="stale-notice" role="status">
@@ -1483,6 +1523,7 @@ export default function MissionApp({
               </details>
             </>
           )}
+          </ReportDetails>
         </section>
       </main>
       </>}

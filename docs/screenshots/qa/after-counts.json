@@ -1,0 +1,92 @@
+[
+  {
+    "locale": "en",
+    "viewport": "desktop",
+    "width": 1440,
+    "text": 100,
+    "counts": {
+      "menu": 1,
+      "hangar-empty": 1,
+      "hangar": 1,
+      "debrief-failure": 3,
+      "debrief": 2,
+      "missions": 4,
+      "research": 1
+    }
+  },
+  {
+    "locale": "en",
+    "viewport": "phone",
+    "width": 390,
+    "text": 100,
+    "counts": {
+      "menu": 1,
+      "hangar-empty": 1,
+      "hangar": 1,
+      "debrief-failure": 3,
+      "debrief": 2,
+      "missions": 4,
+      "research": 1
+    }
+  },
+  {
+    "locale": "en",
+    "viewport": "reflow",
+    "width": 320,
+    "text": 200,
+    "counts": {
+      "menu": 1,
+      "hangar-empty": 1,
+      "hangar": 1,
+      "debrief-failure": 3,
+      "debrief": 2,
+      "missions": 4,
+      "research": 1
+    }
+  },
+  {
+    "locale": "ua",
+    "viewport": "desktop",
+    "width": 1440,
+    "text": 100,
+    "counts": {
+      "menu": 1,
+      "hangar-empty": 1,
+      "hangar": 1,
+      "debrief-failure": 3,
+      "debrief": 2,
+      "missions": 4,
+      "research": 1
+    }
+  },
+  {
+    "locale": "ua",
+    "viewport": "phone",
+    "width": 390,
+    "text": 100,
+    "counts": {
+      "menu": 1,
+      "hangar-empty": 1,
+      "hangar": 1,
+      "debrief-failure": 3,
+      "debrief": 2,
+      "missions": 4,
+      "research": 1
+    }
+  },
+  {
+    "locale": "ua",
+    "viewport": "reflow",
+    "width": 320,
+    "text": 200,
+    "counts": {
+      "menu": 1,
+      "hangar-empty": 1,
+      "hangar": 1,
+      "debrief-failure": 3,
+      "debrief": 2,
+      "missions": 4,
+      "research": 1
+    }
+  }
+]

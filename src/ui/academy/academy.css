@@ -89,3 +89,8 @@
 @media (prefers-reduced-motion: reduce) {
   .academy-guide *, .academy-guide *::before, .academy-guide *::after { animation: none !important; transition: none !important; }
 }
+.guide-assembly { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem; margin:1rem 0; }
+.guide-assembly > p,.guide-assembly > strong { grid-column:1/-1; }
+.guide-assembly label { display:grid; gap:.2rem; min-width:0; font-size:.75rem; }
+.guide-assembly select { max-width:100%; min-width:0; padding:.4rem; }
+@media(max-width:650px) { .guide-assembly { grid-template-columns:minmax(0,1fr); } }

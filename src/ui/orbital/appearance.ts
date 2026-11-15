@@ -99,7 +99,7 @@ export const UNKNOWN_APPEARANCE: UnknownAppearance = {
   },
 }
 
-export const APPEARANCES: Readonly<Record<string, Appearance>> = {
+const BASE_APPEARANCES: Readonly<Record<string, Appearance>> = {
   'bus-3u': {
     kind: 'bus', id: 'bus-3u', units: 3,
     label: { en: '3U bus', ua: 'Платформа 3U' }, short: '3U', accent: '#5fd0c1',
@@ -216,6 +216,35 @@ export const APPEARANCES: Readonly<Record<string, Appearance>> = {
     label: { en: '50 kg SSO rideshare slot', ua: 'Слот rideshare 50 кг на SSO' }, accent: '#d99a6c',
     note: { en: 'Launch booking: previewed separately, never attached to the spacecraft.', ua: 'Бронювання запуску: окремий попередній огляд, не деталь на апараті.' },
   },
+}
+
+/** Fictional packages share the renderer, not just a new name or color. */
+const variant = <T extends Appearance>(baseId:string, changes:Partial<T> & Pick<T,'id'|'label'>):T =>
+  ({...BASE_APPEARANCES[baseId],...changes}) as T
+export const APPEARANCES: Readonly<Record<string, Appearance>> = {
+  ...BASE_APPEARANCES,
+  'bus-12u-light':variant<BusAppearance>('bus-12u',{id:'bus-12u-light',label:{en:'Skeletal 12U',ua:'Полегшена 12U'},short:'LIGHT',
+    size:[.98,.92,1.74],radiatorCells:3,bands:5,goldFoil:true}),
+  'bus-12u-vault':variant<BusAppearance>('bus-12u',{id:'bus-12u-vault',label:{en:'Vault 12U',ua:'Сховище 12U'},short:'VAULT',
+    size:[1.08,1.1,1.74],radiatorCells:10,bands:4}),
+  'arr-fold-40':variant<ArrayAppearance>('arr-deploy-l',{id:'arr-fold-40',label:{en:'Fan wings',ua:'Віялові крила'},short:'40',
+    span:1.18,chord:.8,segments:4,rows:2,cols:5,yoke:.3}),
+  'arr-fold-75':variant<ArrayAppearance>('arr-deploy-l',{id:'arr-fold-75',label:{en:'Accordion wings',ua:'Крила-гармошки'},short:'75',
+    span:1.92,chord:.76,segments:5,rows:4,cols:8,yoke:.32}),
+  'bat-pack-80':variant<BatteryAppearance>('bat-m',{id:'bat-pack-80',label:{en:'Twin pack',ua:'Подвійний блок'},short:'80',
+    nominalWh:80,pack:[.34,.1,.23]}),
+  'bat-pack-180':variant<BatteryAppearance>('bat-m',{id:'bat-pack-180',label:{en:'Stacked pack',ua:'Ярусний блок'},short:'180',
+    nominalWh:180,pack:[.26,.24,.4]}),
+  'rf-s-burst':variant<RadioAppearance>('rf-s',{id:'rf-s-burst',label:{en:'S-band horn',ua:'S-рупор'},short:'S12',
+    antenna:'dish-small',mast:.2,dishRadius:.29}),
+  'rf-x-eco':variant<RadioAppearance>('rf-x',{id:'rf-x-eco',label:{en:'Compact X-band',ua:'Компактний X-діапазон'},short:'X50',
+    antenna:'dish-small',mast:.26,dishRadius:.18}),
+  'pl-thermal-survey':variant<PayloadAppearance>('pl-thermal',{id:'pl-thermal-survey',label:{en:'Wide LWIR',ua:'Ширококутний LWIR'},short:'SURVEY',
+    barrelLength:.38,barrelRadius:.3,rings:2}),
+  'pl-visible-strip':variant<PayloadAppearance>('pl-visible-35',{id:'pl-visible-strip',label:{en:'Wide visible',ua:'Широкосмугова видима'},short:'STRIP',
+    barrelLength:.35,barrelRadius:.19,rings:5}),
+  'gs-regional':variant<ExternalAppearance>('gs-network',{id:'gs-regional',label:{en:'Regional service',ua:'Регіональний сервіс'},short:'REG'}),
+  'gs-priority':variant<ExternalAppearance>('gs-service',{id:'gs-priority',label:{en:'Priority service',ua:'Пріоритетний сервіс'},short:'PRI'}),
 }
 
 export function hasAppearance(id: string): boolean {

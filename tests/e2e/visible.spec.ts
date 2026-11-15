@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { assembleEngineering, FIRST_PLAYER } from './assembly'
 for (const locale of ['en', 'ua'] as const) {
   test(`visible lens tradeoff and capability repair (${locale})`, async ({ page }, testInfo) => {
     await page.goto('./?view=engineering')
     if (locale === 'ua') await page.getByRole('button', { name: 'Українська', exact: true }).click()
     await page.locator('#mission-picker').selectOption('visible-mapping')
+    await assembleEngineering(page,{...FIRST_PLAYER,scenarioId:'visible-mapping',payloadId:'pl-visible-8',radioId:'rf-s',groundId:'gs-network'})
     const run = page.getByRole('button', { name: locale === 'en' ? 'Run mission' : 'Запустити місію', exact: true })
     await run.click()
     await expect(page.getByTestId('requirement-VM-GSD')).toContainText(locale === 'en' ? 'Not met' : 'Не виконано')

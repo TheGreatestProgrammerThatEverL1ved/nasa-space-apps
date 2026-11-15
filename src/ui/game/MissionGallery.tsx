@@ -47,6 +47,10 @@ function countLabel(count: number, locale: Locale) {
   const word = mod10 === 1 && mod100 !== 11 ? 'місія' : mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14) ? 'місії' : 'місій'
   return `${count} ${word}`
 }
+function goalChips(id:string) {
+  return id === 'wildfire' ? ['≤200 m','≥90 km','≤6 h'] : id === 'urban-heat' ? ['≤180 m','≥100 km','≤12 h']
+    : id === 'visible-mapping' ? ['≤60 m','≥80 km','≤12 h'] : ['≥1 GB/day','≤4 h','1 year']
+}
 
 function MissionArt({ mission, locale }: { mission: MissionDefinition; locale: Locale }) {
   const en = locale === 'en'
@@ -157,17 +161,11 @@ export function MissionGallery({ missions, locale, selectedMissionId, onChoose, 
   })).filter(group => group.missions.length > 0)
   return <main className="mission-gallery" aria-labelledby="missions-title">
     <header className="mission-gallery-header">
-      <p className="mission-gallery-eyebrow">{en ? 'EARTH ORBIT / MISSION SELECT' : 'ОРБІТА ЗЕМЛІ / ВИБІР МІСІЇ'}</p>
       <h1 id="missions-title" tabIndex={-1}>{en ? 'Mission gallery' : 'Галерея місій'}</h1>
-      <p className="mission-gallery-intro">{en
-        ? 'Compare the brief, goals and contract before you assemble. All scenarios in this gallery share one Earth-orbit destination.'
-        : 'Порівняйте опис, цілі й контракт перед складанням. Усі сценарії в цій галереї мають одне призначення — орбіту Землі.'}</p>
-      <p className="art-note">{en ? 'Original illustrations — not observations, propagated coverage or flight-qualified hardware.' : 'Оригінальні ілюстрації — не спостереження, розраховане покриття чи льотно кваліфіковане обладнання.'}</p>
     </header>
     {groups.map(group => <section key={group.key} className="mission-gallery-group" aria-labelledby={`destination-${group.key}`}>
       <div className="mission-gallery-group-head">
-        <div><p className="mission-gallery-eyebrow">{en ? 'DESTINATION' : 'ПРИЗНАЧЕННЯ'}</p><h2 id={`destination-${group.key}`}>{group.label[locale]}</h2></div>
-        <p>{group.note[locale]}</p>
+        <h2 id={`destination-${group.key}`}>{group.label[locale]}</h2>
         <span className="mission-gallery-count">{countLabel(group.missions.length, locale)}</span>
       </div>
       <div className="mission-gallery-grid">
@@ -188,12 +186,11 @@ export function MissionGallery({ missions, locale, selectedMissionId, onChoose, 
                 {status && <span className={`mission-gallery-pill ${status}`}>{status === 'completed' ? (en ? 'Cleared' : 'Пройдено') : status === 'available' ? (en ? 'Contract open' : 'Контракт доступний') : (en ? 'Locked' : 'Заблоковано')}</span>}
               </div>
               <h3 id={`${mission.id}-title`}>{mission.title[locale]}</h3>
-              <p className="mission-gallery-premise">{mission.subtitle[locale]}</p>
-              <p className="mission-gallery-objective"><strong>{en ? 'Objective' : 'Завдання'}</strong> {firstSentence(mission.brief[locale])}</p>
-              <div className="mission-gallery-goals"><h4>{en ? 'Goals and limits' : 'Цілі та межі'}</h4><p>{mission.goals[locale]}</p></div>
-              <details className="mission-gallery-brief"><summary>{en ? 'Full mission brief' : 'Повний опис місії'}</summary><p>{mission.brief[locale]}</p></details>
+               <p className="mission-gallery-objective">{firstSentence(mission.brief[locale])}</p>
+               <div className="goal-chips">{goalChips(mission.id).map(chip=><span key={chip}>{chip}</span>)}</div>
+               <details className="mission-gallery-brief"><summary>{en ? 'Mission details' : 'Подробиці місії'}</summary><p>{mission.brief[locale]}</p><p>{mission.goals[locale]}</p><p>{mission.lesson[locale]}</p></details>
               {contract?.reason && <p className="mission-gallery-contract">{contract.reason}</p>}
-              {contract && <p className="mission-gallery-reward"><span>{contract.completed ? (en ? 'Collected once · replay pays 0' : 'Уже отримано · повтор дає 0') : (en ? 'First-clear reward' : 'Нагорода за перше проходження')}</span><strong>{`${contract.reward} ${en ? 'credits' : 'кредитів'}`}</strong></p>}
+               {contract && <span className="mission-gallery-reward">{contract.completed ? '✓' : '+'}{contract.completed ? 0 : contract.reward} {en ? 'credits' : 'кредитів'}</span>}
               <button className={`mission-gallery-action${current ? ' is-current' : ''}`} type="button" disabled={locked} onClick={() => onChoose(mission.id)}>
                 {action}<span aria-hidden="true">↗</span>
               </button>

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { assembleEngineering } from './assembly'
 
 for (const locale of ['en', 'ua'] as const) {
   test(`mission-control repair and accessible disclosures (${locale})`, async ({ page }, testInfo) => {
@@ -9,6 +10,7 @@ for (const locale of ['en', 'ua'] as const) {
     await expect(page.locator('#ground-hint')).toContainText(/3[.,]1/)
     await page.screenshot({ path: testInfo.outputPath(`control-ready-${locale}.png`) })
     const run = page.getByRole('button', { name: locale === 'en' ? 'Run mission' : 'Запустити місію', exact: true })
+    await assembleEngineering(page)
     await run.click()
     await expect(page.getByTestId('verdict')).toBeFocused()
     await expect(page.getByTestId('latency-value')).toBeVisible()

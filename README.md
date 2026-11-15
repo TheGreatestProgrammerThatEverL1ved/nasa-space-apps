@@ -12,13 +12,13 @@ Also playable: **Trace the Shoreline**, a genuinely visible-light lens-selection
 - [Agent workflow and review gates](docs/agent-workflow.md)
 - [Agent entry point](AGENTS.md)
 
-**Current stage: hangar visual review candidate.** A spacecraft-first industrial assembly bay, compact illustrated equipment tray and one inspector refine the completed night-03 orbital flow and branching campaign. [Visual target, locked captures and play path](docs/hangar-visual-target.md). [Overnight handoff](docs/overnight-handoff.md) preserves the earlier checkpoints. Human bilingual scientific/linguistic and assistive-technology review remains pending. Nothing has been deployed.
+**Current stage: QA implementation checkpoint, clean-copy acceptance pending.** Fresh builds are empty; the revisioned player catalog has **35 unique IDs**, including **12 new parts**. Research is a first-level **12-node / eight-purchase** map. [QA dossier](docs/qa-goal-dossier.md) records counts, witnesses, worker limits and verification. [Player balance and exact recipes](docs/player-balance.md) distinguish the new engineering caps from preserved audited contexts. Human bilingual scientific/linguistic and assistive-technology review remains pending. Nothing has been deployed.
 
 ## Run locally
 
-A fresh profile automatically enters **Flight Academy**, with immediate Skip and language selection. Accept its training contract, launch (7.1 h), equip the ground network and rerun (3.1 h provisional pass). The menu's **Tutorial** replays it; **Help / Academy** or **?** preserves your draft, report and credits. Guided runs never pay credits.
+A fresh profile automatically enters **Flight Academy**, with immediate Skip and language selection. Accept its training contract, explicitly select all eight components (including the single station), launch (7.1 h), select the network and rerun (3.1 h provisional pass). Accept/Continue alone never equips. The menu's **Tutorial** replays an empty isolated build; **Help / Academy** or **?** preserves player drafts, reports and credits. Guided runs never pay credits.
 
-Menu, hangar and launch share a lazy procedural 3D spacecraft with actual part-specific shapes, internal battery inspection and a dynamic SVG fallback. A visible menu control disables continuous motion; reduced-motion starts static and skips launch presentation. Earth texture: NASA Earth Observatory. All spacecraft/scenario art is illustrative, not a flight layout. The **Engineering console** link retains the detailed legacy workbench as an optional advanced entry.
+Menu, hangar and launch share a lazy procedural 3D spacecraft with part-specific shapes, internal battery inspection and a dynamic SVG fallback. Only installed hardware is drawn. **Settings & About** controls motion; reduced-motion starts static and skips launch presentation. Earth texture: NASA Earth Observatory. Art is illustrative, not a flight layout. The **Engineering console** retains the advanced workbench and obeys the same empty-build rules.
 
 Node 22.22.2+ (or a compatible supported Node release) and npm:
 
@@ -27,13 +27,13 @@ npm ci
 npm run dev
 ```
 
-Open the printed local URL under `/nasa-space-apps/`. Finish or skip the academy → **Customize**. Choose a subsystem and a real part card to equip it immediately. **Launch** freezes the current design and evaluator result; skip the short presentation at any time. Wildfire's starter has a 7.1 h latency failure: use the debrief's ground-service repair, equip the network, then launch again for a 3.1 h provisional pass. English/Ukrainian controls and results are available.
+Open the printed local URL under `/nasa-space-apps/`. Finish or skip Academy → **Customize**, initially **0/8**. Explicitly choose bus, payload, solar, battery, radio, ground, orbit and launch booking. Remove or Clear Build never substitutes another part. **Launch** enables only at 8/8 and freezes the evaluator result. For a Sandbox repair lesson assemble `bus-12u-light`, `pl-thermal`, `arr-deploy-l`, `bat-m`, `rf-x`, `gs-single`, `orb-sso-low`, `lv-heavy`: launch at 7.1 h, then deliberately change ground to `gs-network` and rerun at 3.1 h. All passes remain provisional.
 
-Choose **Urban Heat Map** for a different challenge. Its starter S-band/network cannot sustain the image stream. Switch **Radio package** to X-band, rerun, then compare **Ground service → single station**: a cheaper provisional pass at 7.1 h is acceptable against urban's 12 h fixture limit, but not wildfire's 6 h limit. Frequent S-band service is another passing approach. All engineering gates remain enforced; no calibrated temperature, air-temperature, street-level or health-risk capability is implied.
+Choose **Urban Heat Map** for a different cap and science brief. Assemble deliberately: S-band/network cannot sustain the thermal stream. The new 50 Mbps X-band alternative reduces radio load/cost; compare a single station's 7.1 h against urban's 12 h limit. A faster radio alone may break the budget. [Named passing/failing recipes](docs/player-balance.md#verified-design-witnesses) cover all four missions. No calibrated temperature, air-temperature, street-level or health-risk capability is implied.
 
 ### Optional campaign
 
-Select **Campaign** from the menu. Clear wildfire, then choose urban or shoreline first; build X-band → receive/store hardware to reach relay. Clear all four to finish. First-clear rewards are **120 /140 /180 /200 credits** (wildfire/urban/shoreline/relay); X-band/visible35 cost100, optional 135 W array120, relay140. The eight-node tree includes four already-owned foundations. Fit owned hardware through the same hangar; refund actual paid amounts to change branches. Every reachable fresh/historical state has a completion route; retries are free. Engineering USD and evaluator requirements remain separate. The campaign menu offers **Sandbox** for immediate unrestricted play.
+Select **Campaign**, assemble from 0/8 and clear wildfire. One free-inventory recipe is the same skeletal bus / thermal camera / large wings / small battery / S-band / frequent service / explicit orbit and booking. Choose urban or shoreline next; build X-band → receive/store to reach relay. Clear all four to finish. First-clear rewards remain **120 /140 /180 /200 credits**. Open **Research** directly from the menu or Campaign navigation: four owned foundations plus eight purchases, yellow buyable / red unavailable / green owned. Hover/focus previews price/effect/locks; touch previews before a second tap buys. Purchasing **never equips**. Select unlocked parts separately in Customize; refunds clear unavailable selections without replacements. [Solvency and migration](docs/mission-campaign.md) preserve historical ledgers, free retries and separate engineering USD.
 
 [Campaign progress](docs/mission-campaign.md) is saved locally, separately from direct play. Re-enter campaign after reload to continue. Direct mission selection remains available; no account is needed.
 
@@ -60,11 +60,13 @@ MISSION_FORGE_PREVIEW=1 npm run test:e2e
 
 ## Delivery scope
 
-Thermal missions retain the frozen audited catalog and seven science/19 engineering checks. New scenario catalogs have explicit provisional evidence records. Relay uses six mission/17 applicable engineering checks, without pretending camera geometry applies. Edited or context-changed results are stale; rerun to evaluate the draft. Rounded boundaries retain full-precision details.
+The audited catalog, contexts, WF-A/B/C and all 15 boundary cases remain unchanged. The explicitly revisioned player layer adds fictional provisional hardware, compatibility assumptions and mission caps, without changing physics or science roles. `?view=engineering&catalog=reference` is labelled internal audited tooling and cannot enter Campaign or award credits. Relay never applies camera geometry. Edited/context-changed reports are stale; rerun. Rounded boundaries retain full-precision details.
 
 The hangar's live draft telemetry is evaluated separately from frozen launch results. Exact installed values and signed, capped headroom bars show real tradeoffs, not arbitrary ratings. Launch animation cannot alter an outcome or mint a second reward. The contact strip consumes the recorded schedule. Keyboard controls, help/guide focus, reduced motion, WebGL context loss/fallback and enlarged-text reflow are tested, including opened disclosures.
 
 ### Actual Chrome screenshots
+
+- QA round: [empty Hangar](docs/screenshots/qa/after-hangar-empty-desktop-en.png) · [Research](docs/screenshots/qa/after-research-desktop-en.png) · [Ukrainian phone](docs/screenshots/qa/after-research-phone-ua.png) · [320px/200%](docs/screenshots/qa/after-research-reflow-ua.png) · [compact debrief](docs/screenshots/qa/after-debrief-phone-ua.png). The dossier contains reproducible before/after counts. All earlier captures below are historical, not current defaults.
 
 - Hangar-04: [baseline](docs/screenshots/hangar04-before-desktop-en.png) → [assembly bay](docs/screenshots/hangar04-after-desktop-en.png) · [phone](docs/screenshots/hangar04-after-phone-en.png) · [Ukrainian fallback](docs/screenshots/hangar04-fallback-phone-ua.png)
 - Actual mesh swaps: [wing before](docs/screenshots/hangar04-wing-before-en.png) / [after](docs/screenshots/hangar04-wing-en.png) · [antenna before](docs/screenshots/hangar04-antenna-before-en.png) / [after](docs/screenshots/hangar04-antenna-en.png) · [title treatment](docs/screenshots/hangar04-title-desktop-en.png)
@@ -88,13 +90,17 @@ Historical night-01 comparisons:
 
 Automated accessibility scans do not replace assistive-technology testing or bilingual human scientific/linguistic review.
 
-### 60-second local demo
+### Hands-on local demo
 
-Open `/nasa-space-apps/` → automatic academy → accept contract → launch (7.1 h) → ground network → retry (3.1 h) → main menu. **Customize** → equip another solar array → return and see the same larger wings. **Missions** → **Trace the Shoreline** → Payload → 35 mm → Launch. Then **Carry the Signal** → Ground service → network → Launch. Toggle Ukrainian at any point. For campaign credits/refunds, see [Mission Campaign](docs/mission-campaign.md).
+Open `/nasa-space-apps/` → Academy → accept → select all eight training slots → launch (7.1 h) → network → retry (3.1 h) → menu. Customize starts independently at 0/8. Use the explicit Sandbox repair recipe above, remove a slot to disable Launch, then restore it. Research is one menu selection; entering its Sandbox preview does not silently change mode. Toggle Ukrainian at any point. For legitimate credits/purchases/refunds, see [Mission Campaign](docs/mission-campaign.md).
 
 See [third-party notices](docs/third-party-notices.md) for software licenses and attribution.
 
 ## Verification
+
+Current QA-round results and the exact tested/pushed checkpoint are in the
+[QA dossier](docs/qa-goal-dossier.md). The records below preserve earlier
+milestones; they do not substitute for current clean-copy acceptance.
 
 Hangar-04 preserves evaluator, catalogs, fixtures, progression and save code unchanged. Typecheck, zero-warning lint, build, **147 engine /33 UI** tests pass. The focused six-test production-browser packet covers real mesh swaps, disclosures, both languages, phone/reflow, dynamic fallback and the complete launch/debrief path; the full suite is **42 tests**. [Verification record](docs/hangar-visual-target.md#verification-and-review) includes actual results, clean-install proof and two intermittent parallel-browser failures rather than claiming an entirely clean run history.
 

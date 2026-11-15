@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { assembleEngineering, FIRST_PLAYER, STARTER_PASS } from './assembly'
 
 for (const locale of ['en', 'ua'] as const) {
   test(`campaign earn → unlock → redesign survives reload without duplicate rewards (${locale})`, async ({ page }, testInfo) => {
@@ -17,6 +18,7 @@ for (const locale of ['en', 'ua'] as const) {
     await expect(page.locator('#radioId option[value="rf-x"]')).toHaveCount(0)
     await expect(page.getByTestId('unlock-rf-x')).toBeDisabled()
     const run = () => page.getByRole('button', { name: locale === 'en' ? 'Run mission' : 'Запустити місію', exact: true })
+    await assembleEngineering(page,{...STARTER_PASS,groundId:'gs-network'})
     // Failed retries are free; the original engineering checks still enforce service.
     await page.locator('#groundId').selectOption('gs-network')
     await run().click()
@@ -31,6 +33,7 @@ for (const locale of ['en', 'ua'] as const) {
     await page.keyboard.press('Enter')
     await expect(page.getByTestId('campaign-credits')).toContainText(/^20 /)
     await expect(page.getByTestId('unlock-rf-x')).toBeDisabled()
+    await page.getByTestId('fit-rf-x').click()
     await expect(page.locator('#radioId')).toBeFocused()
     await expect(page.locator('#radioId option[value="rf-x"]')).toHaveCount(1)
     await page.reload()
@@ -43,6 +46,7 @@ for (const locale of ['en', 'ua'] as const) {
     await page.keyboard.press('ArrowDown')
     await expect(page.locator('#mission-picker')).toHaveValue('urban-heat')
     await expect(page.locator('#mission-picker')).toBeFocused()
+    await assembleEngineering(page,{...FIRST_PLAYER,scenarioId:'urban-heat',radioId:'rf-s',groundId:'gs-network'})
     await run().click()
     await expect(page.getByTestId('campaign-credits')).toContainText(/^20 /)
     await page.locator('#radioId').selectOption('rf-x')
@@ -58,6 +62,7 @@ for (const locale of ['en', 'ua'] as const) {
     await expect(page.getByTestId('campaign-credits')).toContainText(/^60 /)
     await page.getByTestId('contract-visible-mapping').click()
     await expect(page.locator('#mission-picker')).toHaveValue('visible-mapping')
+    await assembleEngineering(page,{...FIRST_PLAYER,scenarioId:'visible-mapping',payloadId:'pl-visible-8',radioId:'rf-s',groundId:'gs-network'})
     await run().click()
     await expect(page.getByTestId('campaign-credits')).toContainText(/^60 /)
     await page.getByTestId('fit-pl-visible-35').click()
@@ -69,6 +74,7 @@ for (const locale of ['en', 'ua'] as const) {
     await expect(page.getByTestId('credit-delta')).toContainText(/\+180/)
     await page.getByTestId('unlock-pl-relay').click()
     await page.getByTestId('contract-packet-relay').click()
+    await assembleEngineering(page,{...FIRST_PLAYER,scenarioId:'packet-relay',payloadId:'pl-relay'})
     await run().click()
     await expect(page.getByTestId('campaign-credits')).toContainText(/^100 /)
     await page.locator('.repair-cta').click()
@@ -95,7 +101,7 @@ for (const locale of ['en', 'ua'] as const) {
     await page.getByRole('button', { name: 'Play campaign', exact: true }).click()
     await expect(page.getByTestId('campaign-complete')).toBeVisible()
     await expect(page.getByTestId('campaign-credits')).toContainText(/^300 /)
-    await page.getByRole('button', { name: 'Run mission', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Run mission', exact: true })).toBeDisabled()
     await expect(page.getByTestId('campaign-credits')).toContainText(/^300 /)
     await page.getByRole('button', { name: 'Return to direct play', exact: true }).click()
     await expect(page.locator('#mission-picker option[value="urban-heat"]')).toHaveCount(1)
@@ -118,6 +124,7 @@ test('array-first route, reversible upgrades and old-save migration preserve cre
   await expect(page.locator('#arrayId')).toBeFocused()
   await expect(page.locator('#arrayId')).toHaveValue('arr-deploy-xl')
   await page.locator('#mission-picker').selectOption('urban-heat')
+  await assembleEngineering(page,{...STARTER_PASS,scenarioId:'urban-heat',arrayId:'arr-deploy-xl',batteryId:'bat-m'})
   await page.locator('#arrayId').selectOption('arr-deploy-xl')
   await page.locator('#batteryId').selectOption('bat-m')
   await page.locator('#groundId').selectOption('gs-service')
@@ -131,11 +138,13 @@ test('array-first route, reversible upgrades and old-save migration preserve cre
   await page.getByTestId('unlock-rf-x').click()
   await page.getByTestId('unlock-pl-visible-35').click()
   await page.getByTestId('contract-visible-mapping').click()
+  await assembleEngineering(page,{...FIRST_PLAYER,scenarioId:'visible-mapping',payloadId:'pl-visible-35',radioId:'rf-s',groundId:'gs-network'})
   await page.getByTestId('fit-pl-visible-35').click()
   await page.getByRole('button', { name: 'Run mission', exact: true }).click()
   await expect(page.getByTestId('campaign-credits')).toContainText(/^180 /)
   await page.getByTestId('unlock-pl-relay').click()
   await page.getByTestId('contract-packet-relay').click()
+  await assembleEngineering(page,{...FIRST_PLAYER,scenarioId:'packet-relay',payloadId:'pl-relay',groundId:'gs-network'})
   await page.locator('#groundId').selectOption('gs-network')
   await page.getByRole('button', { name: 'Run mission', exact: true }).click()
   await expect(page.getByTestId('campaign-complete')).toBeVisible()

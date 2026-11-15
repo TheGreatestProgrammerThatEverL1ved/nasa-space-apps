@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { assembleHangar } from './assembly'
 
 // Slice renderer tests represent an established profile. Fresh-profile academy
 // behavior is exercised separately rather than bypassed in application code.
@@ -23,7 +24,7 @@ test('orbital slice renders real WebGL and swaps shared hardware with stationary
   await page.screenshot({ path: 'docs/screenshots/night03-menu-en.png' })
   await page.getByRole('button', { name: /Customize/ }).click()
   const scene = page.locator('.craft-scene')
-  await expect(scene).toHaveAttribute('data-array-id', 'arr-deploy-l')
+  await expect(scene).toHaveAttribute('data-array-id', '')
   await page.locator('.camera-controls').getByRole('button', { name: 'Reset camera' }).click()
   await page.screenshot({ path: 'docs/screenshots/night03-hangar-before-en.png' })
   await page.locator('.craft-inspection').screenshot({ path: 'docs/screenshots/night03-craft-before-en.png' })
@@ -67,6 +68,8 @@ test('SVG fallback equips, preserves language and supports phone/reflow and laun
   await expect(page.locator('.craft-scene')).toHaveAttribute('data-renderer', 'svg')
   await page.screenshot({ path: 'docs/screenshots/night03-menu-mobile-uk.png', fullPage: true })
   await page.getByRole('button', { name: /Налаштувати/ }).click()
+  await assembleHangar(page)
+  await page.locator('[data-slot="arrayId"]').click()
   await page.locator('[data-part-id="arr-body"]').click()
   await expect(page.locator('.craft-scene')).toHaveAttribute('data-array-id', 'arr-body')
   const beforeRotation = await page.locator('.craft-fallback svg').screenshot()

@@ -3,6 +3,9 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from '../../src/App'
 import { CAMPAIGN_STORAGE_KEY } from '../../src/campaign/progress'
+import { assemble } from './assemble'
+import { WF_A, FIRST_MISSION } from '../../src/fixtures/builds'
+import { PLAYER_MISSIONS } from '../../src/data/player/missions'
 
 beforeEach(() => localStorage.removeItem(CAMPAIGN_STORAGE_KEY))
 afterEach(() => { cleanup(); vi.restoreAllMocks(); localStorage.removeItem(CAMPAIGN_STORAGE_KEY) })
@@ -13,7 +16,8 @@ it.each(['en', 'ua'] as const)('earns once, buys audited X-band, persists and co
   if (locale === 'ua') await user.click(screen.getByRole('button', { name: 'Українська' }))
   await user.click(screen.getByRole('button', { name: locale === 'en' ? 'Play campaign' : 'Грати кампанію' }))
   const runName = locale === 'en' ? 'Run mission' : 'Запустити місію'
-  expect((screen.getByLabelText(locale === 'en' ? 'Radio package' : 'Радіопакет') as HTMLSelectElement).value).toBe('rf-s')
+  expect((screen.getByLabelText(locale === 'en' ? 'Radio package' : 'Радіопакет') as HTMLSelectElement).value).toBe('')
+  await assemble(user,WF_A)
   expect(screen.getByTestId('unlock-rf-x').getAttribute('disabled')).not.toBeNull()
   await user.click(screen.getByRole('button', { name: runName }))
   expect(screen.getByTestId('campaign-credits').textContent).toMatch(/^120 /)
@@ -30,6 +34,7 @@ it.each(['en', 'ua'] as const)('earns once, buys audited X-band, persists and co
   expect(screen.getByTestId('unlock-rf-x').getAttribute('disabled')).not.toBeNull()
   if (locale === 'ua') await user.click(screen.getByRole('button', { name: 'Українська' }))
   await user.selectOptions(screen.getByLabelText(locale === 'en' ? 'Mission' : 'Місія', { exact: true }), 'urban-heat')
+  await assemble(user,{...FIRST_MISSION,scenarioId:'urban-heat'})
   await user.selectOptions(screen.getByLabelText(locale === 'en' ? 'Radio package' : 'Радіопакет'), 'rf-x')
   await user.selectOptions(screen.getByLabelText(locale === 'en' ? 'Ground service' : 'Наземний сервіс', { exact: true }), 'gs-single')
   await user.click(screen.getByRole('button', { name: runName }))
@@ -37,11 +42,13 @@ it.each(['en', 'ua'] as const)('earns once, buys audited X-band, persists and co
   expect(screen.getByTestId('campaign-credits').textContent).toMatch(/^160 /)
   await user.click(screen.getByTestId('unlock-pl-visible-35'))
   await user.selectOptions(screen.getByLabelText(locale === 'en' ? 'Mission' : 'Місія', { exact: true }), 'visible-mapping')
+  await assemble(user,PLAYER_MISSIONS.find(m=>m.id==='visible-mapping')!.passingConfiguration)
   await user.selectOptions(screen.getByLabelText(locale === 'en' ? 'Payload' : 'Корисне навантаження', { exact: true }), 'pl-visible-35')
   await user.click(screen.getByRole('button', { name: runName }))
   expect(screen.getByTestId('campaign-credits').textContent).toMatch(/^240 /)
   await user.click(screen.getByTestId('unlock-pl-relay'))
   await user.selectOptions(screen.getByLabelText(locale === 'en' ? 'Mission' : 'Місія', { exact: true }), 'packet-relay')
+  await assemble(user,{...PLAYER_MISSIONS.find(m=>m.id==='packet-relay')!.passingConfiguration,busId:'bus-12u-light'})
   await user.selectOptions(screen.getByLabelText(locale === 'en' ? 'Ground service' : 'Наземний сервіс', { exact: true }), 'gs-network')
   await user.click(screen.getByRole('button', { name: runName }))
   expect(screen.getByTestId('campaign-complete')).toBeTruthy()
@@ -54,19 +61,23 @@ it('warns honestly when local saving fails, while keeping the in-memory pass', a
   const user = userEvent.setup()
   render(<App presentation="engineering" />)
   await user.click(screen.getByRole('button', { name: 'Play campaign' }))
+  await assemble(user,WF_A)
   vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('quota') })
   await user.click(screen.getByRole('button', { name: 'Run mission' }))
   expect(screen.getByRole('alert').textContent).toMatch(/may not survive reload/)
   expect(screen.getByTestId('campaign-credits').textContent).toMatch(/^120 /)
   expect(screen.getByTestId('verdict').textContent).toMatch(/provisional/i)
 })
-it('fits purchased hardware without losing other draft edits and preserves session drafts across navigation', async () => {
+it('purchases without fitting, fits deliberately, and preserves session drafts across navigation', async () => {
   const user = userEvent.setup()
   render(<App presentation="engineering" />)
   await user.click(screen.getByRole('button', { name: 'Play campaign' }))
+  await assemble(user,WF_A)
   await user.selectOptions(screen.getByLabelText('Battery', { exact: true }), 'bat-m')
   await user.click(screen.getByRole('button', { name: 'Run mission' }))
   await user.click(screen.getByTestId('unlock-rf-x'))
+  expect((screen.getByLabelText('Radio package') as HTMLSelectElement).value).toBe('rf-s')
+  await user.click(screen.getByTestId('fit-rf-x'))
   expect((screen.getByLabelText('Radio package') as HTMLSelectElement).value).toBe('rf-x')
   expect((screen.getByLabelText('Battery', { exact: true }) as HTMLSelectElement).value).toBe('bat-m')
   expect((screen.getByLabelText('Ground service', { exact: true }) as HTMLSelectElement).value).toBe('gs-service')
@@ -79,11 +90,11 @@ it('fits purchased hardware without losing other draft edits and preserves sessi
   expect(screen.queryByTestId('latency-value')).toBeNull()
 })
 
-it('fits the actual owned foundation nodes from the eight-node tree without charging credits', async () => {
+it('fits the actual owned foundation nodes from the twelve-node tree without charging credits', async () => {
   const user = userEvent.setup()
   render(<App presentation="engineering" />)
   await user.click(screen.getByRole('button', { name: 'Play campaign' }))
-  expect(document.querySelectorAll('.upgrade-node')).toHaveLength(8)
+  expect(document.querySelectorAll('.upgrade-node')).toHaveLength(12)
   await user.selectOptions(screen.getByLabelText('Battery', { exact: true }), 'bat-m')
   await user.selectOptions(screen.getByLabelText('Bus', { exact: true }), 'bus-6u')
   await user.click(screen.getByTestId('fit-bus-12u'))

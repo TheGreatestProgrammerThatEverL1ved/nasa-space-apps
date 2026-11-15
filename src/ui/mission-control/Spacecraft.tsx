@@ -16,27 +16,29 @@ export function Spacecraft({ config, context, locale, onInspect }: {
 }) {
   const array = context.catalog.arrays.find(p => p.id === config.arrayId)
   const relay = context.catalog.relayPayloads?.some(p => p.id === config.payloadId) ?? false
+  const installed = Object.values(context.catalog).flat().filter(part =>
+    !['ground','orbit','launcher'].includes(part.category) && Object.values(config).includes(part.id))
+    .map(part=>part.label[locale]).join(', ')
   return <section className="spacecraft-bay" aria-label={locale === 'en' ? 'Spacecraft hangar' : 'Ангар апарата'}>
     <div className="bay-heading">
       <span>{locale === 'en' ? 'YOUR SPACECRAFT' : 'ВАШ АПАРАТ'}</span>
       <span>{locale === 'en' ? 'Draft • inspect a subsystem' : 'Чернетка • огляньте підсистему'}</span>
     </div>
-    <svg viewBox="0 0 680 300" role="img" aria-label={locale === 'en' ? 'Conceptual spacecraft with bus, payload, solar wings and antenna. Not to scale.' : 'Концептуальний апарат із платформою, приладом, сонячними крилами й антеною. Не в масштабі.'}>
+    <svg viewBox="0 0 680 300" role="img" aria-label={`${installed || (locale==='en'?'No installed hardware':'Обладнання не встановлено')}. ${locale==='en'?'Conceptual; not to scale.':'Концептуально; не в масштабі.'}`}>
       <defs><pattern id="solar-cells" width="24" height="26" patternUnits="userSpaceOnUse"><rect width="22" height="24" fill="#244b67" stroke="#8fb7cc" strokeWidth=".6" /></pattern></defs>
       <ellipse cx="340" cy="163" rx="286" ry="111" fill="none" stroke="#577286" strokeDasharray="4 9" />
-      <g transform={`translate(340 145) scale(${array && array.bolW > 55 ? 1.15 : 1}) translate(-340 -145)`}>
+      {config.arrayId && <g transform={`translate(340 145) scale(${array && array.bolW > 55 ? 1.15 : 1}) translate(-340 -145)`}>
         <path d="M75 92 L262 76 L262 196 L75 222Z M418 76 L605 92 L605 222 L418 196Z" fill="url(#solar-cells)" stroke="#a5c3d2" strokeWidth="3" />
-      </g>
+      </g>}
+      {config.busId && <g>
       <path d="M270 65 L364 42 L415 78 L415 205 L321 230 L270 195Z" fill="#d1d6d8" stroke="#f3e4c8" strokeWidth="3" />
       <path d="M321 99 L415 78 L415 205 L321 230Z" fill="#768c9c" stroke="#c4d5dc" strokeWidth="2" />
       <path d="M270 65 L321 99 L321 230 L270 195Z" fill="#a7b9c3" />
       <path d="M321 99 L321 230 M270 129 L321 161 L415 138" fill="none" stroke="#354b5c" strokeWidth="4" />
-      {relay ? <g><rect x="329" y="156" width="46" height="48" rx="5" fill="#172d40" stroke="#f8bc74" strokeWidth="4" /><path d="M337 166h30 M337 180h30 M337 194h30" stroke="#82b2c4" strokeWidth="5" /></g>
-        : <g><circle cx="351" cy="181" r="26" fill="#172d40" stroke="#f8bc74" strokeWidth="7" /><circle cx="351" cy="181" r="12" fill="#82b2c4" /></g>}
-      <path d="M371 48 L402 14 M387 30 L427 36" stroke="#f8bc74" strokeWidth="5" />
-      <text x="36" y="266" fill="#d7e7ed" fontSize="14">{locale === 'en' ? 'SOLAR POWER' : 'СОНЯЧНЕ ЖИВЛЕННЯ'}</text>
-      <text x="290" y="272" fill="#f8bc74" fontSize="14">{relay ? (locale === 'en' ? 'PACKET BUFFER' : 'БУФЕР ПАКЕТІВ') : (locale === 'en' ? 'PAYLOAD' : 'ПРИЛАД')}</text>
-      <text x="475" y="45" fill="#d7e7ed" fontSize="14">{locale === 'en' ? 'RADIO LINK' : 'РАДІОЛІНІЯ'}</text>
+      </g>}
+      {config.payloadId && (relay ? <g><rect x="329" y="156" width="46" height="48" rx="5" fill="#172d40" stroke="#f8bc74" strokeWidth="4" /><path d="M337 166h30 M337 180h30 M337 194h30" stroke="#82b2c4" strokeWidth="5" /></g>
+        : <g><circle cx="351" cy="181" r="26" fill="#172d40" stroke="#f8bc74" strokeWidth="7" /><circle cx="351" cy="181" r="12" fill="#82b2c4" /></g>)}
+      {config.radioId && <path d="M371 48 L402 14 M387 30 L427 36" stroke="#f8bc74" strokeWidth="5" />}
     </svg>
     <p className="bay-caption">{locale === 'en' ? 'Original schematic, not a flight layout. Select a slot to inspect and fit parts.' : 'Оригінальна схема, не льотне компонування. Виберіть слот для огляду й заміни деталей.'}</p>
     <div className="subsystem-slots">{slots.map(([field, category, group]) => {

@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
+import { assembleEngineering } from './assembly'
 
 async function tabTo(page: Page, target: Locator) {
   for (let i = 0; i < 70; i++) {
@@ -24,6 +25,7 @@ for (const locale of ['en', 'ua'] as const) {
     }
     await expect(page.locator('html')).toHaveAttribute('lang', locale === 'ua' ? 'uk' : 'en')
     const run = page.getByRole('button', { name: locale === 'en' ? 'Run mission' : 'Запустити місію', exact: true })
+    await assembleEngineering(page)
     await tabTo(page, run)
     await page.keyboard.press('Enter')
     await expect(page.getByTestId('latency-value')).toContainText(/7[.,]1/)
@@ -48,7 +50,7 @@ for (const locale of ['en', 'ua'] as const) {
     await page.reload()
     // Reload intentionally starts a new unsaved design in the primary language.
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
-    await expect(page.getByLabel('Ground service', { exact: true })).toHaveValue('gs-single')
+    await expect(page.getByLabel('Ground service', { exact: true })).toHaveValue('')
     expect(failedAssets).toEqual([])
   })
 }

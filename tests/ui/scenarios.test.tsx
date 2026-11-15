@@ -6,6 +6,7 @@ import MissionApp from '../../src/ui/MissionApp'
 import { FIRST_MISSION } from '../../src/fixtures/builds'
 import { evaluateMission } from '../../src/engine/evaluate'
 import { DEFAULT_CONTEXT } from '../../src/data/context'
+import { assemble } from './assemble'
 
 afterEach(cleanup)
 
@@ -23,12 +24,14 @@ it.each(['en', 'ua'] as const)('switches scenario without relabelling a report, 
   render(<App presentation="engineering" />)
   if (locale === 'ua') await user.click(screen.getByRole('button', { name: 'Українська' }))
   const runName = locale === 'en' ? 'Run mission' : 'Запустити місію'
+  await assemble(user,FIRST_MISSION)
   await user.click(screen.getByRole('button', { name: runName }))
   expect(screen.getByTestId('latency-value').textContent).toMatch(/7[.,]1/)
   await user.selectOptions(screen.getByLabelText(locale === 'en' ? 'Mission' : 'Місія', { exact: true }), 'urban-heat')
   expect(document.documentElement.lang).toBe(locale === 'en' ? 'en' : 'uk')
   expect(screen.queryByTestId('latency-value')).toBeNull()
-  expect((screen.getByLabelText(locale === 'en' ? 'Radio package' : 'Радіопакет') as HTMLSelectElement).value).toBe('rf-s')
+  expect((screen.getByLabelText(locale === 'en' ? 'Radio package' : 'Радіопакет') as HTMLSelectElement).value).toBe('')
+  await assemble(user,{...FIRST_MISSION,scenarioId:'urban-heat',radioId:'rf-s',groundId:'gs-network'})
   await user.click(screen.getByRole('button', { name: runName }))
   expect(screen.getByTestId('requirement-UH-DELIVERY').textContent).toMatch(/1[.,]5/)
   expect(screen.queryByTestId('requirement-WF-LATENCY')).toBeNull()

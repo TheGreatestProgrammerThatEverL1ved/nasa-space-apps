@@ -42,6 +42,13 @@
 .hangar-heading h1 { font-size:clamp(1.5rem,2vw,1.9rem); margin:.25rem 0 0; }
 .hangar-heading .game-eyebrow { margin:0; }
 .hangar-heading .game-primary { min-width:8rem; }
+.build-actions { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; max-width:100%; }
+.build-actions span { font-size:.7rem; overflow-wrap:anywhere; }
+.build-actions strong { font:1.1rem var(--mono); color:#f6c692; }
+#build-blocker { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; margin:.5rem 0 .75rem; color:#f6c692; font-size:.8rem; }
+.game-frame button:disabled { opacity:.6; cursor:not-allowed; }
+.part-hud > button { margin-top:.7rem; font-size:.7rem; }
+.draft-telemetry > summary { cursor:pointer; font-size:.75rem; }
 .subsystem-tabs { display:flex; flex-wrap:wrap; gap:.4rem; padding-bottom:.8rem; }
 .subsystem-tabs button { font-size:.78rem; }
 .game-frame button[aria-pressed=true]:not(.locale-switch button):not(.menu-bottom button) { border-color:#91ddff; box-shadow:inset 0 -2px #91ddff; background:#193348; }
@@ -189,3 +196,4 @@
   .hud-stats dd,.live-margin strong { white-space:normal; overflow-wrap:anywhere; }
 }
 @media(prefers-reduced-motion:reduce) { .game-frame *, .game-frame *::before, .game-frame *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+.catalog-inputs { white-space:pre-wrap; overflow-wrap:anywhere; max-width:100%; font-size:.7rem; }

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { assembleEngineering, assembleTraining } from './assembly'
 
 for (const locale of ['en', 'ua'] as const) {
   test(`guided real mission, no payout, help restoration and narrow reflow (${locale})`, async ({ page }, testInfo) => {
@@ -9,6 +10,8 @@ for (const locale of ['en', 'ua'] as const) {
     await page.getByRole('button', { name: locale === 'en' ? 'Start guided mission' : 'Почати навчальну місію', exact: true }).click()
     const dialog = page.getByRole('dialog')
     await expect(dialog).toBeVisible()
+    await expect(page.getByTestId('guide-progress')).toHaveText('0/8')
+    await assembleTraining(page)
     await dialog.getByRole('button', { name: locale === 'en' ? 'Launch guided simulation' : 'Запустити навчальну симуляцію' }).click()
     await expect(page.getByTestId('guide-latency')).toContainText(/7[.,]1/)
     await expect(dialog.getByRole('heading', { level: 2 })).toBeFocused()
@@ -22,7 +25,8 @@ for (const locale of ['en', 'ua'] as const) {
     await dialog.getByRole('button', { name: locale === 'en' ? 'Return to my design' : 'Повернутися до мого проєкту' }).click()
     const help = page.getByRole('button', { name: locale === 'en' ? 'Help / Academy' : 'Допомога / Академія', exact: true })
     await expect(page.locator('.help-entry')).toBeFocused()
-    await expect(page.locator('#groundId')).toHaveValue('gs-single')
+    await expect(page.locator('#groundId')).toHaveValue('')
+    await assembleEngineering(page)
     const run = page.getByRole('button', { name: locale === 'en' ? 'Run mission' : 'Запустити місію', exact: true })
     await run.click()
     await page.locator('#groundId').selectOption('gs-network')
@@ -50,6 +54,7 @@ test('skipping first-run guide is persistent and manual typed repairs focus actu
   await page.goto('./?view=engineering')
   await page.getByRole('button', { name: 'Skip tutorial', exact: true }).click()
   await page.screenshot({ path: testInfo.outputPath('night02-first-load.png') })
+  await assembleEngineering(page)
   await page.locator('#arrayId').selectOption('arr-deploy-m')
   await page.getByRole('button', { name: 'Run mission', exact: true }).click()
   await page.getByRole('link', { name: /Back to|Return to|Revise/i }).first().click()
@@ -76,6 +81,7 @@ test('guide launch inside campaign never pays or replaces the player draft/repor
   await page.locator('#batteryId').selectOption('bat-m')
   await page.getByRole('button', { name: 'Start guided mission', exact: true }).click()
   const dialog = page.getByRole('dialog')
+  await assembleTraining(page)
   await dialog.getByRole('button', { name: 'Launch guided simulation' }).click()
   await dialog.locator('#guide-ground').selectOption('gs-network')
   await dialog.getByRole('button', { name: 'Run repaired design' }).click()

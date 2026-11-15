@@ -1,5 +1,10 @@
 # MISSION FORGE — agent entry point
 
+## Current status
+
+Read [the status handoff](docs/STATUS.md) first: what is implemented, what is verified, the one
+gate still open, and what cost time last round.
+
 ## Post-M4 authorization
 
 The current user authorizes a visual/bilingual redesign and scenario expansion from M4 `397c041591ce3efaaa6d49faf7d67b4dd36fed55`, with local tests, commits and pushes on `mission-forge`. This supersedes the historical wildfire-only execution boundary below, **not** the audited wildfire mechanics. Ship the redesigned wildfire checkpoint independently before integrating urban heat. New scenario policy is documented separately in [the expansion supplement](docs/scenario-expansion.md). All preservation, ownership, permitted-model routing and Git restrictions below still apply. No live deployment, PR or merge; stop at a reviewable delivery candidate.

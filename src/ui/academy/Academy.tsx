@@ -8,6 +8,8 @@ import CraftScene from '../orbital/CraftScene'
 import { ContactStrip } from '../mission-control/Spacecraft'
 import { formatLimit, formatMetric, formatNumber, formatValue } from '../format'
 import './academy.css'
+import { completeDraft, draftOptions, draftView, emptyDraft, missingSlots, SLOT_FIELDS, type MissionDraft } from '../../engine/draft'
+import { translate } from '../../i18n'
 
 const KEY = 'mission-forge.academy.v1'
 function isSeen() { try { return localStorage.getItem(KEY) === 'seen' } catch { return false } }
@@ -20,7 +22,7 @@ const copy = {
     firstRun: 'First-run tutorial', contract: 'Training contract', bound: 'Delivery bound', setup: 'setup',
     contacts: 'contacts/day', processing: 'processing',
     preview: 'Live preview — rerun to commit every gate. A passing preview is not a report.',
-    goal: 'A land-management team needs thermal images back within 6 hours. Your starter spacecraft is assembled. Can it return the images in time?',
+    goal: 'A land-management team needs thermal images back within 6 hours. Select each component, then test the delivery bound.',
     parts: 'The bus holds and points the spacecraft. The payload is the camera that collects the required light. Solar panels replenish energy; the battery supplies shadow periods. The ground service decides when your radio can send images home.',
     run: 'Launch guided simulation', retry: 'Run repaired design', repair: '02 / Repair the real bottleneck',
     miss: 'The radio is fast enough, but four ground contacts per day leave too much waiting. 7.1 hours misses the 6 hour requirement. Select the ground network below, then run again.',
@@ -41,7 +43,7 @@ const copy = {
     firstRun: 'Навчання першого запуску', contract: 'Навчальний контракт', bound: 'Межа доставки', setup: 'налаштування',
     contacts: 'сеансів/добу', processing: 'обробка',
     preview: 'Живий попередній перегляд — повторіть запуск, щоб зафіксувати всі умови. Попередній прохід не є звітом.',
-    goal: 'Команді землекористування потрібні теплові знімки за 6 годин. Початковий апарат уже складено. Чи поверне він знімки вчасно?',
+    goal: 'Команді землекористування потрібні теплові знімки за 6 годин. Виберіть кожну складову й перевірте межу доставки.',
     parts: 'Платформа тримає й наводить апарат. Корисний прилад — камера, що збирає потрібне випромінювання. Панелі поповнюють енергію, акумулятор живить у тіні. Наземний сервіс визначає, коли радіо може передати знімки додому.',
     run: 'Запустити навчальну симуляцію', retry: 'Перевірити виправлений проєкт', repair: '02 / Виправте справжнє обмеження',
     miss: 'Радіо досить швидке, але чотири сеанси на добу змушують довго чекати. 7,1 год перевищує межу 6 год. Виберіть наземну мережу нижче й запустіть знову.',
@@ -68,7 +70,9 @@ export default function Academy({ locale, onLocaleChange, replaySignal = 0, comp
   const [open, setOpen] = useState(start.auto)
   const [guided, setGuided] = useState(start.auto)
   const [autoFlow, setAutoFlow] = useState(start.auto)
-  const [ground, setGround] = useState('gs-single')
+  const [draft, setDraft] = useState<MissionDraft>(() => emptyDraft('wildfire'))
+  const ground = draft.groundId ?? ''
+  const setGround = (id: string) => setDraft(d => ({...d,groundId:id}))
   const [report, setReport] = useState<EvaluationReport | null>(null)
   const [dirty, setDirty] = useState(false)
   const [contractChosen, setContractChosen] = useState(!compact)
@@ -78,18 +82,19 @@ export default function Academy({ locale, onLocaleChange, replaySignal = 0, comp
   const flowRef = useRef<HTMLDivElement>(null)
   const lastReplay = useRef(0)
   const returnRef = useRef<HTMLElement | null>(null)
-  const config = useMemo(() => ({ ...FIRST_MISSION, groundId: ground }), [ground])
-  const preview = useMemo(() => compact ? evaluateMission(config, DEFAULT_CONTEXT) : null, [compact, config])
+  const config = useMemo(() => draftView(draft), [draft])
+  const complete = completeDraft(draft,DEFAULT_CONTEXT)
+  const preview = useMemo(() => compact && complete ? evaluateMission(draft, DEFAULT_CONTEXT) : null, [compact, complete, draft])
   const visible = compact && dirty && preview ? preview : report
   const shownPass = visible?.outcome === 'MODEL_PASS_PROVISIONAL'
   const passed = !dirty && report?.outcome === 'MODEL_PASS_PROVISIONAL'
   const limit = preview?.checks.find(check => check.checkId === 'WF-LATENCY')?.limit
   const remember = () => { setOffered(false); try { localStorage.setItem(KEY, 'seen') } catch { /* Guide remains usable without persistence. */ } }
-  const reset = () => { setGuided(true); setGround('gs-single'); setReport(null); setDirty(false); setAutoFlow(false); setContractChosen(!compact) }
+  const reset = () => { setGuided(true); setDraft(emptyDraft('wildfire')); setReport(null); setDirty(false); setAutoFlow(false); setContractChosen(!compact) }
   const show = (guide: boolean) => {
     returnRef.current = document.activeElement as HTMLElement
     setGuided(guide); setOpen(true); setAutoFlow(false)
-    if (guide) { setGround('gs-single'); setReport(null); setDirty(false); setContractChosen(!compact) }
+    if (guide) { setDraft(emptyDraft('wildfire')); setReport(null); setDirty(false); setContractChosen(!compact) }
   }
   const close = () => {
     const exitAuto = autoFlow
@@ -118,7 +123,7 @@ export default function Academy({ locale, onLocaleChange, replaySignal = 0, comp
     if (replaySignal === lastReplay.current) return
     lastReplay.current = replaySignal
     returnRef.current = document.activeElement as HTMLElement
-    setGuided(true); setOpen(true); setGround('gs-single'); setReport(null); setDirty(false); setAutoFlow(false); setContractChosen(!compact)
+    setGuided(true); setOpen(true); setDraft(emptyDraft('wildfire')); setReport(null); setDirty(false); setAutoFlow(false); setContractChosen(!compact)
   }, [replaySignal, compact])
   useEffect(() => {
     const helpShortcut = (event: KeyboardEvent) => {
@@ -133,7 +138,7 @@ export default function Academy({ locale, onLocaleChange, replaySignal = 0, comp
     return () => document.removeEventListener('keydown', helpShortcut)
   }, [])
   const run = () => {
-    if (compact && !contractChosen) return
+    if (!completeDraft(draft,DEFAULT_CONTEXT) || compact && !contractChosen) return
     setReport(evaluateMission(config, DEFAULT_CONTEXT))
     setDirty(false)
   }
@@ -144,6 +149,16 @@ export default function Academy({ locale, onLocaleChange, replaySignal = 0, comp
   }
   const exitLabel = guided ? (report?.outcome === 'MODEL_PASS_PROVISIONAL' ? c.back : c.skip) : c.close
   const step = passed ? 3 : report ? 2 : 1
+  const categories = ['bus','payload','array','battery','radio','ground','orbit','launcher'] as const
+  const options = draftOptions(DEFAULT_CONTEXT)
+  const assembly = <section className="guide-assembly" aria-label={locale === 'en' ? 'Training assembly' : 'Навчальне складання'}>
+    <strong data-testid="guide-progress">{8-missingSlots(draft,DEFAULT_CONTEXT).length}/8</strong>
+    <p>{locale === 'en' ? 'Select each training component. Continue does not install hardware.' : 'Виберіть кожну навчальну складову. Продовження не встановлює обладнання.'}</p>
+    {SLOT_FIELDS.map((field,i) => <label key={field}>{translate(locale,`category.${categories[i]}`)}<select data-guide-slot={field} value={draft[field] ?? ''} onChange={e => {setDraft(d=>({...d,[field]:e.target.value}));if(report)setDirty(true)}}>
+      <option value="">{locale === 'en' ? 'Select…' : 'Виберіть…'}</option>
+      {options[field].filter(p => p.id === FIRST_MISSION[field] || field === 'groundId' && p.id === 'gs-network').map(p => <option key={p.id} value={p.id}>{p.label[locale]}</option>)}
+    </select></label>)}
+  </section>
   const glossary = <details><summary>{c.glossary}</summary>
     <dl className="academy-glossary">
       <div><dt>{c.margins}</dt><dd>{c.marginsBody}</dd></div>
@@ -174,6 +189,7 @@ export default function Academy({ locale, onLocaleChange, replaySignal = 0, comp
             {[c.intro, c.repair, c.done].map((label, index) => <li key={label} aria-current={step === index + 1 ? 'step' : undefined}>{label}</li>)}
           </ol>
           <h3>{passed ? c.done : report ? c.repair : c.intro}</h3>
+          {!report && assembly}
           {!report && <>
             <article className="academy-contract" aria-label={c.contract}>
               <p className="academy-kicker">{c.contract}</p>
@@ -186,7 +202,7 @@ export default function Academy({ locale, onLocaleChange, replaySignal = 0, comp
                 {contractChosen ? (locale === 'en' ? 'Training contract selected' : 'Навчальний контракт вибрано') : (locale === 'en' ? 'Accept this training contract' : 'Прийняти цей навчальний контракт')}
               </button>
             </article>
-            <p>{c.goal}</p><p>{c.parts}</p>
+            <p>{locale === 'en' ? 'Assemble, run, then repair the delivery bottleneck.' : 'Складіть, запустіть і виправте обмеження доставки.'}</p>
           </>}
           {visible && <div className="academy-result" data-state={shownPass ? 'pass' : 'miss'} role="status">
             <p>{compact && dirty ? c.preview : shownPass ? c.pass : c.miss}</p>
@@ -201,7 +217,7 @@ export default function Academy({ locale, onLocaleChange, replaySignal = 0, comp
             </button>)}
           </div>}
           <p className="academy-note">{c.noReward}</p>
-          {!passed && <div className="academy-actions"><button className="guide-primary" disabled={!contractChosen} onClick={run}>{report ? c.retry : c.run}</button></div>}
+          {!passed && <div className="academy-actions"><button className="guide-primary" disabled={!contractChosen || !complete} onClick={run}>{report ? c.retry : c.run}</button></div>}
           {glossary}
         </div>
       </div> : <div className="academy-flow academy-alone">
@@ -211,7 +227,7 @@ export default function Academy({ locale, onLocaleChange, replaySignal = 0, comp
       </div>) : <>
         {guided ? <>
           <h3>{passed ? c.done : report ? c.repair : c.intro}</h3>
-          <p>{c.goal}</p><p>{c.parts}</p>
+          {!report && assembly}
           {report && <div className="guide-result" role="status">
             <p>{passed ? c.pass : c.miss}</p>
             <strong data-testid="guide-latency">{formatMetric(report.metrics.latencyHours!, locale, 'latencyHours')}</strong>
@@ -223,7 +239,7 @@ export default function Academy({ locale, onLocaleChange, replaySignal = 0, comp
               {DEFAULT_CONTEXT.catalog.grounds.map(g => <option key={g.id} value={g.id}>{g.label[locale]}</option>)}
             </select></>}
           <p className="note">{c.noReward}</p>
-          <div className="academy-actions">{!passed && <button className="guide-primary" onClick={run}>{report ? c.retry : c.run}</button>}
+          <div className="academy-actions">{!passed && <button className="guide-primary" disabled={!complete} onClick={run}>{report ? c.retry : c.run}</button>}
             <button onClick={close}>{passed ? c.back : c.skip}</button></div>
         </> : <><p>{c.saved}</p><button className="guide-primary" onClick={reset}>{c.replay}</button></>}
         {glossary}

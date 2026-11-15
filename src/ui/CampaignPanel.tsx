@@ -1,5 +1,5 @@
 import type { Locale, MissionConfiguration } from '../engine/types'
-import { MISSIONS } from '../data/scenarios'
+import { PLAYER_MISSIONS as MISSIONS } from '../data/player/missions'
 import { CAMPAIGN_CONTRACTS, CAMPAIGN_SHOP, CAMPAIGN_UPGRADES, campaignComplete, campaignContractAvailable, campaignCredits, campaignOwnsPart, campaignPurchaseReady, type CampaignProgress } from '../campaign/progress'
 import { translate } from '../i18n'
 import './campaign.css'
@@ -71,14 +71,14 @@ export default function CampaignPanel({ active, progress, locale, storageError, 
         </article>
       })}</div></>}
       <h3 id="upgrade-heading">{locale === 'en' ? 'Upgrade tree' : 'Дерево вдосконалень'}</h3>
-      <p>{locale === 'en' ? 'Eight real hardware nodes. After wildfire, choose urban or shoreline first; build the comms branch to reach relay. All four clears finish the campaign. Every purchase refunds its actual paid amount, including old saves. Retries are free.' : 'Вісім вузлів реального обладнання. Після лісової місії оберіть місто або берегову лінію; гілка зв’язку відкриє ретрансляцію. Для завершення потрібні всі чотири проходи. Кожна покупка повертає фактично сплачену суму, зокрема зі старих збережень. Повтори безплатні.'}</p>
+      <p>{locale === 'en' ? 'Twelve equipment nodes. Purchase, then select equipment separately. Refunds return the actual paid basis; retries are free.' : 'Дванадцять вузлів обладнання. Купіть, потім окремо виберіть складові. Повернення відшкодовує фактично сплачену суму; повтори безплатні.'}</p>
       <div className="upgrade-tree" role="group" aria-labelledby="upgrade-heading">
         <div className="upgrade-root">{renderNode('bus-12u')}</div>
         <div className="upgrade-branches">
           {([
-            { title: locale === 'en' ? 'Power' : 'Живлення', ids: ['arr-deploy-l', 'arr-deploy-xl'] },
-            { title: locale === 'en' ? 'Comms → Relay' : 'Зв’язок → Ретрансляція', ids: ['rf-s', 'rf-x', 'pl-relay'] },
-            { title: locale === 'en' ? 'Payload' : 'Прилад', ids: ['pl-thermal', 'pl-visible-35'] },
+            { title: locale === 'en' ? 'Power' : 'Живлення', ids: ['arr-deploy-l', 'arr-deploy-xl','arr-fold-75','bat-pack-80'] },
+            { title: locale === 'en' ? 'Comms → Relay' : 'Зв’язок → Ретрансляція', ids: ['rf-s', 'rf-x', 'pl-relay','rf-x-eco'] },
+            { title: locale === 'en' ? 'Payload' : 'Прилад', ids: ['pl-thermal', 'pl-visible-35','pl-thermal-survey'] },
           ]).map(branch => <section className="upgrade-branch" key={branch.ids[0]}>
             <h4 className="upgrade-branch-title">{branch.title}</h4>
             <ol>{branch.ids.map(id => <li key={id}>{renderNode(id)}</li>)}</ol>

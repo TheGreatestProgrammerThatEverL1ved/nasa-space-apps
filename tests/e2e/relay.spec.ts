@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 for (const locale of ['en', 'ua'] as const) {
   test(`relay ingress is not egress, real route repair (${locale})`, async ({ page }, testInfo) => {
-    await page.goto('./')
+    await page.goto('./?view=engineering')
     if (locale === 'ua') await page.getByRole('button', { name: 'Українська', exact: true }).click()
     await page.locator('#mission-picker').selectOption('packet-relay')
     const run = page.getByRole('button', { name: locale === 'en' ? 'Run mission' : 'Запустити місію', exact: true })

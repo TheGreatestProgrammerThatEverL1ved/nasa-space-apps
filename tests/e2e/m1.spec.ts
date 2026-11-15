@@ -16,7 +16,7 @@ for (const locale of ['en', 'ua'] as const) {
     page.on('response', response => {
       if (response.status() >= 400) failedAssets.push(`${response.status()} ${response.url()}`)
     })
-    await page.goto('./')
+    await page.goto('./?view=engineering')
     if (locale === 'ua') {
       const toggle = page.getByRole('button', { name: 'Українська', exact: true })
       await tabTo(page, toggle)

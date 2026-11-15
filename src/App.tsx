@@ -6,6 +6,7 @@ import { WF_A } from './fixtures/builds'
 import type { EvaluationReport, Locale, MissionConfiguration } from './engine/types'
 import CampaignPanel from './ui/CampaignPanel'
 import { translate } from './i18n'
+import type { GameScreen } from './ui/game/GameScreens'
 import {
   awardCampaignPass, buyCampaignPart, campaignComplete, campaignContext, campaignContractAvailable,
   campaignCredits, CAMPAIGN_CONTRACTS, CAMPAIGN_SHOP, CAMPAIGN_STORAGE_KEY,
@@ -16,8 +17,10 @@ function readCampaign(): { progress: CampaignProgress; storageError: boolean } {
   try { return { progress: parseCampaign(localStorage.getItem(CAMPAIGN_STORAGE_KEY)), storageError: false } }
   catch { return { progress: EMPTY_CAMPAIGN, storageError: true } }
 }
-export default function App() {
+export default function App({ presentation }: { presentation?: 'orbital' | 'engineering' } = {}) {
+  const engineering = presentation === 'engineering' || new URLSearchParams(window.location.search).get('view') === 'engineering'
   const [missionId, setMissionId] = useState('wildfire')
+  const [screen, setScreen] = useState<GameScreen>('menu')
   const [locale, setLocale] = useState<Locale>('en')
   const [pickerWasUsed, setPickerWasUsed] = useState(false)
   const [campaignActive, setCampaignActive] = useState(false)
@@ -41,6 +44,7 @@ export default function App() {
   const chooseMission = (id: string) => {
     if (campaignActive && !campaignContractAvailable(campaign.progress, id)) return
     setPickerWasUsed(true); setMissionId(id); setCreditDelta(null)
+    setScreen(screen === 'control' ? 'control' : 'hangar')
   }
   const fit = (partId: string, refund = false, progress = campaign.progress) => {
     const item = CAMPAIGN_SHOP.find(p => p.partId === partId)
@@ -89,5 +93,9 @@ export default function App() {
       onChoose={chooseMission} onFit={id => fit(id)} onRefund={refund}
       onToggle={() => { setCampaignActive(!campaignActive); setMissionId('wildfire'); setPickerWasUsed(true); setCreditDelta(null) }}
       onBuy={buy} />}
+    game={engineering ? undefined : { screen, onNavigate: setScreen, campaignActive, onCampaign: () => {
+      setCampaignActive(!campaignActive); setMissionId('wildfire'); setPickerWasUsed(true); setCreditDelta(null)
+      setScreen(campaignActive ? 'menu' : 'control')
+    } }}
     locale={locale} onLocaleChange={setLocale} />
 }

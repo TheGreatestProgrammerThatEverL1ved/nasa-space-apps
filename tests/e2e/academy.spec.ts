@@ -4,7 +4,7 @@ import AxeBuilder from '@axe-core/playwright'
 for (const locale of ['en', 'ua'] as const) {
   test(`guided real mission, no payout, help restoration and narrow reflow (${locale})`, async ({ page }, testInfo) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.goto('./')
+    await page.goto('./?view=engineering')
     if (locale === 'ua') await page.getByRole('button', { name: 'Українська', exact: true }).click()
     await page.getByRole('button', { name: locale === 'en' ? 'Start guided mission' : 'Почати навчальну місію', exact: true }).click()
     const dialog = page.getByRole('dialog')
@@ -47,7 +47,7 @@ for (const locale of ['en', 'ua'] as const) {
 }
 
 test('skipping first-run guide is persistent and manual typed repairs focus actual controls', async ({ page }, testInfo) => {
-  await page.goto('./')
+  await page.goto('./?view=engineering')
   await page.getByRole('button', { name: 'Skip tutorial', exact: true }).click()
   await page.screenshot({ path: testInfo.outputPath('night02-first-load.png') })
   await page.locator('#arrayId').selectOption('arr-deploy-m')
@@ -71,7 +71,7 @@ test('skipping first-run guide is persistent and manual typed repairs focus actu
 })
 
 test('guide launch inside campaign never pays or replaces the player draft/report', async ({ page }) => {
-  await page.goto('./')
+  await page.goto('./?view=engineering')
   await page.getByRole('button', { name: 'Play campaign', exact: true }).click()
   await page.locator('#batteryId').selectOption('bat-m')
   await page.getByRole('button', { name: 'Start guided mission', exact: true }).click()

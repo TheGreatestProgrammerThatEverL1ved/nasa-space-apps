@@ -34,6 +34,8 @@ import '../App.css'
 import Academy from './academy/Academy'
 import { ContactStrip, Spacecraft, type PartField } from './mission-control/Spacecraft'
 import { repairDestination } from './mission-control/repairs'
+import LiveHangar, { SceneMenu, type GameScreen } from './game/GameScreens'
+import { useOrbitalMotion } from './game/motion'
 
 export interface MissionAppProps {
   readonly context: EvaluationContext
@@ -50,6 +52,10 @@ export interface MissionAppProps {
   readonly onDraftChange?: (config: MissionConfiguration) => void
   readonly ref?: Ref<MissionHandle>
   readonly debriefAction?: ReactNode
+  readonly game?: {
+    screen: GameScreen; onNavigate: (screen: GameScreen) => void
+    campaignActive: boolean; onCampaign: () => void
+  }
 }
 export interface EquipmentRequest { readonly partId: string; readonly field: PartField; readonly refund?: boolean }
 export interface MissionHandle { fitEquipment: (request: EquipmentRequest, context: EvaluationContext) => void }
@@ -477,6 +483,7 @@ export default function MissionApp({
   onDraftChange,
   ref,
   debriefAction,
+  game,
 }: MissionAppProps) {
   const [localLocale, setLocalLocale] = useState<Locale>('en')
   const locale = controlledLocale ?? localLocale
@@ -491,6 +498,10 @@ export default function MissionApp({
   const controlRefs = useRef<Partial<Record<PartField, HTMLSelectElement | null>>>({})
   const pickerRef = useRef<HTMLSelectElement>(null)
   const [phase, setPhase] = useState<'board' | 'build' | 'debrief'>('build')
+  const [selectedField, setSelectedField] = useState<PartField>('arrayId')
+  const [tutorialSignal, setTutorialSignal] = useState(0)
+  const { motion, setMotion } = useOrbitalMotion()
+  const gameScreen = game?.screen
 
   const t = (key: MessageKey) => translate(locale, key)
   const tc = (key: MessageKey, _fallback?: string) => translate(locale, key)
@@ -505,6 +516,11 @@ export default function MissionApp({
   useEffect(() => {
     if (focusMissionPicker) pickerRef.current?.focus()
   }, [focusMissionPicker])
+  useEffect(() => {
+    if (!gameScreen) return
+    const id = gameScreen === 'menu' ? 'menu-title' : gameScreen === 'hangar' ? 'hangar-title' : gameScreen === 'debrief' ? 'result-heading' : 'picker-heading'
+    document.getElementById(id)?.focus()
+  }, [gameScreen])
 
   useEffect(() => {
     if (runSignal === 0) return
@@ -529,6 +545,7 @@ export default function MissionApp({
   }
 
   const handleRun = () => {
+    game?.onNavigate('debrief')
     setPhase('debrief')
     setEvaluationError(false)
     try {
@@ -556,6 +573,12 @@ export default function MissionApp({
 
   const inspectPart = (field: PartField | null) => {
     setPhase('build')
+    if (game) {
+      setSelectedField(field ?? 'arrayId')
+      game.onNavigate('hangar')
+      requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('.part-card[aria-pressed="true"]')?.focus())
+      return
+    }
     const target = field ? controlRefs.current[field] : document.getElementById('mission-controls')
     target?.focus()
     target?.scrollIntoView?.({ block: 'center' })
@@ -642,12 +665,36 @@ export default function MissionApp({
   )
 
   return (
-    <div className="mission-shell">
+    <div className={game ? 'game-frame' : 'mission-shell'}>
+      {game && <>
+        <header className="game-topbar">
+          <span className="game-brand">MISSION FORGE <span aria-hidden="true">/</span> {game.campaignActive ? (locale === 'en' ? 'CAMPAIGN' : 'КАМПАНІЯ') : (locale === 'en' ? 'SANDBOX' : 'ПІСОЧНИЦЯ')}</span>
+          {game.screen === 'menu' && <a className="engineering-entry" href="?view=engineering">{locale === 'en' ? 'Engineering console' : 'Інженерна консоль'}</a>}
+          {game.screen !== 'menu' && <button onClick={() => game.onNavigate('menu')}>{locale === 'en' ? '← Main menu' : '← Головне меню'}</button>}
+          <Academy locale={locale} onLocaleChange={setLocale} replaySignal={tutorialSignal} compact />
+          <div className="locale-switch" role="group" aria-label={t('app.language')}>
+            <button aria-pressed={locale === 'en'} onClick={() => setLocale('en')}>English</button>
+            <button aria-pressed={locale === 'ua'} onClick={() => setLocale('ua')}>Українська</button>
+          </div>
+        </header>
+        {game.screen === 'menu' && <SceneMenu config={draft} locale={locale} missionName={missionName}
+          campaignActive={game.campaignActive} motion={motion} onMotion={() => setMotion(!motion)}
+          onNavigate={screen => game.onNavigate(screen === 'missions' ? 'control' : screen)} onCampaign={game.onCampaign}
+          onTutorial={() => setTutorialSignal(n => n + 1)} />}
+        {game.screen === 'hangar' && <LiveHangar config={draft} context={context} locale={locale}
+          selectedField={selectedField} onInspect={setSelectedField} motion={motion} onLaunch={handleRun}
+          onEquip={(field, id) => {
+            if (draft[field] === id) return
+            const next = { ...draft, [field]: id }
+            setDraft(next); onDraftChange?.(next); if (report) setStale(true)
+          }} />}
+      </>}
+      {(!game || game.screen === 'control' || game.screen === 'debrief') && <>
       <a className="skip-link" href="#mission-controls">
         {t('app.skipToControls')}
       </a>
 
-      <header className="mission-header">
+      {!game && <><header className="mission-header">
         <div className="header-grid">
           <div className="mission-identity">
             <p className="product-mark">{t('app.brand')}</p>
@@ -754,8 +801,8 @@ export default function MissionApp({
           }}>{step === 'board' ? (locale === 'en' ? '01 Mission Control' : '01 Центр керування')
             : step === 'build' ? (locale === 'en' ? '02 Spacecraft hangar' : '02 Ангар апарата')
               : (locale === 'en' ? '03 Mission debrief' : '03 Підсумок місії')}</button>)}
-      </nav>
-      <Academy locale={locale} onLocaleChange={setLocale} />
+      </nav></>}
+      {!game && <Academy locale={locale} onLocaleChange={setLocale} />}
 
       <main className="command-grid">
         {campaignPanel}
@@ -1382,6 +1429,7 @@ export default function MissionApp({
           )}
         </section>
       </main>
+      </>}
     </div>
   )
 }

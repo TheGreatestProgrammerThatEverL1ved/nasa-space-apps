@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 for (const locale of ['en', 'ua'] as const) {
   test(`all three audited builds remain provisional in the real UI (${locale})`, async ({ page }) => {
-    await page.goto('./')
+    await page.goto('./?view=engineering')
     if (locale === 'ua') await page.getByRole('button', { name: 'Українська', exact: true }).click()
     for (const [array, battery, radio, ground, latency] of [
       ['arr-deploy-l', 'bat-s', 'rf-s', 'gs-service', /2[.,]2/],

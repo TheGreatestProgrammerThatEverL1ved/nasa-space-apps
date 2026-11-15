@@ -14,8 +14,10 @@
     "typecheck": "tsc -b && tsc -p tsconfig.tests.json"
   },
   "dependencies": {
+    "@react-three/fiber": "9.8.2",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "three": "0.183.2"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
@@ -26,6 +28,7 @@
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/three": "0.183.1",
     "@vitejs/plugin-react": "^6.1.2",
     "jsdom": "^31.0.1",
     "oxlint": "^1.90.0",

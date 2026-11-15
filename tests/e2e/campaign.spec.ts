@@ -6,7 +6,7 @@ for (const locale of ['en', 'ua'] as const) {
     const errors: string[] = []
     page.on('pageerror', error => errors.push(error.message))
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.goto('./')
+    await page.goto('./?view=engineering')
     const useLanguage = async () => {
       if (locale === 'ua') await page.getByRole('button', { name: 'Українська', exact: true }).click()
     }
@@ -105,7 +105,7 @@ for (const locale of ['en', 'ua'] as const) {
 }
 
 test('array-first route, reversible upgrades and old-save migration preserve credits and unrelated storage', async ({ page }) => {
-  await page.goto('./')
+  await page.goto('./?view=engineering')
   await page.evaluate(() => {
     localStorage.setItem('unrelated.user.setting', 'keep-me')
     localStorage.setItem('mission-forge.campaign.v1', JSON.stringify({ version: 1, completedMissionIds: ['wildfire', 'urban-heat'], unlockedPartIds: ['arr-deploy-xl'] }))

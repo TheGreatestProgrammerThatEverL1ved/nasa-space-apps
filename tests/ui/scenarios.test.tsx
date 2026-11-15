@@ -20,7 +20,7 @@ it('marks negative schedule slack as a deficit without changing the verdict', as
 
 it.each(['en', 'ua'] as const)('switches scenario without relabelling a report, preserving language (%s)', async locale => {
   const user = userEvent.setup()
-  render(<App />)
+  render(<App presentation="engineering" />)
   if (locale === 'ua') await user.click(screen.getByRole('button', { name: 'Українська' }))
   const runName = locale === 'en' ? 'Run mission' : 'Запустити місію'
   await user.click(screen.getByRole('button', { name: runName }))

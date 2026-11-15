@@ -9,7 +9,7 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); localStorage.removeItem(CAMPA
 
 it.each(['en', 'ua'] as const)('earns once, buys audited X-band, persists and completes the campaign (%s)', async locale => {
   const user = userEvent.setup()
-  const view = render(<App />)
+  const view = render(<App presentation="engineering" />)
   if (locale === 'ua') await user.click(screen.getByRole('button', { name: 'Українська' }))
   await user.click(screen.getByRole('button', { name: locale === 'en' ? 'Play campaign' : 'Грати кампанію' }))
   const runName = locale === 'en' ? 'Run mission' : 'Запустити місію'
@@ -23,7 +23,7 @@ it.each(['en', 'ua'] as const)('earns once, buys audited X-band, persists and co
   expect(screen.getByTestId('campaign-credits').textContent).toMatch(/^0 /)
   expect(screen.getByTestId('unlock-rf-x').getAttribute('disabled')).not.toBeNull()
   view.unmount()
-  render(<App />)
+  render(<App presentation="engineering" />)
   // Direct play remains the primary reload entry; progress is retained separately.
   await user.click(screen.getByRole('button', { name: 'Play campaign' }))
   expect(screen.getByTestId('campaign-credits').textContent).toMatch(/^0 /)
@@ -52,7 +52,7 @@ it.each(['en', 'ua'] as const)('earns once, buys audited X-band, persists and co
 
 it('warns honestly when local saving fails, while keeping the in-memory pass', async () => {
   const user = userEvent.setup()
-  render(<App />)
+  render(<App presentation="engineering" />)
   await user.click(screen.getByRole('button', { name: 'Play campaign' }))
   vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('quota') })
   await user.click(screen.getByRole('button', { name: 'Run mission' }))
@@ -62,7 +62,7 @@ it('warns honestly when local saving fails, while keeping the in-memory pass', a
 })
 it('fits purchased hardware without losing other draft edits and preserves session drafts across navigation', async () => {
   const user = userEvent.setup()
-  render(<App />)
+  render(<App presentation="engineering" />)
   await user.click(screen.getByRole('button', { name: 'Play campaign' }))
   await user.selectOptions(screen.getByLabelText('Battery', { exact: true }), 'bat-m')
   await user.click(screen.getByRole('button', { name: 'Run mission' }))

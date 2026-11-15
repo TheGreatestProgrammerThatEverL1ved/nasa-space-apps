@@ -1,0 +1,130 @@
+.game-frame {
+  --bg: #050b16; --surface: #101b2c; --surface-alt: #142337; --ink: #e1eaf4; --ink-soft: #a9bed2;
+  --navy: #ecf5ff; --line: #304357; --line-strong: #6d8ba6; --orange: #ffb27c; --orange-bright: #ffd1ac;
+  --orange-soft: #30231e; --green: #9ce6c2; --green-soft: #12342d; --red: #ffb9a8; --red-soft: #3d2021;
+  --amber: #ffd39b; --amber-soft: #342b1f; --code-bg: #142437; --focus: #91ddff;
+  background: var(--bg); color: var(--ink); min-height: 100svh; color-scheme: dark; display:flex; flex-direction:column;
+}
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
+.game-frame button { border: 1px solid var(--line); color: var(--ink); background: #111e2d; border-radius: 3px; padding: .65rem 1rem; }
+.game-frame button:hover { background: #203b51; border-color: #79bedc; }
+.game-frame button:focus-visible,.game-frame a:focus-visible { outline: 3px solid #b6eaff; outline-offset: 4px; }
+.game-frame .game-primary { background: #f6ad73; color: #15120e; border-color: #f6ad73; font-weight: 700; }
+.game-frame .game-primary:hover { background: #ffd3b2; color: #15120e; }
+.game-topbar { position: relative; z-index: 2; display:flex; flex-wrap:wrap; align-items:center; gap:1rem; padding:1rem 3vw; border-bottom:1px solid #263b50; background:#060e1be8; }
+.game-brand { font:700 .85rem var(--mono); letter-spacing:.12em; margin-right:auto; color:#d7edff; }
+.engineering-entry { font-size:.65rem; color:#b0c7db; }
+.game-topbar .locale-switch { margin:0; }
+.game-topbar .locale-switch button { padding:.35rem .65rem; }
+.game-topbar .locale-switch button[aria-pressed=true] { color:#101824; background:#b6e4ff; }
+.game-eyebrow { font:.67rem var(--mono); letter-spacing:.16em; color:#9eb9cf; }
+.orbital-menu { min-height:0; flex:1; position:relative; isolation:isolate; overflow:hidden; display:flex; flex-direction:column; justify-content:center; padding:3rem 7vw 5rem; }
+.menu-scene { position:absolute; inset:0; z-index:-2; }
+.menu-scene .craft-scene { border:0; border-radius:0; min-height:0; }
+.menu-scene::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,#050c18e8,transparent 60%); pointer-events:none; }
+.menu-copy { width:min(31rem,45%); }
+.menu-copy h1 { font-size:clamp(3.7rem,6.3vw,7rem); letter-spacing:-.055em; line-height:.94; font-weight:750; margin:1.7rem 0 1rem; color:#e7f3ff; }
+.menu-copy h1 span { color:#85c9f1; }
+.menu-tagline { color:#bed2e5; margin-bottom:2.3rem; }
+.menu-actions { display:grid; gap:.55rem; max-width:22rem; }
+.menu-actions button { text-align:left; display:flex; align-items:center; gap:1rem; font-size:1.08rem; padding:.9rem 1.2rem; background:#07101cc9; border-color:#38526b; }
+.menu-actions button span { font:.68rem var(--mono); opacity:.75; }
+.menu-actions button b { margin-left:auto; font-size:1.5rem; line-height:1; }
+.menu-current { border-left:2px solid #75bbdf; padding-left:1rem; margin-top:2rem; }
+.menu-current > span { font:.6rem var(--mono); color:#9eb5c9; letter-spacing:.12em; }
+.menu-current p { margin-top:.3rem; color:#e5eef5; }
+.menu-bottom { position:absolute; bottom:1rem; left:3vw; right:3vw; display:flex; gap:1rem; justify-content:space-between; align-items:center; color:#aec4d7; font:.67rem var(--mono); }
+.menu-bottom button { padding:.4rem .65rem; }
+.live-hangar { padding:1.7rem 3vw 3rem; max-width:1900px; margin:auto; }
+.hangar-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1.4rem; }
+.hangar-heading > div { min-width:0; overflow-wrap:anywhere; }
+.hangar-heading h1 { font-size:clamp(1.5rem,2.6vw,2.5rem); margin-top:.4rem; }
+.hangar-heading .game-primary { min-width:8rem; }
+.subsystem-tabs { display:flex; flex-wrap:wrap; gap:.4rem; padding-bottom:1.25rem; }
+.subsystem-tabs button { font-size:.78rem; }
+.game-frame button[aria-pressed=true]:not(.locale-switch button):not(.menu-bottom button) { border-color:#91ddff; box-shadow:inset 0 -2px #91ddff; background:#193348; }
+.hangar-layout { display:grid; grid-template-columns:minmax(220px, .85fr) minmax(300px,2fr) minmax(210px,.8fr); gap:1.2rem; align-items:start; }
+.part-library h2,.part-hud h2 { font-size:1.1rem; margin:.55rem 0; }
+.library-hint { color:#abc2d5; font-size:.74rem; margin-bottom:1rem; }
+.part-cards { display:grid; gap:.6rem; }
+.game-frame .part-card { text-align:left; display:grid; gap:.5rem; padding:1rem; border-color:#31475c; }
+.part-card-top { display:flex; justify-content:space-between; font-size:.65rem; color:#a6cce7; }
+.part-card-top code { padding:0; background:none; color:inherit; }
+.part-card strong { font-size:.92rem; line-height:1.4; }
+.part-summary { font-size:.72rem; color:#bbd0e2; line-height:1.55; }
+.part-warning { font-size:.68rem; color:#ffd0a0; }
+.craft-inspection { position:relative; background:radial-gradient(ellipse at 50% 35%,#122e48,#070f1c 70%); border:1px solid #293e53; }
+.inspection-label { display:flex; justify-content:space-between; gap:1rem; font:.55rem var(--mono); color:#9dbcd4; padding:1rem; }
+.craft-inspection .craft-scene { height:380px; }
+.camera-controls { display:flex; justify-content:center; gap:.45rem; flex-wrap:wrap; padding:.7rem; }
+.camera-controls button { font-size:.65rem; }
+.viewport-slots { display:flex; justify-content:center; gap:.35rem; flex-wrap:wrap; padding:.5rem 1rem; }
+.viewport-slots button { font-size:.6rem; padding:.4rem .6rem; }
+.art-note { color:#93aec5; font-size:.62rem; line-height:1.6; padding:.7rem 1rem; }
+.part-hud { border-top:2px solid #81c4e9; padding:1rem .4rem; }
+.part-hud dl { display:grid; gap:.7rem; margin:1rem 0; }
+.part-hud dl > div { border-bottom:1px solid #263b50; padding-bottom:.55rem; }
+.part-hud dt { font-size:.68rem; color:#aac1d6; }
+.part-hud dd { font:1.1rem var(--mono); margin-top:.15rem; }
+.part-hud dd small { color:#9cb6ce; font-size:.65rem; }
+.tradeoff { font-size:.7rem; color:#c1d4e4; border-left:2px solid #dc9e6c; padding-left:.7rem; margin:1rem 0; }
+.draft-telemetry { margin-top:1.4rem; }
+.draft-telemetry h3 { font-size:.76rem; }
+.live-margin { margin-top:.8rem; }
+.live-margin p { display:flex; gap:.5rem; justify-content:space-between; font-size:.67rem; }
+.live-margin strong { font-family:var(--mono); font-weight:500; white-space:nowrap; color:#b5e6f5; }
+.live-margin small { font-size:.58rem; color:#9ab1c8; }
+.honest-bar { height:3px; background:#273b4e; margin:.35rem 0 .1rem; overflow:hidden; }
+.honest-bar span { display:block; height:100%; background:#86c9e8; }
+.live-margin.deficit strong,.live-margin.deficit small { color:#ffb6a6; }
+.draft-telemetry .art-note { padding:.6rem 0; }
+.mission-choice-preview { min-height:380px; padding:1rem; display:flex; flex-direction:column; justify-content:center; text-align:center; }
+.mission-choice-preview svg { width:100%; max-height:270px; }
+.mission-choice-preview small { color:#a6bed2; font-size:.65rem; }
+.game-frame .help-entry { position:static; margin:0; font-size:.8rem; }
+.selection-feedback { border-left:2px solid #79bedc; background:#102232; padding:.65rem; margin:.7rem 0; font-size:.7rem; color:#c5dced; }
+.selection-feedback strong { display:block; margin-bottom:.35rem; }
+.selection-feedback p + p { margin-top:.4rem; color:#f2c998; }
+.native-totals { margin-top:1rem; font-size:.7rem; }
+.part-hud .system-totals dd { font-size:.8rem; }
+.game-frame .academy-offer { margin:0; }
+.game-frame .academy-dialog { background:#101d2e; color:#e1eaf4; }
+.game-frame .mission-shell { background:var(--bg); }
+.game-frame .command-grid { padding-top:1rem; }
+@media(min-width:1650px) { .craft-inspection .craft-scene { height:490px; } }
+@media(max-width:1100px) {
+  .hangar-layout { grid-template-columns:minmax(200px,.8fr) minmax(300px,1.6fr); }
+  .part-hud { grid-column:1/-1; display:grid; grid-template-columns:1fr 1fr; gap:0 2rem; }
+  .part-hud .game-eyebrow,.part-hud h2 { grid-column:1; }
+  .part-hud dl { grid-column:1; }
+  .part-hud .draft-telemetry { grid-column:2; grid-row:1/6; }
+  .menu-copy { width:47%; }
+}
+@media(max-width:650px) {
+  .game-topbar { gap:.6rem; padding:.7rem 1rem; font-size:.75rem; }
+  .game-topbar > button { padding:.4rem .6rem; }
+  .game-brand { font-size:.65rem; }
+  .orbital-menu { padding:18rem 1.3rem 7rem; justify-content:start; }
+  .menu-copy { width:100%; max-width:none; }
+  .menu-copy h1 { font-size:3.6rem; margin:1rem 0; }
+  .menu-scene { bottom:auto; height:390px; }
+  .menu-copy .game-eyebrow { font-size:.57rem; }
+  .menu-tagline { font-size:.85rem; margin-bottom:1.5rem; }
+  .menu-actions { max-width:none; }
+  .menu-bottom { bottom:1rem; left:1.3rem; right:1.3rem; align-items:start; flex-direction:column; font-size:.55rem; }
+  .menu-current { margin-top:1.3rem; }
+  .hangar-layout { display:flex; flex-direction:column; }
+  .hangar-layout > * { width:100%; min-width:0; }
+  .craft-inspection { order:0; }
+  .part-library { order:1; }
+  .part-hud { order:2; display:block; }
+  .craft-inspection .craft-scene { height:270px; }
+  .viewport-slots { display:none; }
+  .live-hangar { padding:1.1rem .8rem 2rem; }
+  .subsystem-tabs { gap:.3rem; }
+  .subsystem-tabs button { font-size:.7rem; padding:.45rem .65rem; }
+  .hangar-heading { align-items:start; }
+  .hangar-heading .game-primary { min-width:auto; padding:.6rem; font-size:.8rem; }
+  .hangar-heading h1 { font-size:1.5rem; }
+}
+@media(prefers-reduced-motion:reduce) { .game-frame *, .game-frame *::before, .game-frame *::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }

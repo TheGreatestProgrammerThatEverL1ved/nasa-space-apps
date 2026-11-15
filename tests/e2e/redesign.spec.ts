@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 for (const locale of ['en', 'ua'] as const) {
   test(`mission-control repair and accessible disclosures (${locale})`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 1440, height: 1000 })
-    await page.goto('./')
+    await page.goto('./?view=engineering')
     if (locale === 'ua') await page.getByRole('button', { name: 'Українська', exact: true }).click()
     await expect(page.locator('#ground-hint')).toContainText(/7[.,]1/)
     await expect(page.locator('#ground-hint')).toContainText(/3[.,]1/)

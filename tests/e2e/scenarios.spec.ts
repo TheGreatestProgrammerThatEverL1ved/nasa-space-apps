@@ -8,7 +8,7 @@ for (const locale of ['en', 'ua'] as const) {
     page.on('pageerror', error => errors.push(error.message))
     page.on('response', response => { if (response.status() >= 400) failedAssets.push(response.url()) })
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.goto('./')
+    await page.goto('./?view=engineering')
     if (locale === 'ua') await page.getByRole('button', { name: 'Українська', exact: true }).click()
     const picker = page.locator('#mission-picker')
     await picker.focus()

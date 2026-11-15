@@ -46,7 +46,7 @@ const copy = {
   },
 } as const
 
-export default function Academy({ locale, onLocaleChange }: { locale: Locale; onLocaleChange: (locale: Locale) => void }) {
+export default function Academy({ locale, onLocaleChange, replaySignal = 0, compact = false }: { locale: Locale; onLocaleChange: (locale: Locale) => void; replaySignal?: number; compact?: boolean }) {
   const c = copy[locale]
   const [offered, setOffered] = useState(() => { try { return localStorage.getItem(KEY) !== 'seen' } catch { return true } })
   const [open, setOpen] = useState(false)
@@ -57,6 +57,7 @@ export default function Academy({ locale, onLocaleChange }: { locale: Locale; on
   const dialogRef = useRef<HTMLDialogElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const helpRef = useRef<HTMLButtonElement>(null)
+  const lastReplay = useRef(0)
   const returnRef = useRef<HTMLElement | null>(null)
   const remember = () => { setOffered(false); try { localStorage.setItem(KEY, 'seen') } catch { /* Guide remains usable without persistence. */ } }
   const show = (guide: boolean) => {
@@ -74,6 +75,12 @@ export default function Academy({ locale, onLocaleChange }: { locale: Locale; on
     if (open) { dialog?.showModal?.(); headingRef.current?.focus() }
     else dialog?.close?.()
   }, [open])
+  useEffect(() => {
+    if (replaySignal === lastReplay.current) return
+    lastReplay.current = replaySignal
+    returnRef.current = document.activeElement as HTMLElement
+    setGuided(true); setOpen(true); setGround('gs-single'); setReport(null); setDirty(false)
+  }, [replaySignal])
   useEffect(() => {
     const helpShortcut = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
@@ -94,7 +101,7 @@ export default function Academy({ locale, onLocaleChange }: { locale: Locale; on
   const passed = !dirty && report?.outcome === 'MODEL_PASS_PROVISIONAL'
   return <>
     <button className="help-entry" ref={helpRef} aria-keyshortcuts="?" title={locale === 'en' ? 'Help shortcut: ?' : 'Клавіша допомоги: ?'} onClick={() => show(false)}>{c.help}</button>
-    {offered && <section className="academy-offer" aria-label={c.title}>
+    {offered && !compact && <section className="academy-offer" aria-label={c.title}>
       <p>{c.offer}</p><button onClick={() => show(true)}>{c.start}</button><button onClick={remember}>{c.skip}</button>
     </section>}
     <dialog ref={dialogRef} className="academy-dialog" aria-labelledby="academy-title" onCancel={event => { event.preventDefault(); close() }}>

@@ -1,0 +1,66 @@
+.mission-gallery {
+  --gallery-pad: clamp(1rem, 3.5vw, 2.75rem);
+  width: 100%; max-width: 1240px; margin: 0 auto;
+  padding: var(--gallery-pad) var(--gallery-pad) calc(var(--gallery-pad) * 1.4);
+}
+.mission-gallery * { box-sizing: border-box; }
+.mission-gallery-header { display: grid; gap: .7rem; padding-bottom: 1.2rem; margin-bottom: 1.4rem; border-bottom: 1px solid var(--line); }
+.mission-gallery-eyebrow { font: .66rem var(--mono, ui-monospace, monospace); letter-spacing: .16em; text-transform: uppercase; color: var(--ink-soft); }
+.mission-gallery h1 { font-size: clamp(1.8rem, 4.6vw, 3.6rem); line-height: 1.02; letter-spacing: -.04em; color: var(--navy); overflow-wrap: anywhere; }
+.mission-gallery h1:focus-visible { outline: 3px solid var(--focus); outline-offset: 5px; }
+.mission-gallery-intro { max-width: 62ch; color: var(--ink-soft); font-size: .92rem; line-height: 1.6; }
+.mission-gallery-group { display: grid; gap: 1rem; }
+.mission-gallery-group-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: .5rem 1rem; }
+.mission-gallery-group-head h2 { font-size: clamp(1.15rem, 2.4vw, 1.6rem); color: var(--navy); }
+.mission-gallery-group-head > p { flex: 1 1 20rem; max-width: 56ch; color: var(--ink-soft); font-size: .78rem; line-height: 1.55; }
+.mission-gallery-count { font: .65rem var(--mono, ui-monospace, monospace); letter-spacing: .08em; color: var(--orange); white-space: nowrap; }
+.mission-gallery-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: stretch; }
+.mission-gallery .mission-card { display: flex; flex-direction: column; min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 5px; background: linear-gradient(180deg, var(--surface-alt), var(--surface)); }
+.mission-gallery .mission-card[aria-current="true"] { border-color: var(--focus); box-shadow: 0 0 0 1px var(--focus), 0 12px 30px #0008; }
+.mission-gallery .mission-card, .game-frame .mission-gallery .mission-gallery-action { transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease; }
+.mission-gallery-art { aspect-ratio: 16 / 9; background: #06101d; border-bottom: 1px solid var(--line); }
+.mission-gallery-art svg { display: block; width: 100%; height: 100%; }
+.mission-gallery-body { display: flex; flex: 1; flex-direction: column; gap: .7rem; min-width: 0; padding: 1rem; overflow-wrap: anywhere; }
+.mission-gallery-status { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; min-height: 1.6rem; }
+.mission-gallery-pill { padding: .25rem .45rem; border: 1px solid currentColor; border-radius: 2px; font: .58rem var(--mono, ui-monospace, monospace); letter-spacing: .08em; text-transform: uppercase; }
+.mission-gallery-pill.current { color: var(--orange-bright); background: var(--orange-soft); }
+.mission-gallery-pill.available { color: var(--green); background: var(--green-soft); }
+.mission-gallery-pill.locked { color: var(--red); background: var(--red-soft); }
+.mission-gallery-pill.completed { color: #9fd8ff; background: #102b40; }
+.mission-gallery .mission-card h3 { color: var(--navy); font-size: 1.18rem; line-height: 1.15; overflow-wrap: anywhere; }
+.mission-gallery-premise { color: var(--ink); font-size: .82rem; line-height: 1.5; }
+.mission-gallery-objective { color: var(--ink-soft); font-size: .78rem; line-height: 1.55; }
+.mission-gallery-objective strong { color: var(--orange-bright); font-weight: 600; }
+.mission-gallery-goals { padding: .6rem .7rem; border-left: 2px solid var(--orange); background: #0c1826; }
+.mission-gallery-goals h4 { margin-bottom: .3rem; color: var(--orange-bright); font: .6rem var(--mono, ui-monospace, monospace); letter-spacing: .12em; text-transform: uppercase; }
+.mission-gallery-goals p { color: #c9dbea; font-size: .7rem; line-height: 1.6; }
+.mission-gallery-brief { padding-top: .55rem; border-top: 1px solid var(--line); font-size: .74rem; }
+.mission-gallery-brief summary { cursor: pointer; color: #9ed8f2; font-weight: 600; }
+.mission-gallery-brief summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.mission-gallery-brief p { margin-top: .45rem; color: var(--ink-soft); line-height: 1.6; }
+.mission-gallery-contract { color: var(--ink-soft); font-size: .72rem; line-height: 1.55; }
+.mission-gallery-reward { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem; padding-top: .55rem; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: .68rem; }
+.mission-gallery-reward strong { color: var(--orange-bright); font: 1rem var(--mono, ui-monospace, monospace); white-space: nowrap; }
+.game-frame .mission-gallery .mission-gallery-action { display: flex; align-items: center; justify-content: space-between; gap: .6rem; width: 100%; min-height: 2.8rem; margin-top: auto; padding: .7rem .8rem; border: 1px solid var(--line-strong); border-radius: 3px; background: #102235; color: var(--navy); font-size: .8rem; font-weight: 700; text-align: left; }
+.game-frame .mission-gallery .mission-gallery-action:hover:not(:disabled) { border-color: #8edcff; background: #1a3850; }
+.game-frame .mission-gallery .mission-gallery-action.is-current { border-color: var(--orange); background: var(--orange); color: #171009; }
+.game-frame .mission-gallery .mission-gallery-action.is-current:hover { border-color: var(--orange-bright); background: var(--orange-bright); color: #171009; }
+.game-frame .mission-gallery .mission-gallery-action:disabled { opacity: .55; cursor: not-allowed; }
+.game-frame .mission-gallery .mission-gallery-action:disabled:hover { border-color: var(--line-strong); background: #102235; }
+.mission-gallery .mission-gallery-action:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.mission-gallery-action span { font-size: 1.1rem; }
+@media (max-width: 760px) {
+  .mission-gallery-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .mission-gallery { --gallery-pad: 1rem; }
+  .mission-gallery-body { padding: .85rem; }
+}
+@media (max-width: 340px) {
+  .mission-gallery { --gallery-pad: .7rem; }
+  .mission-gallery h1 { font-size: 1.7rem; }
+  .mission-gallery-reward { align-items: start; flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mission-gallery *, .mission-gallery *::before, .mission-gallery *::after { animation: none !important; transition: none !important; }
+}

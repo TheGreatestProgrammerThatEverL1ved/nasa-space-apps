@@ -1,9 +1,10 @@
-import { afterEach, expect, it } from 'vitest'
+import { afterEach, beforeEach, expect, it } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from '../../src/App'
 
-afterEach(cleanup)
+beforeEach(() => localStorage.setItem('mission-forge.academy.v1', 'seen'))
+afterEach(() => { cleanup(); localStorage.removeItem('mission-forge.academy.v1') })
 it('menu → hangar → real part swap → menu keeps the same spacecraft and locale', async () => {
   const user = userEvent.setup()
   const { container } = render(<App />)

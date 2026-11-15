@@ -214,7 +214,7 @@ export const APPEARANCES: Readonly<Record<string, Appearance>> = {
   'lv-heavy': {
     kind: 'external', id: 'lv-heavy', role: 'launcher', short: 'LV',
     label: { en: '50 kg SSO rideshare slot', ua: 'Слот rideshare 50 кг на SSO' }, accent: '#d99a6c',
-    note: { en: 'Launch booking: shown only as a plume in launch mode.', ua: 'Бронювання запуску: показано лише факелом у режимі запуску.' },
+    note: { en: 'Launch booking: previewed separately, never attached to the spacecraft.', ua: 'Бронювання запуску: окремий попередній огляд, не деталь на апараті.' },
   },
 }
 

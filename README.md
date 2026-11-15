@@ -12,11 +12,13 @@ Also playable: **Trace the Shoreline**, a genuinely visible-light lens-selection
 - [Agent workflow and review gates](docs/agent-workflow.md)
 - [Agent entry point](AGENTS.md)
 
-**Current stage: four-mission night-02 candidate with interactive academy and a complete campaign.** Mission Control → inspectable spacecraft hangar → real simulation → debrief/typed repair → next contract. Details/evidence remain accessible on demand. [Overnight handoff](docs/overnight-handoff.md) records actual progress and recovery. Human bilingual scientific/linguistic and assistive-technology review remains pending. Nothing has been deployed.
+**Current stage: night-03 orbital visual/flow checkpoint.** Full-screen menu → live spacecraft customization → illustrated Earth mission selector → frozen launch → debrief/typed repair. The original campaign remains playable; the branching economy is the next authorized slice, not yet shipped. [Overnight handoff](docs/overnight-handoff.md) records exact checkpoints and recovery. Human bilingual scientific/linguistic and assistive-technology review remains pending. Nothing has been deployed.
 
 ## Run locally
 
-Night-02 adds a skippable, replayable **Flight Academy**. Use **Help / Academy** (or **?** outside form fields) at any time: the guided WF-B run uses the real evaluator (7.1 h → choose the ground network → 3.1 h), never pays campaign credits, and leaves your design/report intact. Mission phase navigation, inspectable spacecraft slots and the recorded 24-hour contact strip explain the current design and its bottleneck. All art is original schematic SVG, not a flight layout.
+A fresh profile automatically enters **Flight Academy**, with immediate Skip and language selection. Accept its training contract, launch (7.1 h), equip the ground network and rerun (3.1 h provisional pass). The menu's **Tutorial** replays it; **Help / Academy** or **?** preserves your draft, report and credits. Guided runs never pay credits.
+
+Menu, hangar and launch share a lazy procedural 3D spacecraft with actual part-specific shapes, internal battery inspection and a dynamic SVG fallback. A visible menu control disables continuous motion; reduced-motion starts static and skips launch presentation. Earth texture: NASA Earth Observatory. All spacecraft/scenario art is illustrative, not a flight layout. The **Engineering console** link retains the detailed legacy workbench as an optional advanced entry.
 
 Node 22.22.2+ (or a compatible supported Node release) and npm:
 
@@ -25,13 +27,13 @@ npm ci
 npm run dev
 ```
 
-Open the printed local URL under `/nasa-space-apps/`. Start with the supplied WF-B/single-station design, run the mission, read the 7.1 h latency failure, change **Ground service** to the network, and run again: 3.1 h, provisional pass. English/Ukrainian controls and results are available.
+Open the printed local URL under `/nasa-space-apps/`. Finish or skip the academy → **Customize**. Choose a subsystem and a real part card to equip it immediately. **Launch** freezes the current design and evaluator result; skip the short presentation at any time. Wildfire's starter has a 7.1 h latency failure: use the debrief's ground-service repair, equip the network, then launch again for a 3.1 h provisional pass. English/Ukrainian controls and results are available.
 
 Choose **Urban Heat Map** for a different challenge. Its starter S-band/network cannot sustain the image stream. Switch **Radio package** to X-band, rerun, then compare **Ground service → single station**: a cheaper provisional pass at 7.1 h is acceptable against urban's 12 h fixture limit, but not wildfire's 6 h limit. Frequent S-band service is another passing approach. All engineering gates remain enforced; no calibrated temperature, air-temperature, street-level or health-risk capability is implied.
 
 ### Optional campaign
 
-Select **Play campaign** for wildfire → urban → visible mapping → relay. Each first provisional pass earns **100 credits once**. Unlock X-band, the 35 mm visible camera and receive/store package for **100 each**. The optional audited 135 W array offers a materially different power/mass choice. Full refunds keep every purchase order solvable. Fit owned parts into compatible designs; retry for free. Engineering USD and all requirements remain separate.
+Select **Campaign** from the menu for wildfire → urban → visible mapping → relay. Each first provisional pass earns **100 credits once**. Unlock X-band, the 35 mm visible camera and receive/store package for **100 each**. The optional audited 135 W array offers a materially different power/mass choice. Full refunds keep every purchase order solvable. Fit owned parts into compatible designs; retry for free. Engineering USD and all requirements remain separate. In campaign the menu offers **Sandbox** to return directly to unrestricted mission selection.
 
 [Campaign progress](docs/mission-campaign.md) is saved locally, separately from direct play. Re-enter campaign after reload to continue. Direct mission selection remains available; no account is needed.
 
@@ -54,15 +56,18 @@ npm run build
 MISSION_FORGE_PREVIEW=1 npm run test:e2e
 ```
 
-`npm run preview` serves the built app locally at `/nasa-space-apps/`. Tests own port 4173; stop another local server on that port first. Reload starts direct wildfire play in English; campaign completions/unlocks survive separately in localStorage. Existing v1 saves preserve their entitlements and credit balance. Designs survive in-session navigation only, not reload. Switching missions preserves language/drafts, restores picker focus and clears the old report rather than relabelling it.
+`npm run preview` serves the built app locally at `/nasa-space-apps/`. Tests own port 4173; stop another local server on that port first. Reload opens the menu in English (or automatic academy if unseen); campaign completions/unlocks survive separately in localStorage. Existing v1/v2 saves retain their entitlements and credit balance. Separate mode/mission drafts survive session navigation, not reload. Selecting a new mission clears the old report rather than relabelling it. `?renderer=svg` explicitly exercises the supported schematic fallback.
 
 ## Delivery scope
 
 Thermal missions retain the frozen audited catalog and seven science/19 engineering checks. New scenario catalogs have explicit provisional evidence records. Relay uses six mission/17 applicable engineering checks, without pretending camera geometry applies. Edited or context-changed results are stale; rerun to evaluate the draft. Rounded boundaries retain full-precision details.
 
-The original schematic spacecraft slots show selected subsystem effects; the contact strip consumes the actual recorded schedule. There is no animation or second verdict. Keyboard controls, help/guide focus, reduced motion and enlarged-text mobile reflow are tested, including opened disclosures. Resource percentages describe the last Run, never the draft.
+The hangar's live draft telemetry is evaluated separately from frozen launch results. Exact installed values and signed, capped headroom bars show real tradeoffs, not arbitrary ratings. Launch animation cannot alter an outcome or mint a second reward. The contact strip consumes the recorded schedule. Keyboard controls, help/guide focus, reduced motion, WebGL context loss/fallback and enlarged-text reflow are tested, including opened disclosures.
 
 ### Actual Chrome screenshots
+
+- Night-03: [orbital menu](docs/screenshots/night03-menu-en.png) · [before](docs/screenshots/night03-craft-before-en.png) / [after real array swap](docs/screenshots/night03-craft-after-en.png) · [battery inspection](docs/screenshots/night03-battery-en.png)
+- [Four illustrated missions](docs/screenshots/night03-missions-en.png) · [Ukrainian academy](docs/screenshots/night03-academy-ua.png) · [launch](docs/screenshots/night03-launch-en.png) · [failure/repair](docs/screenshots/night03-debrief-failure-en.png) · [provisional pass](docs/screenshots/night03-debrief-pass-ua.png)
 
 - Night-02: [first load](docs/screenshots/night02-first-load.png) · [spacecraft](docs/screenshots/night02-workbench.png) · [debrief](docs/screenshots/night02-debrief-en.png) · [Ukrainian academy](docs/screenshots/night02-academy-uk.png)
 - [Visible mapping](docs/screenshots/night02-visible-en.png) · [Ukrainian](docs/screenshots/night02-visible-uk.png)
@@ -82,11 +87,13 @@ Automated accessibility scans do not replace assistive-technology testing or bil
 
 ### 60-second local demo
 
-Open `/nasa-space-apps/` → **Start guided mission** → launch (7.1 h failure) → choose the ground network → rerun (3.1 h provisional pass) → return to design. Then select **Trace the Shoreline**, fit 35 mm and Run; select **Carry the Signal**, choose ground network and Run. Toggle Ukrainian at any point. For the longer campaign path and refunds, see [Mission Campaign](docs/mission-campaign.md).
+Open `/nasa-space-apps/` → automatic academy → accept contract → launch (7.1 h) → ground network → retry (3.1 h) → main menu. **Customize** → equip another solar array → return and see the same larger wings. **Missions** → **Trace the Shoreline** → Payload → 35 mm → Launch. Then **Carry the Signal** → Ground service → network → Launch. Toggle Ukrainian at any point. For campaign credits/refunds, see [Mission Campaign](docs/mission-campaign.md).
 
 See [third-party notices](docs/third-party-notices.md) for software licenses and attribution.
 
 ## Verification
+
+The night-03 visual/flow checkpoint passed typecheck, lint (zero warnings), build, **137 engine /32 UI /33 production-preview Chrome** tests and audit (zero vulnerabilities). This includes actual WebGL and context-loss replacement, fallback equipment and rotation, the complete four-mission bilingual game flow, fresh automatic academy, frozen launch/reward integrity, and completing the guide plus disclosed report reflow at 320px/200%. See the handoff for exact checkpoint and clean-copy status; branching progression remains pending.
 
 The night-02 candidate passed typecheck, lint, build, **133 evaluator/progression**, **27 UI**, and **21 production-preview Chrome tests**. Coverage preserves WF-A/B/C/all 15 audited cases and urban checks, and adds actual bilingual guide/mission/campaign repairs, visible↔thermal capability, exact FIFO relay/boundaries/malformed evidence, all v1 inventories, storage isolation, stale/spoofed reward rejection, fitting/refunds and **48/48-state campaign solvency**. Keyboard focus, axe, 320px/200% text, opened disclosures and reduced motion remain covered. See the handoff for checkpoint and clean-copy evidence.
 

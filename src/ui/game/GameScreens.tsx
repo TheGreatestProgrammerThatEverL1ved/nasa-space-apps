@@ -7,7 +7,7 @@ import type { PartField } from '../mission-control/Spacecraft'
 import CraftScene from '../orbital/CraftScene'
 import './game.css'
 
-export type GameScreen = 'menu' | 'hangar' | 'control' | 'missions' | 'launch' | 'debrief'
+export type GameScreen = 'menu' | 'hangar' | 'missions' | 'launch' | 'debrief'
 const categories = [
   ['busId', 'bus'], ['payloadId', 'payload'], ['arrayId', 'array'], ['batteryId', 'battery'],
   ['radioId', 'radio'], ['groundId', 'ground'], ['orbitId', 'orbit'], ['launcherId', 'launcher'],

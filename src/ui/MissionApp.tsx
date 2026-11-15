@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useRef, useState, type ChangeEvent, type MouseEvent, type ReactNode, type Ref } from 'react'
+import { useCallback, useEffect, useImperativeHandle, useRef, useState, type ChangeEvent, type MouseEvent, type ReactNode, type Ref } from 'react'
 import type {
   Category,
   CheckResult,
@@ -36,6 +36,8 @@ import { ContactStrip, Spacecraft, type PartField } from './mission-control/Spac
 import { repairDestination } from './mission-control/repairs'
 import LiveHangar, { SceneMenu, type GameScreen } from './game/GameScreens'
 import { useOrbitalMotion } from './game/motion'
+import MissionGallery from './game/MissionGallery'
+import LaunchSequence from './game/LaunchSequence'
 
 export interface MissionAppProps {
   readonly context: EvaluationContext
@@ -55,6 +57,7 @@ export interface MissionAppProps {
   readonly game?: {
     screen: GameScreen; onNavigate: (screen: GameScreen) => void
     campaignActive: boolean; onCampaign: () => void
+    contracts?: readonly { missionId: string; available: boolean; completed: boolean; reward: number; reason: string }[]
   }
 }
 export interface EquipmentRequest { readonly partId: string; readonly field: PartField; readonly refund?: boolean }
@@ -500,8 +503,21 @@ export default function MissionApp({
   const [phase, setPhase] = useState<'board' | 'build' | 'debrief'>('build')
   const [selectedField, setSelectedField] = useState<PartField>('arrayId')
   const [tutorialSignal, setTutorialSignal] = useState(0)
+  const [academyOpen, setAcademyOpen] = useState(false)
   const { motion, setMotion } = useOrbitalMotion()
   const gameScreen = game?.screen
+  const navigateGame = game?.onNavigate
+  const launchLock = useRef(false)
+  const [frozenRun, setFrozenRun] = useState<MissionConfiguration | null>(null)
+  const finishLaunch = useCallback(() => {
+    launchLock.current = false
+    navigateGame?.('debrief')
+    setRunSignal(value => value + 1)
+  }, [navigateGame])
+  const navigate = (screen: GameScreen) => {
+    launchLock.current = false
+    navigateGame?.(screen)
+  }
 
   const t = (key: MessageKey) => translate(locale, key)
   const tc = (key: MessageKey, _fallback?: string) => translate(locale, key)
@@ -518,7 +534,7 @@ export default function MissionApp({
   }, [focusMissionPicker])
   useEffect(() => {
     if (!gameScreen) return
-    const id = gameScreen === 'menu' ? 'menu-title' : gameScreen === 'hangar' ? 'hangar-title' : gameScreen === 'debrief' ? 'result-heading' : 'picker-heading'
+    const id = gameScreen === 'menu' ? 'menu-title' : gameScreen === 'hangar' ? 'hangar-title' : gameScreen === 'debrief' ? 'result-heading' : gameScreen === 'launch' ? 'launch-title' : 'missions-title'
     document.getElementById(id)?.focus()
   }, [gameScreen])
 
@@ -545,11 +561,13 @@ export default function MissionApp({
   }
 
   const handleRun = () => {
-    game?.onNavigate('debrief')
+    if (game && launchLock.current) return
+    if (game) launchLock.current = true
     setPhase('debrief')
     setEvaluationError(false)
     try {
-      const next = evaluate(draft)
+      const runConfig = Object.freeze({ ...draft })
+      const next = evaluate(runConfig)
       // Snapshot the evaluated context and configuration together, so later
       // edits or catalog revisions cannot rewrite this report's provenance.
       const evaluatedContext = structuredClone(context)
@@ -560,14 +578,24 @@ export default function MissionApp({
         parts: selectedParts(evaluatedConfig, evaluatedContext),
       })
       setReport(next)
+      setFrozenRun(Object.freeze({ ...(next.config ?? runConfig) }))
       setStale(false)
+      // Settlement is synchronous and exactly once at preflight, never from an
+      // animation/timer callback. Skip, locale changes and exiting cannot mint.
       onReport?.(next)
+      if (game) {
+        const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+        if (reduced || !motion) finishLaunch()
+        else navigateGame?.('launch')
+      }
     } catch {
+      launchLock.current = false
+      navigateGame?.('debrief')
       setEvaluationError(true)
       // The old report survives, but it can no longer be presented as current.
       if (report) setStale(true)
     } finally {
-      setRunSignal((value) => value + 1)
+      if (!game) setRunSignal((value) => value + 1)
     }
   }
 
@@ -591,7 +619,11 @@ export default function MissionApp({
     fitEquipment(request, nextContext) {
       const field = selectFields(nextContext).find(f => f.key === request.field)
       const available = field?.options.some(p => p.id === request.partId)
-      if (!field || (!available && !request.refund)) { pickerRef.current?.focus(); return }
+      if (!field || (!available && !request.refund)) {
+        if (game) navigate('missions')
+        else pickerRef.current?.focus()
+        return
+      }
       if (!request.refund || draft[field.key] === request.partId) {
         const next = { ...draft, [field.key]: request.refund ? field.options[0]?.id ?? '' : request.partId }
         setDraft(next); onDraftChange?.(next)
@@ -665,21 +697,28 @@ export default function MissionApp({
   )
 
   return (
-    <div className={game ? 'game-frame' : 'mission-shell'}>
+    <div className={game ? 'game-frame' : 'mission-shell'} onClickCapture={event => {
+      // A double-click must not retarget its second click to the language/menu
+      // controls after the Launch button is replaced by the new screen.
+      if (game && event.detail > 1 && (event.target as HTMLElement).closest('button, a, summary')) {
+        event.preventDefault(); event.stopPropagation()
+      }
+    }}>
       {game && <>
         <header className="game-topbar">
           <span className="game-brand">MISSION FORGE <span aria-hidden="true">/</span> {game.campaignActive ? (locale === 'en' ? 'CAMPAIGN' : 'КАМПАНІЯ') : (locale === 'en' ? 'SANDBOX' : 'ПІСОЧНИЦЯ')}</span>
           {game.screen === 'menu' && <a className="engineering-entry" href="?view=engineering">{locale === 'en' ? 'Engineering console' : 'Інженерна консоль'}</a>}
-          {game.screen !== 'menu' && <button onClick={() => game.onNavigate('menu')}>{locale === 'en' ? '← Main menu' : '← Головне меню'}</button>}
-          <Academy locale={locale} onLocaleChange={setLocale} replaySignal={tutorialSignal} compact />
+          {game.screen !== 'menu' && <button onClick={() => navigate('menu')}>{locale === 'en' ? '← Main menu' : '← Головне меню'}</button>}
+          {report && ['menu', 'hangar'].includes(game.screen) && <button onClick={() => navigate('debrief')}>{locale === 'en' ? 'Last debrief' : 'Останній підсумок'}</button>}
+          <Academy locale={locale} onLocaleChange={setLocale} replaySignal={tutorialSignal} compact autoStart onFirstRunExit={() => navigate('menu')} onOpenChange={setAcademyOpen} />
           <div className="locale-switch" role="group" aria-label={t('app.language')}>
             <button aria-pressed={locale === 'en'} onClick={() => setLocale('en')}>English</button>
             <button aria-pressed={locale === 'ua'} onClick={() => setLocale('ua')}>Українська</button>
           </div>
         </header>
         {game.screen === 'menu' && <SceneMenu config={draft} locale={locale} missionName={missionName}
-          campaignActive={game.campaignActive} motion={motion} onMotion={() => setMotion(!motion)}
-          onNavigate={screen => game.onNavigate(screen === 'missions' ? 'control' : screen)} onCampaign={game.onCampaign}
+          campaignActive={game.campaignActive} motion={motion && !academyOpen} onMotion={() => setMotion(!motion)}
+          onNavigate={navigate} onCampaign={game.onCampaign}
           onTutorial={() => setTutorialSignal(n => n + 1)} />}
         {game.screen === 'hangar' && <LiveHangar config={draft} context={context} locale={locale}
           selectedField={selectedField} onInspect={setSelectedField} motion={motion} onLaunch={handleRun}
@@ -688,11 +727,18 @@ export default function MissionApp({
             const next = { ...draft, [field]: id }
             setDraft(next); onDraftChange?.(next); if (report) setStale(true)
           }} />}
+        {game.screen === 'missions' && mission && missions && onMissionChange && <>
+          <MissionGallery missions={missions} locale={locale} selectedMissionId={mission.id}
+            onChoose={onMissionChange} contracts={game.campaignActive ? game.contracts : undefined} />
+          {game.campaignActive && campaignPanel}
+        </>}
+        {game.screen === 'launch' && frozenRun && report && <LaunchSequence config={frozenRun} report={report} locale={locale}
+          missionName={missionName} onFinish={finishLaunch} />}
       </>}
-      {(!game || game.screen === 'control' || game.screen === 'debrief') && <>
-      <a className="skip-link" href="#mission-controls">
+      {(!game || game.screen === 'debrief') && <>
+      {!game && <a className="skip-link" href="#mission-controls">
         {t('app.skipToControls')}
-      </a>
+      </a>}
 
       {!game && <><header className="mission-header">
         <div className="header-grid">
@@ -804,9 +850,13 @@ export default function MissionApp({
       </nav></>}
       {!game && <Academy locale={locale} onLocaleChange={setLocale} />}
 
-      <main className="command-grid">
-        {campaignPanel}
-        {mission && missions && onMissionChange && (
+      <main className={game ? 'game-debrief' : 'command-grid'}>
+        {game && <header className="debrief-mission"><p className="game-eyebrow">{locale === 'en' ? 'FROZEN MISSION REPORT' : 'ЗАФІКСОВАНИЙ ЗВІТ МІСІЇ'}</p>
+          <h1>{missionName}</h1><p>{mission?.brief[locale] ?? t('app.brief')}</p>
+          <details><summary>{locale === 'en' ? 'Objective & requirements' : 'Мета й вимоги'}</summary><p>{mission?.goals[locale]}</p></details>
+        </header>}
+        {!game && campaignPanel}
+        {!game && mission && missions && onMissionChange && (
           <section className="panel mission-picker" aria-labelledby="picker-heading">
             <div>
               <p className="section-kicker">{t('mission.intro')}</p>
@@ -820,7 +870,7 @@ export default function MissionApp({
             </div>
           </section>
         )}
-        <section className="panel brief-panel" aria-labelledby="brief-heading">
+        {!game && <section className="panel brief-panel" aria-labelledby="brief-heading">
           <p className="section-kicker">{tc('control.goal', 'Mission goal')}</p>
           <h2 id="brief-heading">{t('app.briefTitle')}</h2>
           <p className="brief-copy">{mission?.brief[locale] ?? t('app.brief')}</p>
@@ -864,9 +914,9 @@ export default function MissionApp({
           </ul>
           <p className="warning-text">{t('app.notPlayable')}</p>
           <p className="note">{t('app.headerNote')}</p>
-        </section>
+        </section>}
 
-        <section
+        {!game && <section
           id="mission-controls"
           className="panel workbench-panel"
           aria-labelledby="config-heading"
@@ -920,9 +970,9 @@ export default function MissionApp({
               {t('config.runNote')}
             </p>
           </div>
-        </section>
+        </section>}
 
-        <aside className="panel telemetry-panel" aria-labelledby="telemetry-heading">
+        {!game && <aside className="panel telemetry-panel" aria-labelledby="telemetry-heading">
           <p className="section-kicker rail-kicker">{tc('control.stepRun', 'Run')}</p>
           <h2 id="telemetry-heading">{tc('control.telemetry', 'Resource telemetry')}</h2>
           {isStale && report && <p className="rail-stale">{t('resources.stale')}</p>}
@@ -990,14 +1040,16 @@ export default function MissionApp({
               </p>
             </>
           )}
-        </aside>
+        </aside>}
 
         <section
           id="mission-result"
           className={`panel results-panel${isStale ? ' is-stale' : ''}`}
           aria-labelledby="result-heading"
         >
-          <p className="section-kicker">{tc('control.stepRepair', 'Repair')}</p>
+          <p className="section-kicker">{report?.outcome === 'MODEL_PASS_PROVISIONAL'
+            ? (locale === 'en' ? 'MISSION RETURNED · PROVISIONAL MODEL RESULT' : 'ДАНІ ПОВЕРНУТО · ПОПЕРЕДНІЙ РЕЗУЛЬТАТ МОДЕЛІ')
+            : tc('control.stepRepair', 'Repair')}</p>
           <h2
             id="result-heading"
             ref={resultHeadingRef}
@@ -1037,6 +1089,7 @@ export default function MissionApp({
             </div>
           )}
           {report && <ContactStrip report={report} locale={locale} stale={isStale} />}
+          {game && report && <p className="debrief-latency">{t('metric.latencyHours')}: <strong data-testid="latency-value">{latencyText(report.metrics.latencyHours, locale)}</strong></p>}
           {report?.outcome === 'MODEL_PASS_PROVISIONAL' && !isStale && debriefAction}
 
           {report && (

@@ -1,0 +1,45 @@
+.launch-sequence { flex:1; position:relative; min-height:650px; overflow:hidden; isolation:isolate; display:flex; align-items:flex-end; padding:4rem 6vw; }
+.launch-craft { position:absolute; inset:0; z-index:-2; animation:separation-reveal 2.9s ease-out both; }
+.launch-craft .craft-scene { border:0; border-radius:0; }
+.launch-sequence::after { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(0deg,#030a16f2,transparent 85%); pointer-events:none; }
+.launch-overlay { max-width:40rem; display:grid; gap:1rem; }
+.launch-overlay h1 { font-size:clamp(2rem,4vw,4rem); }
+.launch-caption { color:#c2d4e4; font-size:.85rem; max-width:34rem; }
+.launch-overlay button { width:fit-content; }
+.launch-stages { position:absolute; top:2rem; left:6vw; right:6vw; display:flex; gap:2rem; list-style:none; padding:0; font:.7rem var(--mono); color:#b3cfe5; }
+.launch-stages li { border-top:2px solid #76bfeb; padding-top:.7rem; animation:sequence-in 2.6s both; }
+.launch-stages li:nth-child(2) { animation-delay:.6s; }
+.launch-stages li:nth-child(3) { animation-delay:1.2s; }
+.launch-hold .launch-craft { animation:none; filter:saturate(.6); }
+.hold-finding { border-left:3px solid #ffb49e; padding-left:1rem; color:#ffd7c8; font-family:var(--mono); }
+.game-debrief { width:min(1150px,100%); min-width:0; overflow-wrap:anywhere; margin:auto; padding:2rem 4vw 4rem; }
+.game-debrief .results-panel { margin-top:1.5rem; }
+.debrief-mission { border-bottom:1px solid #2c445c; padding-bottom:1.5rem; }
+.debrief-mission h1 { font-size:clamp(1.6rem,3vw,2.7rem); margin:.6rem 0 1rem; }
+.debrief-mission p { max-width:55rem; color:#bcd1e5; }
+.game-debrief .panel { background:#101b2b; color:#e0ebf5; border-color:#3c5269; }
+.game-debrief .contact-strip { background:#122a3d; color:#d8ebf6; }
+.game-debrief .contact-strip svg { max-width:100%; }
+.game-debrief .contact-strip text { fill:#d6e9f5; }
+.game-debrief .verdict-facts { background:#1a3345; color:#e1edf5; }
+.game-debrief .verdict-facts strong { color:#ffd1a6; }
+.game-debrief .drawer { background:#12283b; color:#e1edf5; border-color:#476178; }
+.game-debrief .debrief-next { background:#15372f; color:#d6f0e6; border-color:#4d8974; }
+.game-debrief .debrief-next p { color:#d6f0e6; }
+.game-debrief .check-item,.game-debrief .diagnostic-list > li,.game-debrief .resource-card,.game-debrief .field-evidence-card { background:#102234; }
+.game-debrief .boundary-note,.game-debrief .warning-list li,.game-debrief .assumption-scope { color:#ffd39b; }
+.game-debrief .check-heading { flex-wrap:wrap; min-width:0; }
+.game-debrief .status-badge { max-width:100%; white-space:normal; overflow-wrap:anywhere; }
+.game-debrief .check-values > div,.game-debrief .check-values dd { min-width:0; max-width:100%; overflow-wrap:anywhere; }
+.game-debrief details { overflow-wrap:anywhere; }
+.game-debrief .repair-card { background:#23212a; color:#f3e1d3; }
+.game-debrief .repair-cta { background:#f2ab74; color:#15120e; }
+.game-frame .campaign-panel { margin:1rem 3vw 3rem; background:#0e1c2c; color:#d7e7f5; border-color:#37516a; }
+.game-frame .campaign-panel .shop-card,.game-frame .campaign-panel .contract-card { background:#13283c; color:#d7e7f5; border-color:#3d566e; }
+.game-frame .campaign-panel .campaign-status { background:#17374a; color:#d7edf5; }
+.game-frame .campaign-panel .campaign-complete { background:#14382e; color:#c5f0df; }
+.game-frame .campaign-panel .shop-card p { color:#c2d2df; }
+@keyframes separation-reveal { 0% { transform:translateY(70px) scale(.9); opacity:.2; } 50% { transform:translateY(0) scale(1); opacity:1; } 100% { transform:translateY(-15px) scale(1.025); opacity:1; } }
+@keyframes sequence-in { 0%,20% { opacity:.3; } 100% { opacity:1; } }
+@media(max-width:650px) { .launch-sequence { min-height:700px; padding:3rem 1.2rem; } .launch-stages { left:1.2rem; right:1.2rem; gap:1rem; font-size:.6rem; flex-wrap:wrap; } .launch-craft { bottom:180px; } .game-debrief { padding:1.5rem .8rem 2rem; } }
+@media(prefers-reduced-motion:reduce) { .launch-craft,.launch-stages li { animation:none; } }

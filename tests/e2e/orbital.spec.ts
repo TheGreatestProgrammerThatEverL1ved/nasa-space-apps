@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
+// Slice renderer tests represent an established profile. Fresh-profile academy
+// behavior is exercised separately rather than bypassed in application code.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('mission-forge.academy.v1', 'seen'))
+})
+
 test('orbital slice renders real WebGL and swaps shared hardware with stationary inspection', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', e => errors.push(e.message))

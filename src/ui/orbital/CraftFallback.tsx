@@ -179,13 +179,8 @@ export default function CraftFallback({ config, locale, mode, selectedField, rea
       <circle cx="182" cy="428" r="346" fill="none" stroke="#5aa9e8" strokeWidth="26" opacity="0.4" filter={`url(#${uid}-blur)`} />
       <circle cx="182" cy="428" r="340" fill="none" stroke="#8ed2ff" strokeWidth="2.5" opacity="0.5" />
 
-      {mode === 'launch' && <g>
-        <ellipse cx={cx} cy={frontY + h + 74} rx={46} ry={12} fill="#f2a23e" opacity="0.18" />
-        <path d={`M${cx - 15} ${frontY + h + 6} L${cx + 15} ${frontY + h + 6} L${cx + 26} ${frontY + h + 96} L${cx - 26} ${frontY + h + 96} Z`} fill={`url(#${uid}-plume)`} opacity="0.85" />
-        <path d={`M${cx - 7} ${frontY + h + 6} L${cx + 7} ${frontY + h + 6} L${cx + 10} ${frontY + h + 54} L${cx - 10} ${frontY + h + 54} Z`} fill="#fff6d8" opacity="0.8" />
-      </g>}
 
-      <g transform={`translate(${cx} ${cy}) rotate(${(angle - 28) / 4}) translate(${-cx} ${-cy})`}>
+      <g data-craft transform={`translate(${cx} ${cy}) rotate(${(angle - 28) / 4}) translate(${-cx} ${-cy})`}>
       {wing(-1)}
       {wing(1)}
 

@@ -44,7 +44,7 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
   const chooseMission = (id: string) => {
     if (campaignActive && !campaignContractAvailable(campaign.progress, id)) return
     setPickerWasUsed(true); setMissionId(id); setCreditDelta(null)
-    setScreen(screen === 'control' ? 'control' : 'hangar')
+    setScreen('hangar')
   }
   const fit = (partId: string, refund = false, progress = campaign.progress) => {
     const item = CAMPAIGN_SHOP.find(p => p.partId === partId)
@@ -75,7 +75,7 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
   return <MissionApp ref={missionRef} key={`${mission.id}:${campaignActive ? 'campaign' : 'direct'}`}
     context={context} initialConfiguration={safeInitial}
     evaluate={request => evaluateMission(request, context)}
-    mission={mission} missions={campaignMissions} onMissionChange={chooseMission}
+    mission={mission} missions={engineering ? campaignMissions : MISSIONS} onMissionChange={chooseMission}
     focusMissionPicker={pickerWasUsed} onReport={onReport}
     onDraftChange={config => { setDrafts(previous => ({ ...previous, [draftKey]: config })) }}
     debriefAction={campaignActive ? <div className="debrief-next">
@@ -85,17 +85,32 @@ export default function App({ presentation }: { presentation?: 'orbital' | 'engi
         : `${locale === 'en' ? 'Next objective' : 'Наступна мета'}: ${nextMission?.title[locale] ?? ''}. ${!nextAvailable ? (locale === 'en' ? 'Unlock the required equipment on the contract board; full refunds keep credits available.' : 'Відкрийте потрібне обладнання на дошці контрактів; повні повернення зберігають доступність кредитів.') : ''}`}</p>
       <button type="button" onClick={() => {
         if (nextAvailable && nextContract) chooseMission(nextContract.missionId)
+        else if (!engineering) setScreen('missions')
         else { const target = document.getElementById('campaign-heading'); target?.focus(); target?.scrollIntoView?.({ block: 'start' }) }
       }}>{nextAvailable ? (locale === 'en' ? 'Choose next contract' : 'Вибрати наступний контракт') : (locale === 'en' ? 'Open contract board / hangar' : 'Відкрити дошку контрактів / ангар')}</button>
-    </div> : <div className="debrief-next"><button onClick={() => { const target = document.getElementById('mission-picker'); target?.focus(); target?.scrollIntoView?.({ block: 'center' }) }}>{locale === 'en' ? 'Choose another mission' : 'Вибрати іншу місію'}</button></div>}
+    </div> : <div className="debrief-next"><button onClick={() => {
+      if (!engineering) setScreen('missions')
+      else { const target = document.getElementById('mission-picker'); target?.focus(); target?.scrollIntoView?.({ block: 'center' }) }
+    }}>{locale === 'en' ? 'Choose another mission' : 'Вибрати іншу місію'}</button></div>}
     campaignPanel={<CampaignPanel active={campaignActive} progress={campaign.progress} locale={locale}
       storageError={campaign.storageError} currentMissionId={missionId} creditDelta={creditDelta}
       onChoose={chooseMission} onFit={id => fit(id)} onRefund={refund}
+      compactBoard={!engineering}
       onToggle={() => { setCampaignActive(!campaignActive); setMissionId('wildfire'); setPickerWasUsed(true); setCreditDelta(null) }}
       onBuy={buy} />}
     game={engineering ? undefined : { screen, onNavigate: setScreen, campaignActive, onCampaign: () => {
       setCampaignActive(!campaignActive); setMissionId('wildfire'); setPickerWasUsed(true); setCreditDelta(null)
-      setScreen(campaignActive ? 'menu' : 'control')
-    } }}
+      setScreen(campaignActive ? 'menu' : 'missions')
+    }, contracts: CAMPAIGN_CONTRACTS.map(contract => {
+      const missingMissions = contract.prerequisites.filter(id => !campaign.progress.completedMissionIds.includes(id))
+      const missingParts = contract.requiredParts.filter(id => !campaign.progress.unlockedPartIds.includes(id))
+      const all = MISSIONS.flatMap(m => Object.values(m.context.catalog).flat())
+      return { missionId: contract.missionId, available: campaignContractAvailable(campaign.progress, contract.missionId),
+        completed: campaign.progress.completedMissionIds.includes(contract.missionId), reward: contract.reward,
+        reason: [
+          missingMissions.length ? `${locale === 'en' ? 'Complete first: ' : 'Спершу пройдіть: '}${missingMissions.map(id => MISSIONS.find(m => m.id === id)?.title[locale]).join(', ')}` : '',
+          missingParts.length ? `${locale === 'en' ? 'Buy equipment below: ' : 'Купіть обладнання нижче: '}${missingParts.map(id => all.find(p => p.id === id)?.label[locale] ?? id).join(', ')}` : '',
+        ].filter(Boolean).join('. ') }
+    }) }}
     locale={locale} onLocaleChange={setLocale} />
 }

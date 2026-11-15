@@ -165,7 +165,7 @@ export default function CraftScene({
     className="craft-scene"
     data-renderer={renderer}
     data-mode={mode}
-    data-motion={motion ? 'on' : 'off'}
+    data-motion={motion && !suspended ? 'on' : 'off'}
     data-bus-id={config.busId}
     data-array-id={config.arrayId}
     data-battery-id={config.batteryId}

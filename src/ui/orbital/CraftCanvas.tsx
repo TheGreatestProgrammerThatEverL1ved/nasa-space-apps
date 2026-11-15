@@ -525,7 +525,6 @@ function CraftModel(props: ModelProps) {
   })
 
   return <group position={[MODE_POSITION[mode][0], MODE_POSITION[mode][1], MODE_POSITION[mode][2]]}>
-    {mode === 'launch' && <Plume motion={motion} depth={busT.size[2]} />}
     <group ref={bob}>
       <group onClick={inspect('busId')}>
         <BusShell id={config.busId} selected={selectedField === 'busId'} />
@@ -1050,41 +1049,5 @@ function BatteryCutaway({ batteryId, busId, onClick }: {
       <boxGeometry args={[0.02, ph * 1.25, pd * 1.15]} />
       <meshStandardMaterial {...HULL.rail} />
     </mesh>
-  </group>
-}
-
-function Plume({ motion, depth }: { motion: boolean; depth: number }) {
-  const group = useRef<THREE.Group | null>(null)
-  const light = useRef<THREE.PointLight | null>(null)
-  useFrame(state => {
-    const t = state.clock.elapsedTime
-    if (motion) {
-      const flicker = 0.9 + Math.sin(t * 22) * 0.06 + Math.sin(t * 37) * 0.04
-      if (group.current) group.current.scale.set(flicker, 0.94 + Math.sin(t * 18) * 0.08, flicker)
-      if (light.current) light.current.intensity = 14 * flicker
-    } else {
-      if (group.current) group.current.scale.set(1, 1, 1)
-      if (light.current) light.current.intensity = 12
-    }
-  })
-  const engineY = -depth / 2
-  return <group ref={group} position={[0, engineY - 0.62, 0]}>
-    <mesh position={[0, 0.6, 0]}>
-      <cylinderGeometry args={[0.15, 0.22, 0.18, 22, 1, true]} />
-      <meshStandardMaterial color="#39434b" metalness={0.85} roughness={0.32} side={THREE.DoubleSide} />
-    </mesh>
-    <mesh>
-      <coneGeometry args={[0.32, 1.3, 28, 1, true]} />
-      <meshBasicMaterial color="#f2a23e" transparent opacity={0.5} depthWrite={false} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} />
-    </mesh>
-    <mesh position={[0, 0.16, 0]}>
-      <coneGeometry args={[0.15, 0.9, 22, 1, true]} />
-      <meshBasicMaterial color="#fff3c4" transparent opacity={0.7} depthWrite={false} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} />
-    </mesh>
-    <mesh position={[0, -0.62, 0]} rotation={[Math.PI / 2, 0, 0]}>
-      <torusGeometry args={[0.3, 0.014, 6, 40]} />
-      <meshBasicMaterial color="#ffbe6a" transparent opacity={0.4} depthWrite={false} />
-    </mesh>
-    <pointLight ref={light} color="#f2a23e" intensity={12} distance={7} decay={2} />
   </group>
 }

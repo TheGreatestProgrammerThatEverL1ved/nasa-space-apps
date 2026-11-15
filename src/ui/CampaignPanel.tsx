@@ -9,10 +9,11 @@ interface Props {
   readonly onToggle: () => void; readonly onBuy: (partId: string) => void
   readonly onRefund: (partId: string) => void; readonly onFit: (partId: string) => void
   readonly onChoose: (missionId: string) => void
+  readonly compactBoard?: boolean
 }
 const parts = MISSIONS.flatMap(m => [...m.context.catalog.arrays, ...m.context.catalog.radios, ...m.context.catalog.payloads, ...(m.context.catalog.relayPayloads ?? [])])
 const partName = (id: string, locale: Locale) => parts.find(p => p.id === id)?.label[locale] ?? id
-export default function CampaignPanel({ active, progress, locale, storageError, currentMissionId, creditDelta, onToggle, onBuy, onRefund, onFit, onChoose }: Props) {
+export default function CampaignPanel({ active, progress, locale, storageError, currentMissionId, creditDelta, onToggle, onBuy, onRefund, onFit, onChoose, compactBoard = false }: Props) {
   const t = (key: Parameters<typeof translate>[1]) => translate(locale, key)
   const credits = campaignCredits(progress)
   return <section className="panel campaign-panel" aria-labelledby="campaign-heading">
@@ -28,7 +29,7 @@ export default function CampaignPanel({ active, progress, locale, storageError, 
         {creditDelta !== null && <strong data-testid="credit-delta">{creditDelta > 0 ? '+' : ''}{creditDelta} {locale === 'en' ? 'credits this action' : 'кредитів за цю дію'}</strong>}
       </div>
       <p className="note">{t('campaign.separate')}</p>
-      <h3>{locale === 'en' ? 'Contract board' : 'Дошка контрактів'}</h3>
+      {!compactBoard && <><h3>{locale === 'en' ? 'Contract board' : 'Дошка контрактів'}</h3>
       <div className="contract-board">{CAMPAIGN_CONTRACTS.map(contract => {
         const mission = MISSIONS.find(m => m.id === contract.missionId)!
         const available = campaignContractAvailable(progress, contract.missionId)
@@ -43,7 +44,7 @@ export default function CampaignPanel({ active, progress, locale, storageError, 
           {missingParts.length > 0 && <p>{locale === 'en' ? 'Buy in hangar: ' : 'Купіть в ангарі: '}{missingParts.map(id => partName(id, locale)).join(', ')}</p>}
           <button type="button" disabled={!available} data-testid={`contract-${contract.missionId}`} aria-pressed={currentMissionId === contract.missionId} onClick={() => onChoose(contract.missionId)}>{locale === 'en' ? 'Choose contract' : 'Вибрати контракт'}</button>
         </article>
-      })}</div>
+      })}</div></>}
       <h3>{locale === 'en' ? 'Equipment hangar' : 'Ангар обладнання'}</h3>
       <p>{locale === 'en' ? 'Your starter kit is already owned. Buy to unlock, then fit on a compatible contract. Optional purchases can be refunded in full; no grinding or paid retries.' : 'Початковий комплект уже ваш. Купуйте для відкриття й установлюйте в сумісному контракті. Необов’язкові покупки можна повністю повернути; без накопичувальних повторів чи платних спроб.'}</p>
       <div className="campaign-shop" role="group" aria-label={t('campaign.shop')}>{CAMPAIGN_SHOP.map(item => {
